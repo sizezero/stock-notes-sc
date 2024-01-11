@@ -1,0 +1,43 @@
+- entry point with various placeholder commands
+  - ~~browse-ticker~~
+  - ~~download-quotes~~
+  - ~~gain~~
+  - ~~next-research~~
+    - ~~note: this is actually a shell script that calls stock-notes oldest. Let's keep the functionality the same for now and refactor later if we want to.~~
+  - calc
+    - this is a completely independent program that should probably exists separately from stock notes
+    - rewrite this sometime in the future if I want to deprecate this
+    - at a minimum I should make sure that this functionality still works in my stock note editor of choice
+  - keywords
+    - might be useful but let that one wait for later
+- command line options are parsed and help is displayed
+  - I looked at various scala command line libraries. They seem to provide complex DSLs to solve the taks. I'm going to start just by implementing it myself in raw scala. It's possible this will be the clearest solution.
+- configuration file has necessary data
+  - log dir, cash dir, notify quotes file, buy sell quotes file, temp file (???), no cik url, finnhub access key
+  - make this a high level object, maybe we can just read JSON from a dot file in the home directory
+- IO object
+  - I'm not sure if we need this. It would be created at a hight level and passed down.
+  - The alterative is to have each command handle whatever IO it needs to do and build the functions in a way that allows easy testing.
+  - I think most IO results in a failure of the command so it may not matter.
+- parse everything
+  - date
+  - notify (maybe don't need this)
+  - shares
+  - stocks
+  - quotes
+  - price
+  - fraction
+  - cash
+  - buysell
+  - trade
+- download quotes
+- gain
+- browse ticker
+- next research
+- calc
+- www pages
+  - https://com-lihaoyi.github.io/scalatags/
+  - buysell
+  - bydate
+  - byticker
+  - ticker
