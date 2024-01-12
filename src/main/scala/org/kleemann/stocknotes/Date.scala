@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes
 
 final case class Date private(year: Int, month: Int, day: Int) extends Ordered[Date] {
-  def compare(that: Date): Int = {
+  override def compare(that: Date): Int = {
     if (this.year != that.year) this.year - that.year
     else if (this.month != that.month) this.month - that.month
     else this.day - that.day

@@ -23,7 +23,7 @@ object Oldest extends Command {
     var r: Boolean = false
     var t: Boolean = false
     var k: Option[String] = Option.empty[String]
-    while(!a.isEmpty) {
+    while (!a.isEmpty) {
       val token = a.remove(0)
       token.match {
         case "-r" => r=true

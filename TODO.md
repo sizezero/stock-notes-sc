@@ -12,28 +12,28 @@
     - might be useful but let that one wait for later
 - ~~command line options are parsed and help is displayed~~
   - ~~I looked at various scala command line libraries. They seem to provide complex DSLs to solve the taks. I'm going to start just by implementing it myself in raw scala. It's possible this will be the clearest solution.~~
-- configuration file has necessary data
-  - log dir, cash dir, notify quotes file, buy sell quotes file, temp file (???), no cik url, finnhub access key
-  - make this a high level object, maybe we can just read JSON from a dot file in the home directory
+- ~~configuration file has necessary data~~
+  - ~~log dir, cash dir, notify quotes file, buy sell quotes file, temp file (???), no cik url, finnhub access key~~
+  - ~~make this a high level object, maybe we can just read JSON from a dot file in the home directory~~
 - IO object
   - I'm not sure if we need this. It would be created at a hight level and passed down.
   - The alterative is to have each command handle whatever IO it needs to do and build the functions in a way that allows easy testing.
   - I think most IO results in a failure of the command so it may not matter.
 - parse everything
-  - date
+  - ~~date~~
   - notify (maybe don't need this)
+  - ~~fraction~~
   - shares
   - stocks
   - quotes
   - price
-  - fraction
   - cash
   - buysell
   - trade
 - download quotes
 - gain
 - browse ticker
-- next research
+- next research (oldest)
 - calc
 - www pages
   - https://com-lihaoyi.github.io/scalatags/
