@@ -35,7 +35,10 @@ def funcMain(args: Seq[String]): Option[String] = {
   * @param args all command line args
   */
 @main def main(args: String*): Unit = {
-  println("Hello world!")
+  
+  // make sure the config file exists and load it
+  val config = Config.load()
+
   funcMain(args) match {
     case Some(out) => {
       println(out)
