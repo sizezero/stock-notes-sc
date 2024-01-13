@@ -25,19 +25,29 @@ final case class Config (shared: String, projectDir: String, finnhubAccessKey: S
     def cashDir: os.Path = os.home/ shared /"cash"
 
     /**
-      * I've forgotten how this is used. TODO: see if we still use this.
+      * This is a legacy file used for gain. The scala system reads from it but doesn't write.
       */
-    def notifyQuotesFile: os.FilePath = os.home/ shared /"download"/"quotes_notify.csv"
+    def notifyQuotesFile: os.Path = os.home/ shared /"download"/"quotes_notify.csv"
 
     /**
-      * The file that contains downloaded stock quote values used for most things.
+      * This is a legacy file used for the buysell html page. The scala system reads from it but doesn't write.
       */
-    def buySellQuotesFile: os.FilePath = os.home/ shared /"download"/"quotes_buysell.csv"
+    def buySellQuotesFile: os.Path = os.home/ shared /"download"/"quotes_buysell.csv"
+
+    /**
+      * This file that the scala system reads from and writes to.
+      * 
+      * On reading, if it doesn't exist, then the two legacy files are read and the newest dated quotes are kept.
+      *
+      * @return
+      */
+    def quotesFile: os.Path = os.home/ shared /"download"/"quotes.csv"
+
 
     /**
       * I'm not sure what parts of the program need a temp directory
       */
-    def tempFile: os.FilePath = os.home/ shared /"download"/"temp"
+    def tempFile: os.Path = os.home/ shared /"download"/"temp"
 
     /**
       * Used by browse_ticker to display the SEC page for an unknown company.

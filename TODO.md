@@ -30,6 +30,36 @@
   - cash
   - buysell
   - trade
+- Hierarchy / Typeing
+  - ~~Quote(price: Double, date: Date)~~
+    - need special parser for CSVs; makes sense for this to be close to the quote download file not date
+    - object method to load the existing cache of tickers
+    - object method to download a list to directory (may need a list of quotes) I wonder how we generate our list for this
+      - I can punt on this if I need the other objects first
+  - ~~Quotes(List[Quote])~~
+    - I'm not sure if we need a structure for this, just a CSV parser; it should probably be part of the CSV Download package
+  - CashAccount(date: Date, balance: Int)
+    - balance is stored as dollars*100 (pennies)
+    - object method to load a list from the dir
+  - price(price: Double, mult:Fraction)
+    - toStr does not seem to honor the multple. Is this intentional?
+  - Shares(shares: Int, Mult: Fraction)
+  - Entry(ticker: String, date: Date, text: String)
+    - this is every dated entry of every company
+    - I don't think they're in chronological order so I'm not sure what they're used for
+  - Trade abstract base class, I guess a trait
+    - Buy(date: Date, shares: Shares, price: Price: Price, commission: Double)
+    - Sell(date: Date, shares: Shares, price: Price, commission: Double)
+    - strangely parsing is returning the balance but it's not part of the data structure
+      - I think it's just an assertion for the parsing
+    - Split(date: Date, mult: Fraction)
+    - Dividend has not been used at all so leave it out
+  - Company(ticker: String, name: String, cid: Option[String], entries: List[Entry], trades: List[Trade], keywords: Set[String])
+    - This could be called Stock. Don't change it for now.
+    - there is a global list of Companies as well as a global list of entries which is used by oldest, html_index, and bydate
+  - Data
+    - I don't know what to call this; something besides data
+    - I this this should contain (companies: Map[String, Company], cashAccounts: Map[String, CashAccount], quotes: Map[String, Quote])
 - download quotes
 - gain
 - browse ticker
