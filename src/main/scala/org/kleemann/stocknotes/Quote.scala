@@ -22,36 +22,60 @@ object Quote {
     /**
       * Reads the quote file. Blows out with an IOException if there is any problem.
       *
-      * I wonder if it would make sense for this to return Option[Quote] instead of Quote?
+      * This is the dirty, side effect version of the function.
       * 
       * @param f
       * @return
       */
-    private[kleemann] def load(f: os.Path): Map[String, Quote] = {
-        var i = 1
-        var out: List[(String,Quote)] = List()
-        val q = Quote(0.0, Date(1900,1,1).get)
-        os.read.lines.stream(f).foreach{ line => {
-            println(line)
-            val a = line.split(",", 4)
-            if (a.length >= 4) {
-                val ticker = a(0)
-                val price = a(1).toDoubleOption.getOrElse(0.0)
-                val dateText = a(2)
-                val errorText = a(3)
-                out = (ticker, Quote(price.toDouble, parseCsvDate(dateText).get)) :: out
+    private[kleemann] def load(f: os.Path): Map[String, Quote] = load(os.read.lines.stream(f))
+
+    /** A functional, testable version of the load command.
+      * 
+      * If the entry fails to parse for any reason, it is omitted from the returned list.
+      * 
+      * @param g
+      * @return
+      */
+    private[kleemann] def load(g: os.Generator[String]): Map[String, Quote] =
+        g.flatMap{ line => {
+            parseCsvLine(line) match {
+                case None => None
+                case some => some // guaranteed to be Some[(String,Quote)]
             }
-            i += 1
-        }}
-        out.toMap
-    }
+        }}.toSeq.toMap
 
     private val datePattern = """^(\d{2})/(\d{2})/(\d{4})$""".r
-    private def parseCsvDate(s: String): Option[Date] = {
-        s match {
-            case datePattern(month,day,year) => Date(year.toInt, month.toInt, day.toInt)
-            case _ => Date(1900,1,1)
-        }
+
+    /**
+      * Parses a line of our dowloaded quote CSV file.
+      * 
+      * The format of the lines are:
+      * AAPL,185.92,01/12/2024,optional error
+      *
+      * @param line
+      * @return
+      */
+    private[kleemann] def parseCsvLine(line: String): Option[(String, Quote)] = {
+        val a = line.split(",", 4)
+        if (a.length == 4) {
+            val ticker = a(0)
+            a(1).toDoubleOption match {
+                case Some(price) => {
+                    val dateText = a(2)
+                    val errorText = a(3)
+                    dateText match {
+                        case datePattern(month,day,year) => {
+                            Date(year.toInt, month.toInt, day.toInt) match {
+                                case Some(d) => Some((ticker, Quote(price.toDouble, d)))
+                                case None => None // date integers out of range
+                            }
+                        }
+                        case _ => None // date string does not parse
+                    }
+                }
+                case None => None // price string can't be converted to double
+            }
+        } else None // length != 4
     }
 
     /**
@@ -67,34 +91,22 @@ object Quote {
     /**
       * Merges two maps. For duplicate values, a function chooses which value to take.
       * 
-      * There is probably a much more functional way to do this. I don't know if it's cleaner.
+      * There is probably a way to do this that takes advantage of generic collections methods. I don't know if it's cleaner.
       *
       * @param m1 first map
       * @param m2 second map
       * @param func I function that, given two duplicate values, returns the one to use in the resultant Map
       * @return A new merged map.
       */
-    private def merge[K,V](m1: Map[K,V], m2: Map[K,V], func: (V,V) => V): Map[K,V] = {
+    private[kleemann] def merge[K,V](m1: Map[K,V], m2: Map[K,V], func: (V,V) => V): Map[K,V] = {
         val keys = m1.keySet.union(m2.keySet)
-        keys.flatMap{ k =>
-            m1.get(k) match {
-                case None => {
-                    m2.get(k) match {
-                         // neight map has the key, this should never happen
-                        case None => None
-                        // m1 does not have the key but m2 does, take the m2 value
-                        case Some(v2) => Some(k -> v2)
-                    }
-                }
-                case Some(v1) => {
-                    m2.get(k) match {
-                        // m1 has the key but m2 doesn't, take the m1 value
-                        case None => Some(k -> v1)
-                        // both m1 and m2 have a value, ask the caller to decide
-                        case Some(v2) => Some(k -> func(v1, v2))
-                    }
-                }
-            }
+        keys.map{ k =>
+            if (m1.contains(k) && m2.contains(k))
+                // we have a conflict so let the caller decide
+                k -> func(m1(k), m2(k))
+            else
+                // either m1 or m2 is guaranteed to have a value for k
+                k -> m1.getOrElse(k, m2(k))
         }.toMap
     }
 
