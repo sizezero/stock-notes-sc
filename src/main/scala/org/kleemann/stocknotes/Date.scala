@@ -59,7 +59,7 @@ object Date {
     else Some(new Date(year,month,day))
 
   /** returns the current date
-   * Note: this is not functional as multiple calls will return different values
+   * Note: this is not a pure function as multiple calls will return different values
    */
   def today: Date = {
     import java.util.Calendar
@@ -73,6 +73,12 @@ object Date {
 
   private val datePattern = """^\s*([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})\s*$""".r
 
+  /**
+    * Parses dates of the format: "MMM DD, YYYY" where MMM is Apr, Jan, etc.
+    *
+    * @param line
+    * @return
+    */
   def parse(line: String): Option[Date] = {
     line match {
         case datePattern(month,day,year) => {

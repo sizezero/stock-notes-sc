@@ -12,7 +12,7 @@ object Gain extends Command {
     }
   }
   
-  private[stocknotes] case class ParseArgs(start: Date, end: Date, commission: Double, tickers: List[String], omitKeyword: Option[String])
+  private[stocknotes] case class ParseArgs(start: Date, end: Date, commission: Double, tickers: List[Ticker], omitKeyword: Option[String])
 
   /** 
     * 
@@ -48,7 +48,7 @@ object Gain extends Command {
 
     val args4 = args3.drop(1)
 
-    val tickers: List[String] = args4.map{ _.toUpperCase() }.sorted.toList
+    val tickers: List[Ticker] = args4.map{ Ticker(_) }.sorted.toList
 
     Right(ParseArgs(start, end, commission, tickers, omitKeyword))
   }
@@ -59,11 +59,7 @@ object Gain extends Command {
     * Does this command have the side effect of printing? Right now our return value consists of only output text in the error case.
     * Maybe we should use Either to enable output in both cases.
     *
-    * @param start 
-    * @param end
-    * @param commission
-    * @param tickers if zero length, then they need to be populated by the full list of actual tickers
-    * @param omitKeyword
+    * @param pa
     * @return
     */
   private def gain(pa: ParseArgs): Option[String] = {

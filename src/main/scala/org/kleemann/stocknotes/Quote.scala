@@ -10,7 +10,7 @@ final case class Quote(price: Double, date: Date)
 
 object Quote {
 
-    def load(config: Config): Map[String, Quote] =
+    def load(config: Config): Map[Ticker, Quote] =
         if (os.exists(config.quotesFile)) load(config.quotesFile)
         else {
             val m1 = if (os.exists(config.notifyQuotesFile)) load(config.notifyQuotesFile) else Map()
@@ -27,7 +27,7 @@ object Quote {
       * @param f
       * @return
       */
-    private[kleemann] def load(f: os.Path): Map[String, Quote] = load(os.read.lines.stream(f))
+    private def load(f: os.Path): Map[Ticker, Quote] = load(os.read.lines.stream(f))
 
     /** A functional, testable version of the load command.
       * 
@@ -36,11 +36,11 @@ object Quote {
       * @param g
       * @return
       */
-    private[kleemann] def load(g: os.Generator[String]): Map[String, Quote] =
+    private[kleemann] def load(g: os.Generator[String]): Map[Ticker, Quote] =
         g.flatMap{ line => {
             parseCsvLine(line) match {
                 case None => None
-                case some => some // guaranteed to be Some[(String,Quote)]
+                case some => some // guaranteed to be Some[(Ticker,Quote)]
             }
         }}.toSeq.toMap
 
@@ -55,10 +55,10 @@ object Quote {
       * @param line
       * @return
       */
-    private[kleemann] def parseCsvLine(line: String): Option[(String, Quote)] = {
+    private[kleemann] def parseCsvLine(line: String): Option[(Ticker, Quote)] = {
         val a = line.split(",", 4)
         if (a.length == 4) {
-            val ticker = a(0)
+            val ticker = Ticker(a(0))
             a(1).toDoubleOption match {
                 case Some(price) => {
                     val dateText = a(2)

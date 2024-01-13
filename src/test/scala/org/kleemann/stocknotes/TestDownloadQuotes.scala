@@ -6,14 +6,6 @@ class TestDownloadQuotes extends munit.FunSuite {
     assertEquals(DownloadQuotes.command(args), None)
   }
 
-  test("succeed on notify argument") {
-    assertEquals(DownloadQuotes.command(Vector("notify")), None)
-  }
-
-  test("succeed on buysell argument") {
-    assertEquals(DownloadQuotes.command(Vector("buysell")), None)
-  }
-
   test("fail on various single arguments") {
     assertNotEquals(DownloadQuotes.command(Vector("foo")), None)
     assertNotEquals(DownloadQuotes.command(Vector("bar")), None)

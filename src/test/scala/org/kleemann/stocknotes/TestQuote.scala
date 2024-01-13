@@ -9,11 +9,11 @@ class TestQuote extends munit.FunSuite {
             "AMD,146.56,01/12/2024,",
             "APEMY,31.41,01/12/2024,"))
         val d = Date(2024, 1, 12).get
-        val m: Map[String, Quote] = Map(
-            "AAPL"  -> Quote(185.92, d),
-            "ABB"   -> Quote(  0,    d),
-            "AMD"   -> Quote(146.56, d),
-            "APEMY" -> Quote(31.41,  d))
+        val m: Map[Ticker, Quote] = Map(
+            Ticker("AAPL")  -> Quote(185.92, d),
+            Ticker("ABB")   -> Quote(  0,    d),
+            Ticker("AMD")   -> Quote(146.56, d),
+            Ticker("APEMY") -> Quote(31.41,  d))
         assertEquals(Quote.load(g), m)
     }
 

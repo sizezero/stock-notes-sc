@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 /**
   * A simple fraction class that can be used for accurate stock splits.
   */
-final case class Fraction private(numerator: Int, denominator: Int) extends Ordered[Fraction]  {
+final case class Fraction private(numerator: Int, denominator: Int) extends Ordered[Fraction] {
 
     override def toString(): String = s"$numerator/$denominator"
 

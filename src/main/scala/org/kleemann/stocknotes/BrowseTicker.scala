@@ -16,14 +16,14 @@ object BrowseTicker extends Command {
   """.stripMargin)
 
   def command(args: IndexedSeq[String]): Option[String] = {
-    if (args.length == 1) browseTicker(args(0), true)
+    if (args.length == 1) browseTicker(Ticker(args(0)), true)
     else if (args.length == 2) {
         val opt = args(0)
-        val ticker = args(1)
+        val ticker = Ticker(args(1))
         if (opt != "-n") help
         else browseTicker(ticker, false)
     } else help
   }
 
-  def browseTicker(ticker: String, edit: Boolean): Option[String] = None
+  def browseTicker(ticker: Ticker, edit: Boolean): Option[String] = None
 }

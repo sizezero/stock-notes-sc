@@ -38,6 +38,7 @@
       - I can punt on this if I need the other objects first
   - ~~Quotes(List[Quote])~~
     - I'm not sure if we need a structure for this, just a CSV parser; it should probably be part of the CSV Download package
+  - ~~I think it's time to refactor the ticker String into a case class~~
   - CashAccount(date: Date, balance: Int)
     - balance is stored as dollars*100 (pennies)
     - object method to load a list from the dir
