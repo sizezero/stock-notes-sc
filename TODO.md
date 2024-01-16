@@ -51,7 +51,7 @@
     - this is every dated entry of every company
     - I don't think they're in chronological order so I'm not sure what they're used for
     - I'm going to try to put this in the case class for Stock (was Company) and see what will happen. Why do that? Leave it as it's own class.
-  - Trade abstract base class, I guess a trait
+  - ~~Trade abstract base class, I guess a trait~~
     - Buy(date: Date, shares: Shares, price: Price, commission: Double)
     - Sell(date: Date, shares: Shares, price: Price, commission: Double)
     - strangely parsing is returning the balance but it's not part of the data structure
