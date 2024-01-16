@@ -45,7 +45,7 @@
   - ~~price(price: Double, mult:Fraction)~~
     - toStr does not seem to honor the multple. Is this intentional?
     - I didn't fully implement this; I have some questions so let's see how it is used first
-  - Shares(shares: Int, Mult: Fraction)
+  - ~~Shares(shares: Int, Mult: Fraction)~~
     - I'm goint to call this Stock, nope, left it as shares
   - Entry(ticker: Ticker, date: Date, text: String)
     - this is every dated entry of every company
