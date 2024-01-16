@@ -58,7 +58,7 @@
       - I think it's just an assertion for the parsing
     - Split(date: Date, mult: Fraction)
     - Dividend has not been used at all so leave it out
-  - Buysell
+  - ~~Buysell~~
     - These are the four ranges to put stocks in. I really hate the name of this. I'm goint to change this to Alert.
     - Watch(buyLow: Price, buyHigh: Price, sellLow: Price)
   - Company(ticker: String, name: String, cid: Option[String], entries: List[Entry], trades: List[Trade], keywords: Set[String])
