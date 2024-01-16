@@ -56,11 +56,15 @@ final case class Fraction private(numerator: Int, denominator: Int) extends Orde
     def /(that: Fraction): Fraction = Fraction(
         this.numerator * that.denominator,
         this.denominator * that.numerator)
+
+    def reciprocal: Fraction =
+        // I don't think we have a use case for zero in this application so this should never happen
+        if (numerator==0) throw new java.lang.ArithmeticException("/ by zero")
+        else Fraction(denominator, numerator)
 }
 
 object Fraction {
 
-    val zero = Fraction(0,1)
     val one  = Fraction(1,1)
 
     def apply(numerator: Int, denominator: Int): Fraction = {

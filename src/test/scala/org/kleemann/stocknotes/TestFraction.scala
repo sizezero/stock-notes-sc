@@ -22,6 +22,12 @@ class TestFraction extends munit.FunSuite {
         assertEquals(f.denominator, 2)
     }
 
+    test("divide by zero") {
+        intercept[java.lang.ArithmeticException] {
+            val f = Fraction(1,0)
+        }
+    }
+
     test("toString") {
         assertEquals(Fraction(1,2).toString, "1/2")
         assertEquals(Fraction(-1,2).toString, "-1/2")
@@ -54,6 +60,15 @@ class TestFraction extends munit.FunSuite {
         assertEquals(Fraction(1,2)/Fraction(1,2), Fraction(1,1))
     }
 
+    test("reciprocal") {
+        assertEquals(Fraction(1,2).reciprocal, Fraction(2,1))
+        assertEquals(Fraction(4,5).reciprocal, Fraction(5,4))
+        intercept[java.lang.ArithmeticException] {
+            val f = Fraction(0,1).reciprocal
+        }
+
+    }
+
     test("ordering") {
         assert(Fraction(1,2) > Fraction(1,4))
         assert(Fraction(-1,2) < Fraction(1,4))
@@ -64,7 +79,6 @@ class TestFraction extends munit.FunSuite {
     }
 
     test("predefined values") {
-        assertEquals(Fraction.zero.toString, "0/1")
         assertEquals(Fraction.one.toString, "1/1")
     }
 }
