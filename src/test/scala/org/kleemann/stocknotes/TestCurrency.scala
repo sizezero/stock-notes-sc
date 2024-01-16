@@ -65,4 +65,9 @@ class TestCurrency extends munit.FunSuite {
     assertEquals(Currency.parse( "+9.99"), Some(Currency( 9_99)))
     assertEquals(Currency.parse( "-9.99"), Some(Currency(-9_99)))
   }
+
+  test("parse single digit to the right of the decimal") {
+    assertEquals(Currency.parse( "1.1"), Some(Currency(1_10)))
+
+  }
 }

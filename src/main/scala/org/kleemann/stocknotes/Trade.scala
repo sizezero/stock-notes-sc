@@ -24,10 +24,10 @@ object Trade {
         // tries to convert the price and Currency values and produces appropriate errors if necessary
         def parse(price: String, commission: String): Either[String, (Price, Currency)] = {
             val co = Currency.parse(commission)
-            if (co.isEmpty) Left("commission must be decimal floating point")
+            if (co.isEmpty) Left(s"commission must be decimal floating point: $commission")
             else {
                 val po = Price.parse(price, multiple)
-                if (po.isEmpty) Left("price must be decimal floating point")
+                if (po.isEmpty) Left(s"price must be decimal floating point: $price")
                 else Right((po.get, co.get))
             }
         }

@@ -47,12 +47,12 @@ object Currency {
     val zero = Currency(0)
 
     private val numberPattern = """^\$?+(\d{1,17})$""".r
-    private val numberPatternWithPennies = """^\$?+(\d{1,15})\.(\d\d)$""".r
+    private val numberPatternWithPennies = """^\$?+(\d{1,15})\.(\d{1,2})$""".r
 
       /**
       * Parses [+|-][$][n+]n[.nn]
       * The leading dollar sign is optional
-      * If digits exist to the right of the decimal point, there must be two
+      * If digits exist to the right of the decimal point, there may be one or two.
       * longs can parse up to 19 digits but we only allow up to 17
       *
       * @param s
@@ -68,7 +68,11 @@ object Currency {
 
       trimmed match {
         case numberPattern(n) => Some(Currency(sign * n.toLong * 100))
-        case numberPatternWithPennies(n1, n2) => Some(Currency(sign * (n1+n2).toLong))
+        case numberPatternWithPennies(n1, n2) => {
+          val pennies = if (n2.length() == 1) n1+n2+"0"
+          else n1+n2
+          Some(Currency(sign * pennies.toLong))
+        }
         case _ => None
       }
     }

@@ -61,7 +61,7 @@
   - ~~Buysell~~
     - These are the four ranges to put stocks in. I really hate the name of this. I'm goint to change this to Alert.
     - Watch(buyLow: Price, buyHigh: Price, sellLow: Price)
-  - Company(ticker: String, name: String, cid: Option[String], entries: List[Entry], trades: List[Trade], keywords: Set[String])
+  - ~~Company(ticker: String, name: String, cid: Option[String], entries: List[Entry], trades: List[Trade], keywords: Set[String])~~
     - This could be called Stock. Don't change it for now. Change it!
     - there is a global list of Companies as well as a global list of entries which is used by oldest, html_index, and bydate
   - Data
