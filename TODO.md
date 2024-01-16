@@ -47,7 +47,7 @@
     - I didn't fully implement this; I have some questions so let's see how it is used first
   - ~~Shares(shares: Int, Mult: Fraction)~~
     - I'm goint to call this Stock, nope, left it as shares
-  - Entry(ticker: Ticker, date: Date, text: String)
+  - ~~Entry(ticker: Ticker, date: Date, text: String)~~
     - this is every dated entry of every company
     - I don't think they're in chronological order so I'm not sure what they're used for
     - I'm going to try to put this in the case class for Stock (was Company) and see what will happen. Why do that? Leave it as it's own class.
