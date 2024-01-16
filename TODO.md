@@ -42,25 +42,32 @@
   - ~~CashAccount(date: Date, balance: Int)~~
     - balance is stored as dollars*100 (pennies)
     - object method to load a list from the dir
-  - price(price: Double, mult:Fraction)
+  - ~~price(price: Double, mult:Fraction)~~
     - toStr does not seem to honor the multple. Is this intentional?
+    - I didn't fully implement this; I have some questions so let's see how it is used first
   - Shares(shares: Int, Mult: Fraction)
-  - Entry(ticker: String, date: Date, text: String)
+    - I'm goint to call this Stock, nope, left it as shares
+  - Entry(ticker: Ticker, date: Date, text: String)
     - this is every dated entry of every company
     - I don't think they're in chronological order so I'm not sure what they're used for
+    - I'm going to try to put this in the case class for Stock (was Company) and see what will happen. Why do that? Leave it as it's own class.
   - Trade abstract base class, I guess a trait
-    - Buy(date: Date, shares: Shares, price: Price: Price, commission: Double)
+    - Buy(date: Date, shares: Shares, price: Price, commission: Double)
     - Sell(date: Date, shares: Shares, price: Price, commission: Double)
     - strangely parsing is returning the balance but it's not part of the data structure
       - I think it's just an assertion for the parsing
     - Split(date: Date, mult: Fraction)
     - Dividend has not been used at all so leave it out
+  - Buysell
+    - These are the four ranges to put stocks in. I really hate the name of this. I'm goint to change this to Alert.
+    - Watch(buyLow: Price, buyHigh: Price, sellLow: Price)
   - Company(ticker: String, name: String, cid: Option[String], entries: List[Entry], trades: List[Trade], keywords: Set[String])
-    - This could be called Stock. Don't change it for now.
+    - This could be called Stock. Don't change it for now. Change it!
     - there is a global list of Companies as well as a global list of entries which is used by oldest, html_index, and bydate
   - Data
-    - I don't know what to call this; something besides data
+    - I don't know what to call this; something besides data; All, 
     - I this this should contain (companies: Map[String, Company], cashAccounts: Map[String, CashAccount], quotes: Map[String, Quote])
+    - might as well throw configuration into it since that is what builds it
 - download quotes
 - gain
 - browse ticker
