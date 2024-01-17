@@ -1,7 +1,5 @@
 package org.kleemann.stocknotes
 
-package org.kleemann.stocknotes
-
 class TestStock extends munit.FunSuite {
 
     test("empty file") {
