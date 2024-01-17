@@ -5,15 +5,16 @@ package org.kleemann.stocknotes
   * 
   * We use an integer representation to prevent binary floating point inconsistencies.
   * An Int would have given us a max currency value of around 21 and a half million dollars so I went with a Long.
+  * This precisions is used because some stock trades use up to five digits to the right of the decimal e.g.: $9.12345
   *
-  * @param kiloPennies The number of pennies times 1000
+  * @param milliPennies The number of pennies divided by 1000
   */
-final case class Currency private(kiloPennies: Long) {
+final case class Currency private(milliPennies: Long) {
 
     /**
       * @return the amount in dollars
       */
-    def toDouble: Double = kiloPennies.toDouble / 100000.0
+    def toDouble: Double = milliPennies.toDouble / 100000.0
 
     /**
       * Displays strings with periods, columns, a dollar sign, and parens for negative values
@@ -27,7 +28,7 @@ final case class Currency private(kiloPennies: Long) {
       */
     override def toString: String = {
         var out = List[Char]()
-        val pennies: Long = kiloPennies / 1000
+        val pennies: Long = milliPennies / 1000
         if (pennies < 0) out = ')' :: out
         val pUnpadded = pennies.abs.toString
         // prefix with zeros if less than length 3

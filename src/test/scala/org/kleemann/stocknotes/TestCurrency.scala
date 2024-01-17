@@ -72,10 +72,10 @@ class TestCurrency extends munit.FunSuite {
   }
 
   test("decimal method") {
-    assertEquals(Currency.decimal(0, 0).kiloPennies,         0L)
-    assertEquals(Currency.decimal(0, 12).kiloPennies,    12000L)
-    assertEquals(Currency.decimal(0, 123).kiloPennies,   12300L)
-    assertEquals(Currency.decimal(0, 1234).kiloPennies,  12340L)
-    assertEquals(Currency.decimal(0, 12345).kiloPennies, 12345L)
+    assertEquals(Currency.decimal(0, 0).milliPennies,         0L)
+    assertEquals(Currency.decimal(0, 12).milliPennies,    12000L)
+    assertEquals(Currency.decimal(0, 123).milliPennies,   12300L)
+    assertEquals(Currency.decimal(0, 1234).milliPennies,  12340L)
+    assertEquals(Currency.decimal(0, 12345).milliPennies, 12345L)
   }
 }
