@@ -9,7 +9,7 @@ class TestPrice extends munit.FunSuite {
 
     test("parse success") {
         val m = Fraction.one
-        assertEquals(Price.parse("$1", m), Some(Price(Currency(1_00), m)))
+        assertEquals(Price.parse("$1", m), Some(Price(Currency.dollarsCents(1, 0), m)))
         assertEquals(Price.parse("foogle", m), None)
         // parse is just a passthrough to Currency.parse so we don't need to test it more here
     }
@@ -17,7 +17,7 @@ class TestPrice extends munit.FunSuite {
     test("multiple") {
         // test multiple changes over time
         val m1 = Fraction.one
-        val p1 = Price(Currency(10_00), m1)
+        val p1 = Price(Currency.dollarsCents(10, 0), m1)
         val d1 = p1.atMult(m1)
         assert(d1 >  9.99)
         assert(d1 < 10.01)
@@ -38,4 +38,5 @@ class TestPrice extends munit.FunSuite {
         assert(clue(d4) > 2.99)
         assert(d4 < 3.01)
     }
+
 }

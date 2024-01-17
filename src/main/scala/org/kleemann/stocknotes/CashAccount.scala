@@ -44,7 +44,7 @@ object CashAccount {
       }
     }
 
-    private val balancePattern = """^BALANCE:\s*\$([\d,]+\.\d{2})$""".r
+    private val balancePattern = """^BALANCE:\s*\$([\d,]+)\.(\d{2})$""".r
 
     /**
       * Loads a cash account from the specified generator. This is testable.
@@ -73,10 +73,8 @@ object CashAccount {
             }
             case None => {
               line match {
-                case balancePattern(balanceText) => {
-                  val remove = Set('.', ',')
-                  val stripped = balanceText.filterNot(remove.contains(_))
-                  curBalance = Currency(stripped.toLong)
+                case balancePattern(dollars, cents) => {
+                  curBalance = Currency.dollarsCents(dollars.replace(",","").toLong, cents.toLong)
                 }
                 case _ => 
               }

@@ -63,6 +63,10 @@ object Gain extends Command {
     * @return
     */
   private def gain(pa: ParseArgs): Option[String] = {
+    // both config and stock loading blow us out with a sys.exit(1) not sure if that's what I want
+    // we're not really returning anything at this point, may as well be Unit
+    val ss: List[Stock] = Stock.load(Config.load())
+    println("all the stocks loaded!")
     None
   }
 }
