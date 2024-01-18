@@ -6,7 +6,7 @@ package org.kleemann.stocknotes
   * @param price The price of the stock around the time it was downloaded
   * @param date  The the day the quote was from
   */
-final case class Quote(price: Double, date: Date)
+final case class Quote(price: Currency, date: Date)
 
 object Quote {
 
@@ -59,21 +59,21 @@ object Quote {
         val a = line.split(",", 4)
         if (a.length == 4) {
             val ticker = Ticker(a(0))
-            a(1).toDoubleOption match {
+            Currency.parse(a(1)) match {
                 case Some(price) => {
                     val dateText = a(2)
                     val errorText = a(3)
                     dateText match {
                         case datePattern(month,day,year) => {
                             Date(year.toInt, month.toInt, day.toInt) match {
-                                case Some(d) => Some((ticker, Quote(price.toDouble, d)))
-                                case None => None // date integers out of range
+                                case Some(d) => Some((ticker, Quote(price, d)))
+                                case None => None // date integer is out of range
                             }
                         }
                         case _ => None // date string does not parse
                     }
                 }
-                case None => None // price string can't be converted to double
+                case None => None // price string can't be parsed
             }
         } else None // length != 4
     }
