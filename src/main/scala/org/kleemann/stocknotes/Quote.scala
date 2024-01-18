@@ -13,7 +13,7 @@ object Quote {
     def load(config: Config): Map[Ticker, Quote] =
         if (os.exists(config.quotesFile)) load(config.quotesFile)
         else {
-            val m1 = if (os.exists(config.notifyQuotesFile)) load(config.notifyQuotesFile) else Map()
+            val m1 = if (os.exists(config.notifyQuotesFile))  load(config.notifyQuotesFile)  else Map()
             val m2 = if (os.exists(config.buySellQuotesFile)) load(config.buySellQuotesFile) else Map()
             // combine the two quote maps with just the newest quotes
             merge(m1, m2, (q1,q2) => if (q1.date > q2.date) q1 else q2 )
@@ -31,18 +31,13 @@ object Quote {
 
     /** A functional, testable version of the load command.
       * 
-      * If the entry fails to parse for any reason, it is omitted from the returned list.
+      * If the entry fails to parse for any reason, it is silently omitted from the returned list.
       * 
       * @param g
       * @return
       */
     private[kleemann] def load(g: os.Generator[String]): Map[Ticker, Quote] =
-        g.flatMap{ line => {
-            parseCsvLine(line) match {
-                case None => None
-                case some => some // guaranteed to be Some[(Ticker,Quote)]
-            }
-        }}.toSeq.toMap
+        g.flatMap{ parseCsvLine(_) }.toSeq.toMap
 
     private val datePattern = """^(\d{2})/(\d{2})/(\d{4})$""".r
 
