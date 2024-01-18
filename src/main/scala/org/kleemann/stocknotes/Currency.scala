@@ -17,6 +17,14 @@ final case class Currency private(milliPennies: Long) {
     def toDouble: Double = milliPennies.toDouble / 100000.0
 
     /**
+      * This is lossy if the multiplier is fractional but is needed by atMult() in higher classes
+      *
+      * @param that
+      * @return
+      */
+    def *(that: Double): Currency = Currency(math.round(milliPennies * that))
+
+    /**
       * Displays strings with periods, columns, a dollar sign, and parens for negative values
       * 0 => $0.00
       * 1_234_56 => $1,234.57
@@ -82,13 +90,16 @@ object Currency {
           }
       }
 
-      if (sign!=1 && sign != -1) throw new java.lang.ArithmeticException(s"sign must be 1 or -1: $sign")
-      else if (rightOfDecimal<0L || rightOfDecimal>99999L) throw new java.lang.ArithmeticException(s"rightOfDecimal must be between 0 and 99999 inclusive: $rightOfDecimal")
-      else if (leftOfDecimal<0L) throw new java.lang.ArithmeticException(s"leftOfDecimal must be non-negative: $leftOfDecimal")
+      if (sign!=1 && sign != -1)
+        throw new java.lang.ArithmeticException(s"sign must be 1 or -1: $sign")
+      else if (rightOfDecimal<0L || rightOfDecimal>99999L)
+        throw new java.lang.ArithmeticException(s"rightOfDecimal must be between 0 and 99999 inclusive: $rightOfDecimal")
+      else if (leftOfDecimal<0L)
+        throw new java.lang.ArithmeticException(s"leftOfDecimal must be non-negative: $leftOfDecimal")
       else {
         // length has to be at least one; max five
         val l = rightOfDecimal.toString.length
-        val mult: Long = pow(5-l, 10)
+        val mult = pow(5-l, 10)
         Currency(sign * (leftOfDecimal*100000L + rightOfDecimal*mult))
       }
     }

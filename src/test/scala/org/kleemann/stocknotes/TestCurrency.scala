@@ -29,6 +29,11 @@ class TestCurrency extends munit.FunSuite {
     assert( 9.999 < d)
   }
 
+  test("multiply") {
+    val c: Currency = Currency.dollarsCents(10, 0) * 0.3
+    assertEquals(c, Currency.dollarsCents(3, 0))
+  }
+
   test("parse simple") {
     assertEquals(Currency.parse("0"), Some(Currency.zero))
     assertEquals(Currency.parse("1"), Some(Currency.dollarsCents(1, 0)))

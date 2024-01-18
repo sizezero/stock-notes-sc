@@ -81,8 +81,8 @@ object Stock {
         var currentMult = Fraction.one
         var entries = List[Entry]() // we add new entries to the head of the list so reverse before making the final list
         var trades  = List[Trade]() // we add new trades to the head of the list so reverse before making the final list
-        var buyWatch = BuyWatch(None, None)
-        var sellWatch = SellWatch(None, None)
+        var buyWatch = BuyWatch.none
+        var sellWatch = SellWatch.none
         var error: String = null
         breakable {
             g.foreach { line => { 

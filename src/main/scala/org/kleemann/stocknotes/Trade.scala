@@ -21,23 +21,23 @@ object Trade {
       * @return (trade, balance) the generated trade and the check for the balance of shares
       */
     def parse(line: String, date: Date, multiple: Fraction): Either[String, (Trade, Shares)] = {
-        // tries to convert the price and Currency values and produces appropriate errors if necessary
-        def parse(price: String, commission: String): Either[String, (Price, Currency)] = {
-            val co = Currency.parse(commission)
-            if (co.isEmpty) Left(s"commission must be decimal floating point: $commission")
-            else {
-                val po = Price.parse(price, multiple)
-                if (po.isEmpty) Left(s"price must be decimal floating point: $price")
-                else Right((po.get, co.get))
+        // tries to convert the price and commission values and produces appropriate errors if necessary
+        def parseCurrency(input: String, name: String): Either[String, Currency] =
+            Currency.parse(input) match {
+                case Some(c) => Right(c)
+                case None => Left(s"$name must be decimal floating point: $input")
             }
-        }
         line match {
             case tradeBuySellPattern("buy", s, p, b, c) =>
-                parse(p, c).map{ (price: Price, commission: Currency) => 
-                    (Buy(date, Shares(s.toInt, multiple), price, commission), Shares(b.toInt, multiple))}
+                for {
+                    price      <- parseCurrency(p, "price")
+                    commission <- parseCurrency(c, "commission")
+                } yield (Buy(date, Shares(s.toInt, multiple), price, commission), Shares(b.toInt, multiple))
             case tradeBuySellPattern("sell", s, p, b, c) =>
-                parse(p, c).map{ (price: Price, commission: Currency) => 
-                    (Sell(date, Shares(s.toInt, multiple), price, commission), Shares(b.toInt, multiple))}
+                for {
+                    price      <- parseCurrency(p, "price")
+                    commission <- parseCurrency(c, "commission")
+                } yield (Sell(date, Shares(s.toInt, multiple), price, commission), Shares(b.toInt, multiple))
             case tradeSplitPattern(numerator, denominator, balance) => {
                 // balance is the balance after the new multiple adjustment
                 val splitMultiple = Fraction(numerator.toInt, denominator.toInt)
@@ -51,13 +51,13 @@ object Trade {
     }
 }
 
-final case class Buy(date: Date, shares: Shares, price: Price, commission: Currency) extends Trade(date) {
+final case class Buy(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
     // TODO: python has shareAdjust which returns shares plus an integer?
     // TODO: python has returnAdjust which changes both the shares and price by a new multiple and subtracts the commission
     // TODO: python has getters and setters for unsoldShares
 }
 
-final case class Sell(date: Date, shares: Shares, price: Price, commission: Currency) extends Trade(date) {
+final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
     // TODO: python has shareAdjust which returns shares plus an integer?
     // TODO: python has returnAdjust which changes both the shares and price by a new multiple and subtracts the commission
 }

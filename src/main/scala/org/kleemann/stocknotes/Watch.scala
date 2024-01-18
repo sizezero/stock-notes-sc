@@ -1,6 +1,18 @@
 package org.kleemann.stocknotes
 
-sealed trait Watch(low: Option[Price], high: Option[Price])
+sealed trait Watch(low: Option[Currency], high: Option[Currency], multiple: Fraction) {
+
+  /**
+    * Multiples change over time. This returns the prices at the new multiple.
+    * Note: this returns a binary floating point number so there are accuracy limits
+    * 
+    * @param currentMultiple
+    * @return a double that represents the number of shares at the current  multiple
+    */
+    def lowAtMult(currentMultiple: Fraction): Option[Currency] = low.map{ c => c * (multiple/currentMultiple).toDouble }
+
+    def highAtMult(currentMultiple: Fraction): Option[Currency] = high.map{ c => c * (multiple/currentMultiple).toDouble }
+}
 
 object Watch {
     private val buySellWatch1Pattern = """^(BUY|SELL)\s+(None|none)\s*$""".r
@@ -19,26 +31,26 @@ object Watch {
       */
     def parse(line: String, multiple: Fraction): Either[String, Watch] = {
         // parse a price and give an optional error message
-        def parse(s: String): Either[String, Price] = {
-            val po = Price.parse(s, multiple)
-            if (po.isDefined) Right(po.get)
-            else Left(s"argument is not a price value: $s")
+        def parse(s: String): Either[String, Currency] = {
+            val co = Currency.parse(s)
+            if (co.isDefined) Right(co.get)
+            else Left(s"argument is not a currency value: $s")
         }
         line match {
-            case buySellWatch1Pattern("BUY", "None" | "none") => Right(BuyWatch(None, None))
-            case buySellWatch2Pattern("BUY", low) => parse(low).map{ p => BuyWatch(Some(p), None) }
+            case buySellWatch1Pattern("BUY", "None" | "none") => Right(BuyWatch(None, None, multiple))
+            case buySellWatch2Pattern("BUY", low) => parse(low).map{ c => BuyWatch(Some(c), None, multiple) }
             case buySellWatch3Pattern("BUY", low, high) =>
                 for (
-                    lowPrice <- parse(low);
-                    highPrice <- parse(high))
-                yield (BuyWatch(Some(lowPrice), Some(highPrice)))
-            case buySellWatch1Pattern("SELL", "None" | "none") => Right(SellWatch(None, None))
-            case buySellWatch2Pattern("SELL", low) => parse(low).map{ p => SellWatch(None, Some(p)) }
+                    lowCurrency <- parse(low);
+                    highCurrency <- parse(high))
+                yield (BuyWatch(Some(lowCurrency), Some(highCurrency), multiple))
+            case buySellWatch1Pattern("SELL", "None" | "none") => Right(SellWatch(None, None, multiple))
+            case buySellWatch2Pattern("SELL", low) => parse(low).map{ c => SellWatch(None, Some(c), multiple) }
             case buySellWatch3Pattern("SELL", low, high) =>
                 for (
-                    lowPrice <- parse(low);
-                    highPrice <- parse(high))
-                yield (SellWatch(Some(lowPrice), Some(highPrice)))
+                    lowCurrency <- parse(low);
+                    highCurrency <- parse(high))
+                yield (SellWatch(Some(lowCurrency), Some(highCurrency), multiple))
             case _ => Left("""buy/sell lines must be one of the following:
                 |(BUY|SELL) $nnn.nnn
                 |(BUY|SELL) $nnn,nnn $nnn.nnn
@@ -54,7 +66,13 @@ object Watch {
   * @param low the lower of the two prices (back in the truck)
   * @param high the higher of the two prices (nibble)
   */
-final case class BuyWatch(low: Option[Price], high: Option[Price]) extends Watch(low, high)
+final case class BuyWatch(low: Option[Currency], high: Option[Currency], multiple: Fraction) extends Watch(low, high, multiple)
+
+object BuyWatch {
+
+    val none = BuyWatch(None, None, Fraction.one)
+
+}
 
 /**
   * A note that there is interest at selling a stock and either of the two prices.
@@ -62,4 +80,10 @@ final case class BuyWatch(low: Option[Price], high: Option[Price]) extends Watch
   * @param low the lower of the two prices (sell it all)
   * @param high the higher of the two prices (take some profits)
   */
-final case class SellWatch(low: Option[Price], high: Option[Price]) extends Watch(low, high)
+final case class SellWatch(low: Option[Currency], high: Option[Currency], multiple: Fraction) extends Watch(low, high, multiple)
+
+object SellWatch {
+
+    val none = SellWatch(None, None, Fraction.one)
+
+}

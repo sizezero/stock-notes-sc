@@ -70,13 +70,14 @@
     - might as well throw configuration into it since that is what builds it
 - gain
   - ~~currency precision~~
-    - mini disaster: it turns out the many buy prices have more than two digits to the right of the decimal point
-    - this makes it a bad choice for currency. I can't think of why I wouldn't just make it a Typed version of Double
-    - I still need price for Watch, but it makes even more sense to incorporate Price Watch at that point
-    - alternatively I could change currency to allow for 5 digits on the right, this sounds a little strange
-    - I'm not sure what that would do to intuitive constructors. I think we would need a dollar one and a dollar and thousandCents?
-    - the common case is dollars and cents, maybe factories would be better than constructors
-    - I've updated all the code, tests, and non-conformant data, and all the stock files now load!
+    - ~~mini disaster: it turns out the many buy prices have more than two digits to the right of the decimal point~~
+      - this makes it a bad choice for currency. I can't think of why I wouldn't just make it a Typed version of Double
+      - I still need price for Watch, but it makes even more sense to incorporate Price Watch at that point
+      - alternatively I could change currency to allow for 5 digits on the right, this sounds a little strange
+      - I'm not sure what that would do to intuitive constructors. I think we would need a dollar one and a dollar and thousandCents?
+      - the common case is dollars and cents, maybe factories would be better than constructors
+      - I've updated all the code, tests, and non-conformant data, and all the stock files now load!o
+  - ~~before I start this I should really get rid of Price. move the mult stuff to Watch where it is actually used.~~
 - next research (oldest)
 - download quotes
 - browse ticker
