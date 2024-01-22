@@ -53,4 +53,6 @@ final case class Shares(shares: Int, multiple: Fraction) {
 object Shares {
     // I'm going to hold off on implementing the parse fn.
     // It just converts a decimal to a share count and takes a multiple argument.
+
+    val zero = Shares(0, Fraction.one)
 }

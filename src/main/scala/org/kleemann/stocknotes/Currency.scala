@@ -16,13 +16,9 @@ final case class Currency private(milliPennies: Long) {
       */
     def toDouble: Double = milliPennies.toDouble / 100000.0
 
-    /**
-      * This is lossy if the multiplier is fractional but is needed by atMult() in higher classes
-      *
-      * @param that
-      * @return
-      */
-    def *(that: Double): Currency = Currency(math.round(milliPennies * that))
+    def +(that: Currency): Currency = Currency(milliPennies + that.milliPennies)
+
+    def -(that: Currency): Currency = Currency(milliPennies - that.milliPennies)
 
     /**
       * Displays strings with periods, columns, a dollar sign, and parens for negative values
@@ -103,6 +99,11 @@ object Currency {
         Currency(sign * (leftOfDecimal*100000L + rightOfDecimal*mult))
       }
     }
+
+    /**
+      * Obviously lossy but we need it for fractional commission calculations and such
+      */
+    def fromDouble(d: Double) = new Currency(Math.round(d * 100000.0))
 
     val zero = Currency(0)
 

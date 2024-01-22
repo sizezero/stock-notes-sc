@@ -9,9 +9,13 @@ sealed trait Watch(low: Option[Currency], high: Option[Currency], multiple: Frac
     * @param currentMultiple
     * @return a double that represents the number of shares at the current  multiple
     */
-    def lowAtMult(currentMultiple: Fraction): Option[Currency] = low.map{ c => c * (multiple/currentMultiple).toDouble }
+    def lowAtMult(currentMultiple: Fraction): Option[Currency] = low.map{ c =>
+        Currency.fromDouble(c.toDouble * (multiple/currentMultiple).toDouble)
+    }
 
-    def highAtMult(currentMultiple: Fraction): Option[Currency] = high.map{ c => c * (multiple/currentMultiple).toDouble }
+    def highAtMult(currentMultiple: Fraction): Option[Currency] = high.map{ c =>
+        Currency.fromDouble(c.toDouble * (multiple/currentMultiple).toDouble)
+    }
 }
 
 object Watch {

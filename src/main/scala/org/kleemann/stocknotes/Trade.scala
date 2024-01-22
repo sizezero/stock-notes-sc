@@ -52,14 +52,24 @@ object Trade {
 }
 
 final case class Buy(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
-    // TODO: python has shareAdjust which returns shares plus an integer?
-    // TODO: python has returnAdjust which changes both the shares and price by a new multiple and subtracts the commission
-    // TODO: python has getters and setters for unsoldShares
+
+    /**
+      * Cost is fixed and doesn't depend on the multiple. This does not include commission.
+      * TODO: no tests for this
+      */
+    def cost: Currency = Currency.fromDouble(price.toDouble * shares.shares)
+
 }
 
 final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
     // TODO: python has shareAdjust which returns shares plus an integer?
     // TODO: python has returnAdjust which changes both the shares and price by a new multiple and subtracts the commission
+
+    /**
+      * Net is fixed and doesn't depend on the multiple. This does not include commission.
+      * TODO: no tests for this
+      */
+    def gross: Currency = Currency.fromDouble(price.toDouble * shares.shares)
 }
 
 /**

@@ -6,6 +6,17 @@ final case class Date private(year: Int, month: Int, day: Int) extends Ordered[D
     else if (this.month != that.month) this.month - that.month
     else this.day - that.day
   }
+
+ /**
+   * Represents the date as a decimal number where the year is the whole number part and the 
+   * month and day are the fraction that is proportional to how many days we are through the years.
+   * This is useful for calculating the difference between dates in years.
+   * 
+   * @return Years are whole numbers while month and days combine into the fractional part
+   */
+  def decimalYear: Double = 
+    year + (Date.cumulativeDaysPerMonth(month)+day)/365.0
+
 }
 
 object Date {
@@ -46,7 +57,8 @@ object Date {
     // start with the iterative solution
     val a = scala.collection.mutable.ArrayBuffer[Int]()
     a += daysPerMonth(0)
-    for (i <- 2 to 12) {
+    a += daysPerMonth(0)
+    for (i <- 1 to 12) {
         a += ( a.last + daysPerMonth(i) )
     }
     a.toVector

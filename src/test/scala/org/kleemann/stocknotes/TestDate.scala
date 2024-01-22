@@ -47,4 +47,18 @@ class TestDate extends munit.FunSuite {
     val o2 = Date(2020,1,2)
     assertEquals(for d0<-o0; d1<-o1 yield (d0<d1), Option(true))
   }
+
+  test("1 decimalYear") {
+    val d1 = Date(2010,1,1).get.decimalYear
+    val d2 = Date(2011,1,1).get.decimalYear
+    assert(d2 - d1 >= 0.99)
+    assert(d2 - d1 <= 1.01)
+  }
+
+  test("2 decimalYear") {
+    val d1 = Date(2010,1,1).get.decimalYear
+    val d2 = Date(2010,12,31).get.decimalYear
+    assert(d2 - d1 >= 0.99)
+    assert(d2 - d1 <= 1.00)
+  }
 }
