@@ -108,13 +108,22 @@ object Gain extends Command {
     if (companies.isEmpty) {
       println("No stocks found")
     }
+
+    // line items
     companies.foreach{ c =>
       println(c.stock.ticker)
-      //println()
+      println()
     }
 
-    None
+    // summary
+    println("Summary")
+    companies.foreach{ c =>
+      println(c.stock.ticker)
+    }
+    println("="*50)
 
+
+    None
   }
 
   private[stocknotes] def functionalGain(pa: ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[Company] = {
@@ -135,14 +144,15 @@ object Gain extends Command {
     // there are two versions of this, one where we get a year range and one where we get a commision and fake a sale
     if (pa.isCurrentValueMode) {
 
+      // bug! of course we want companies with sells since we are going to add a sell to the list
       // ignore stocks that don't have at least one sell (in the date range)
-      val stocks3 = stocks2.filter{ s =>
-        s.trades.exists{ t => t match {
-          case _: Sell => true
-          case _ => false
-        }}
-      }
-      stocks3.flatMap{ s => parseCompanyCurrentValue(
+      // val stocks3 = stocks2.filter{ s =>
+      //   s.trades.exists{ t => t match {
+      //     case _: Sell => true
+      //     case _ => false
+      //   }}
+      // }
+      stocks2.flatMap{ s => parseCompanyCurrentValue(
         s, 
         if (quotes contains s.ticker) quotes.get(s.ticker).get.price else Currency.zero,
         pa.commission,
@@ -210,7 +220,7 @@ object Gain extends Command {
       t match {
         case b: Buy  => brss = brss :+ BuyReadyToSell(b)
         case s: Sell => {
-            if (s.date>start && s.date<end) {
+            if (s.date>=start && s.date<=end) {
             val (m: MatchedSell, brss2: Vector[BuyReadyToSell]) = parseMatchedSell(s, brss)
             brss = brss2
             ms = m :: ms
