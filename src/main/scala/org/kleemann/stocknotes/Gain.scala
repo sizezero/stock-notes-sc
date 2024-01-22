@@ -298,7 +298,7 @@ object Gain extends Command {
     ims.map { im =>
       val fractionalSellCommission: Currency = Currency.fromDouble(sell.commission.toDouble * (im.buy.shares.atMult(sell.shares.multiple)/sell.shares.shares))
       val diff: Double = sell.date.decimalYear - im.buy.date.decimalYear
-      val ltcg: Boolean = diff > 1.0
+      val ltcg: Boolean = diff >= 1.0
       MatchedBuy(im.buy, im.sold, fractionalSellCommission, ltcg, annualYield(im.buy.cost, sell.gross, diff))
     }
 

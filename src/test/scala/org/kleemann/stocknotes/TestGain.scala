@@ -51,8 +51,39 @@ class TestGain extends munit.FunSuite {
   }
 
   test("parseCompany") {
-    // test both sell immediate and sell in years range, do a split
-    assert(true)
+    // test both sell immediate and sell in years range, do a split, multiple sells
+
+    // def parseCompany(stock: Stock, price: Currency, commission: Currency, today: Date): Company
+    // def parseCompany(stock: Stock, start: Date, end: Date): Company
+
+    val g: os.Generator[String] = os.Generator.from(
+        """
+        |Jan 1, 1990
+        |TRADE buy 10@$5.00 balance 10 commission 9.99
+        |Jan 1, 1991
+        |TRADE buy 5@$6.00 balance 20 commission 9.99
+        |Jan 1, 1992
+        |TRADE split 2:1 balance 40
+        |Jan 1, 1993
+        |TRADE buy 10@$4.00 balance 50 commission 9.99
+        |Jan 1, 1994
+        |TRADE sell 40@4 balance 10 commission 0
+        |Jan 1, 1995
+        |TRADE buy 10@3 balance 20 commission 0
+        |Jan 1, 1996
+        |TRADE sell 10@7 balance 10 commission 0
+        |""".stripMargin.split("\n")
+    )
+    val e = Stock.load(Ticker("MSFT"), "filename", g)
+    assert{e.isRight}
+    val stock: Stock = e.right.get
+
+    val today = Date(1994, 2, 1).get
+    val c1 = Gain.parseCompany(stock, Currency.dollarsCents(8,0), Currency.zero, today)
+    assertEquals(c1.ms.length, 1) // one sell
+
+    val c2 = Gain.parseCompany(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
+    assertEquals(c2.ms.length, 2) // two sells due to date range
   }
 
   test("parsedMatchedSell") {
@@ -83,6 +114,7 @@ class TestGain extends munit.FunSuite {
 
     val (ms, brss2) = Gain.parseMatchedSell(s1, brss)
 
+    // I didn't test the annual yield, just copied it from the output
     val ms2 = List[Gain.MatchedBuy](
       Gain.MatchedBuy(b1, Shares(4,m), com, true, 0.6548754598234365),
       Gain.MatchedBuy(b2, Shares(4,m), com, true, 0.7099759466766968),
