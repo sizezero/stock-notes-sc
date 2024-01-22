@@ -46,44 +46,102 @@ class TestGain extends munit.FunSuite {
   // functionality
 
   test("functionalGain") {
-    // TODO three companies, test both sell immediate and sell in years range
-    assert(true)
+    // two companies, test both sell immediate and sell in years range
+
+    val g1: os.Generator[String] = os.Generator.from(
+        """
+        |Jan 1, 1990
+        |TRADE buy 10@$5.00 balance 10 commission 9.99
+        |Jan 1, 1991
+        |TRADE buy 5@$6.00 balance 15 commission 9.99
+        |Jan 1, 1992
+        |TRADE split 2:1 balance 30
+        |Jan 1, 1993
+        |TRADE buy 10@$4.00 balance 40 commission 9.99
+        |Jan 1, 1994
+        |TRADE sell 40@4 balance 0 commission 0
+        |Jan 1, 1995
+        |TRADE buy 10@3 balance 10 commission 0
+        |Jan 1, 1996
+        |TRADE sell 10@7 balance 0 commission 0
+        |""".stripMargin.split("\n")
+    )
+    val t1 = Ticker("MSFT")
+    val e1 = Stock.load(t1, "filename", g1)
+    assert(e1.isRight)
+    val stock1: Stock = e1.right.get
+
+    val g2: os.Generator[String] = os.Generator.from(
+        """
+        |Jan 1, 1990
+        |TRADE buy 10@$5.00 balance 10 commission 9.99
+        |Jan 1, 1991
+        |TRADE buy 5@$6.00 balance 15 commission 9.99
+        |Jan 1, 1992
+        |TRADE split 2:1 balance 30
+        |Jan 1, 1993
+        |TRADE buy 10@$4.00 balance 40 commission 9.99
+        |Jan 1, 1994
+        |TRADE sell 40@4 balance 0 commission 0
+        |Jan 1, 1995
+        |TRADE buy 10@3 balance 10 commission 0
+        |Jan 1, 1996
+        |TRADE sell 10@7 balance 0 commission 0
+        |""".stripMargin.split("\n")
+    )
+    val t2 = Ticker("AAPL")
+    val e2 = Stock.load(t2, "filename", g2)
+    assert(e2.isRight)
+    val stock2: Stock = e2.right.get
+
+    val today = Date(1997, 1, 1).get
+    val pa1 = Gain.ParseArgs(Date(1900,1,1).get, Date(1900,1,1).get, Currency.dollarsCents(30, 0), Nil, None)
+    val stocks = List(stock1, stock2)
+    val quotes = Map( t1 -> Quote(Currency.dollarsCents(8,0), today), t2 ->  Quote(Currency.dollarsCents(9,0), today))
+
+    val companies = Gain.functionalGain(pa1, stocks, quotes, today)
+    //private[stocknotes] def functionalGain(pa: ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[Company] = {
+
+    assertEquals(companies.length, 2)
   }
 
   test("parseCompany") {
     // test both sell immediate and sell in years range, do a split, multiple sells
-
-    // def parseCompany(stock: Stock, price: Currency, commission: Currency, today: Date): Company
-    // def parseCompany(stock: Stock, start: Date, end: Date): Company
 
     val g: os.Generator[String] = os.Generator.from(
         """
         |Jan 1, 1990
         |TRADE buy 10@$5.00 balance 10 commission 9.99
         |Jan 1, 1991
-        |TRADE buy 5@$6.00 balance 20 commission 9.99
+        |TRADE buy 5@$6.00 balance 15 commission 9.99
         |Jan 1, 1992
-        |TRADE split 2:1 balance 40
+        |TRADE split 2:1 balance 30
         |Jan 1, 1993
-        |TRADE buy 10@$4.00 balance 50 commission 9.99
+        |TRADE buy 10@$4.00 balance 40 commission 9.99
         |Jan 1, 1994
-        |TRADE sell 40@4 balance 10 commission 0
+        |TRADE sell 40@4 balance 0 commission 0
         |Jan 1, 1995
-        |TRADE buy 10@3 balance 20 commission 0
+        |TRADE buy 10@3 balance 10 commission 0
         |Jan 1, 1996
-        |TRADE sell 10@7 balance 10 commission 0
+        |TRADE sell 10@7 balance 0 commission 0
         |""".stripMargin.split("\n")
     )
     val e = Stock.load(Ticker("MSFT"), "filename", g)
-    assert{e.isRight}
+    assert(e.isRight)
     val stock: Stock = e.right.get
 
     val today = Date(1994, 2, 1).get
-    val c1 = Gain.parseCompany(stock, Currency.dollarsCents(8,0), Currency.zero, today)
-    assertEquals(c1.ms.length, 1) // one sell
-
-    val c2 = Gain.parseCompany(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
-    assertEquals(c2.ms.length, 2) // two sells due to date range
+    val o1 = Gain.parseCompanyCurrentValue(stock, Currency.dollarsCents(8,0), Currency.zero, today)
+    o1 match {
+      case Some(c: Gain.Company) => assertEquals(c.ms.length, 1) // one sell
+      case None => assert(false)
+    }
+    
+    val o2 = Gain.parseCompanyDateRange(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
+    o2 match {
+      case Some(c: Gain.Company) => assertEquals(c.ms.length, 2) // two sells due to date range
+      case None => assert(false)
+    }
   }
 
   test("parsedMatchedSell") {

@@ -27,6 +27,19 @@ class TestShares extends munit.FunSuite {
         //assertEquals(s3, Shares(39, Fraction(20, 3)))
     }
 
+    test("compare") {
+        // zero
+        assertEquals(Shares.zero, Shares.zero)
+        assertEquals(Shares.zero, Shares(0, Fraction(2,1)))
+        assertEquals(Shares.zero, Shares(0, Fraction(1,2)))
+        // equality of simple numbers
+        assertEquals(Shares(1, Fraction.one), Shares(1, Fraction.one))
+        assertEquals(Shares(1, Fraction.one), Shares(2, Fraction(2,1)))
+        // inquality
+        assertNotEquals(Shares(1, Fraction.one), Shares(1, Fraction(2,1)))
+        assertNotEquals(Shares(1, Fraction.one), Shares(2, Fraction.one))
+    }
+
     test("simple add, source and dest multiples are the same") {
         val s = Shares(1, Fraction.one)
         assertEquals(s.add(s, Fraction.one), Shares(2,Fraction.one))

@@ -18,6 +18,21 @@ final case class Shares(shares: Int, multiple: Fraction) {
       */
     def atMult(currentMultiple: Fraction): Int = (shares * (currentMultiple/multiple).toDouble).toInt
 
+    /**
+      * At a minimum we need this to compare shares against Shares.zero.
+      * I think Odersky's Scala book has a bunch of pages on this so it might be useful to read them.
+      * I think the fact that this is a final class makes things easier.
+      *
+      * @param other
+      * @return
+      */
+    override def equals(other: Any): Boolean = other match {
+      case that: Shares =>
+        (this.shares==0 && that.shares==0)
+        || (this.shares/this.multiple.toDouble == that.shares/that.multiple.toDouble)
+      case _ => false
+    }
+
     // TODO: there are a whole bunch of comparison and arithmetic operators that I'm going to hold of on implementing.
 
     /**

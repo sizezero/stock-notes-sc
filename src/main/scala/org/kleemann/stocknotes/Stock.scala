@@ -118,10 +118,19 @@ object Stock {
                                         trade match {
                                             case Buy (d, shares, price, commission) => currentShares = currentShares.add(shares, currentMult)
                                             case Sell(d, shares, price, commission) => currentShares = currentShares.sub(shares, currentMult)
-                                            case Split(_, splitMultiple) => currentMult = currentMult * splitMultiple
+                                            case Split(_, splitMultiple) => {
+                                                currentMult = currentMult * splitMultiple
+                                                // bring the current shares up to the current multiple
+                                                currentShares = currentShares.add(Shares.zero, currentMult)
+                                            }
                                         }
                                         if (currentShares.shares < 0) {
                                             error = s"share count cannot be negative: $currentShares"
+                                            break
+                                        }
+                                        assert(balance.multiple == currentShares.multiple)
+                                        if (currentShares != balance) {
+                                            error = s"listed balance: $balance does not equal calculated: $currentShares"
                                             break
                                         }
                                         trades = trade :: trades

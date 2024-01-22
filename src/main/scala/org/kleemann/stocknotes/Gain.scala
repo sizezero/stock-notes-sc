@@ -22,7 +22,20 @@ object Gain extends Command {
     * @param tickers
     * @param omitKeyword
     */
-  private[stocknotes] case class ParseArgs(start: Date, end: Date, commission: Currency, tickers: List[Ticker], omitKeyword: Option[String])
+  private[stocknotes] case class ParseArgs(start: Date, end: Date, commission: Currency, tickers: List[Ticker], omitKeyword: Option[String]) {
+
+    /**
+      * There are two modes for the gain report:
+      * current value mode: creates fake sells for each stock dates today and simulates the underlying value of all stocks
+      * historical mode: takes a date arguments and shows the gains of actual sales in the past
+      * 
+      * TODO: the current way to distinguish the modes is with the currency set to -100, a trait and two case classes would probably be a better
+      * way to do this.
+      *
+      * @return true if the parse args represents the current value mode
+      */
+    def isCurrentValueMode: Boolean = commission != Currency.dollarsCents(-100, 0)
+  }
 
   /** 
     * 
@@ -97,7 +110,7 @@ object Gain extends Command {
     }
     companies.foreach{ c =>
       println(c.stock.ticker)
-      println()
+      //println()
     }
 
     None
@@ -106,24 +119,37 @@ object Gain extends Command {
 
   private[stocknotes] def functionalGain(pa: ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[Company] = {
 
-    val stocks2 = stocks.filter{ s =>
+    val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
+
+    // if tickers is empty then replace it with the tickers of all companies
+    val tickers: List[Ticker] = if (pa.tickers.isEmpty) sm.keys.toList.sorted
+    else pa.tickers
+
+    val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ s =>
       // ignore stocks that have no trades
       !s.trades.isEmpty &&
       // ignore the stock if it contains the specified keyword
-      pa.omitKeyword.filter{k => s.keywords contains k}.isDefined
+      (if (pa.omitKeyword.isDefined) !(s.keywords contains pa.omitKeyword.get) else true)
     }
         
     // there are two versions of this, one where we get a year range and one where we get a commision and fake a sale
-    if (pa.commission == Currency.zero) {
-      // ignore stocks that don't have at least one sell
+    if (pa.isCurrentValueMode) {
+
+      // ignore stocks that don't have at least one sell (in the date range)
       val stocks3 = stocks2.filter{ s =>
         s.trades.exists{ t => t match {
           case _: Sell => true
           case _ => false
         }}
       }
-      stocks3.map{ s => parseCompany(s, pa.start, pa.end)}
+      stocks3.flatMap{ s => parseCompanyCurrentValue(
+        s, 
+        if (quotes contains s.ticker) quotes.get(s.ticker).get.price else Currency.zero,
+        pa.commission,
+        today)}
+
     } else {
+
       // ignore stocks that don't have at least one sell (in the date range)
       val stocks3 = stocks2.filter{ s =>
         s.trades.exists{ t => t match {
@@ -131,11 +157,8 @@ object Gain extends Command {
           case _ => false
         }}
       }
-      stocks3.map{ s => parseCompany(
-        s, 
-        if (quotes contains s.ticker) quotes.get(s.ticker).get.price else Currency.zero,
-        pa.commission,
-        today)}
+      stocks3.flatMap{ s => parseCompanyDateRange(s, pa.start, pa.end)}
+
     }
   }
 
@@ -150,7 +173,7 @@ object Gain extends Command {
     */
   case class Company(stock: Stock, ms: List[MatchedSell], value: Currency, capGains: Currency, ltcgPercentage: Double)
 
-  def parseCompany(stock: Stock, price: Currency, commission: Currency, today: Date): Company = {
+  def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[Company] = {
     // need to find all outstanding shares of the company
     var currentMultiple = Fraction.one
     var acc = Shares.zero
@@ -161,22 +184,25 @@ object Gain extends Command {
         case Split(date, multiple) => currentMultiple = currentMultiple*multiple
       }
     }
-    // final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
-    val sell = Sell(today, acc, price, commission)
-    val t2 = stock.trades :+ sell // inefficient, but what else do we do?
-    val s = Stock(
-      stock.ticker,
-      stock.name,
-      stock.cid,
-      stock.keywords,
-      stock.entries,
-      t2,
-      stock.buyWatch,
-      stock.sellWatch)
-    parseCompany(s, Date(1900, 1, 1).get, today)
+    if (acc == Shares.zero) None
+    else {
+      // final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
+      val sell = Sell(today, acc, price, commission)
+      val t2 = stock.trades :+ sell // inefficient, but what else do we do?
+      val s = Stock(
+        stock.ticker,
+        stock.name,
+        stock.cid,
+        stock.keywords,
+        stock.entries,
+        t2,
+        stock.buyWatch,
+        stock.sellWatch)
+      parseCompanyDateRange(s, Date(1900, 1, 1).get, today)
+    }
   }
 
-  def parseCompany(stock: Stock, start: Date, end: Date): Company = {
+  def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[Company] = {
     // I'm breaking my head trying to get this to work with foldLeft or other method. Going back to iterative.
     var brss = Vector[BuyReadyToSell]()
     var ms = List[MatchedSell]()
@@ -193,29 +219,33 @@ object Gain extends Command {
         case p: Split => Nil
       }
     }
-    // the sum of each Matched sell, I think we leave the commissions out of it
-    val value: Currency = ms.foldLeft(Currency.zero){ (acc, m) => acc + m.sell.gross }
-    // gross of each sell - sell
-    val capGains: Currency = ms.foldLeft(Currency.zero){ (acc: Currency, m: MatchedSell) =>
-       acc + m.sell.gross - m.sell.commission - m.mbs.foldLeft(Currency.zero) { (acc2, mb) =>
-        mb.buy.cost + mb.buy.commission
-       }
+    // if there are no matched sells for the company, then there's nothing to report
+    if (ms.isEmpty) None
+    else {
+      // the sum of each Matched sell, I think we leave the commissions out of it
+      val value: Currency = ms.foldLeft(Currency.zero){ (acc, m) => acc + m.sell.gross }
+      // gross of each sell - sell
+      val capGains: Currency = ms.foldLeft(Currency.zero){ (acc: Currency, m: MatchedSell) =>
+        acc + m.sell.gross - m.sell.commission - m.mbs.foldLeft(Currency.zero) { (acc2, mb) =>
+          mb.buy.cost + mb.buy.commission
+        }
+      }
+      // percentage of shares that are ltcg vs short
+      // all share counts need to be converted to an arbitrary multiple
+      // since they are all at the same multiple, we can just divde their int values
+      val ltcgPercentage: Double = 
+        ms.foldLeft(Shares.zero){ (acc, m) =>
+          acc.add(
+            m.mbs.foldLeft(acc){ (acc, mb) => 
+              acc.add(if (mb.ltcg) mb.sold else Shares.zero, Fraction.one)
+            }, 
+            Fraction.one)
+        }.shares.toDouble
+        /
+        ms.foldLeft(Shares.zero){ (acc, m) => acc.add(m.sell.shares, Fraction.one )}.shares.toDouble
+        
+      Some(Company(stock, ms, value, capGains, ltcgPercentage))
     }
-    // percentage of shares that are ltcg vs short
-    // all share counts need to be converted to an arbitrary multiple
-    // since they are all at the same multiple, we can just divde their int values
-    val ltcgPercentage: Double = 
-      ms.foldLeft(Shares.zero){ (acc, m) =>
-        acc.add(
-          m.mbs.foldLeft(acc){ (acc, mb) => 
-            acc.add(if (mb.ltcg) mb.sold else Shares.zero, Fraction.one)
-          }, 
-          Fraction.one)
-      }.shares.toDouble
-      /
-      ms.foldLeft(Shares.zero){ (acc, m) => acc.add(m.sell.shares, Fraction.one )}.shares.toDouble
-      
-    Company(stock, ms, value, capGains, ltcgPercentage)
   }
 
   private[stocknotes] case class MatchedSell(sell: Sell, mbs: List[MatchedBuy])
