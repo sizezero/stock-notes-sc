@@ -122,7 +122,7 @@ object Gain extends Command {
         println(s"${s.date} sell ${s.shares}@${s.price} ${s.gross} commission ${s.commission}")
         println(String.format(itemFmt, "purchase date", "", "share@price", "cost", "buy fee", "sell feel", "annual yield"))
         ms.mbs.foreach{ mb =>
-
+          println(String.format(itemFmt, mb.buy.date, if (mb.ltcg) "ltcg" else "", s"${mb.sold.toString(s.shares.multiple)}@${mb.buy.price}", mb.proportionalCost, mb.proportionalBuyCommission, mb.proportionalSellCommission, f"${mb.annualYield}%.1f%%"))
         }
         println()
       }

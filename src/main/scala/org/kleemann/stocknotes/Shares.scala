@@ -18,6 +18,8 @@ final case class Shares(shares: Int, multiple: Fraction) {
       */
     def atMult(currentMultiple: Fraction): Double = (shares * (currentMultiple/multiple).toDouble)
 
+    def toString(multiple: Fraction): String = atMult(multiple).toInt.toString
+
     /**
       * At a minimum we need this to compare shares against Shares.zero.
       * I think Odersky's Scala book has a bunch of pages on this so it might be useful to read them.
