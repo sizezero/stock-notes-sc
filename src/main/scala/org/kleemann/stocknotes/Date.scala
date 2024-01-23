@@ -7,6 +7,8 @@ final case class Date private(year: Int, month: Int, day: Int) extends Ordered[D
     else this.day - that.day
   }
 
+  override def toString(): String = f"$year%04d/$month%02d/$day%02d"
+
  /**
    * Represents the date as a decimal number where the year is the whole number part and the 
    * month and day are the fraction that is proportional to how many days we are through the years.

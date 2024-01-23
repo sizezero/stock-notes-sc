@@ -1,6 +1,8 @@
 package org.kleemann.stocknotes
 
-sealed trait Trade(date: Date)
+sealed trait Trade(date: Date) {
+    def getDate(): Date = date
+}
 
 object Trade {
 
@@ -55,9 +57,13 @@ final case class Buy(date: Date, shares: Shares, price: Currency, commission: Cu
 
     /**
       * Cost is fixed and doesn't depend on the multiple. This does not include commission.
+      * TODO: I'm not sure if this works for our purposes. We are using this to match with sells.
+      * There are probably only a fraction of the shares sold and I'm not sure what multiple the sold shares are.
+      * I think we have to do without this because it's so dubious.
+      * Let's try to just give the cost for the specified number of shares 
       * TODO: no tests for this
       */
-    def cost: Currency = Currency.fromDouble(price.toDouble * shares.shares)
+    //def cost: Currency = Currency.fromDouble(price.toDouble * shares.shares)
 
 }
 

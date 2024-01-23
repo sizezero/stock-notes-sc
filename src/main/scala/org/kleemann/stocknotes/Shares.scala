@@ -14,9 +14,9 @@ final case class Shares(shares: Int, multiple: Fraction) {
       * This is a lossy way to calculate the current integer share count.
       *
       * @param currentMultiple The current multiple to convert to.
-      * @return the rounded number of integer shares left.
+      * @return the decimal number of shares
       */
-    def atMult(currentMultiple: Fraction): Int = (shares * (currentMultiple/multiple).toDouble).toInt
+    def atMult(currentMultiple: Fraction): Double = (shares * (currentMultiple/multiple).toDouble)
 
     /**
       * At a minimum we need this to compare shares against Shares.zero.

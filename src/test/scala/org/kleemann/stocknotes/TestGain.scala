@@ -61,9 +61,9 @@ class TestGain extends munit.FunSuite {
         |Jan 1, 1994
         |TRADE sell 40@4 balance 0 commission 0
         |Jan 1, 1995
-        |TRADE buy 10@3 balance 10 commission 0
+        |TRADE buy 20@3 balance 20 commission 0
         |Jan 1, 1996
-        |TRADE sell 10@7 balance 0 commission 0
+        |TRADE sell 10@7 balance 10 commission 0
         |""".stripMargin.split("\n")
     )
     val t1 = Ticker("MSFT")
@@ -84,9 +84,9 @@ class TestGain extends munit.FunSuite {
         |Jan 1, 1994
         |TRADE sell 40@4 balance 0 commission 0
         |Jan 1, 1995
-        |TRADE buy 10@3 balance 10 commission 0
+        |TRADE buy 20@3 balance 20 commission 0
         |Jan 1, 1996
-        |TRADE sell 10@7 balance 0 commission 0
+        |TRADE sell 10@7 balance 10 commission 0
         |""".stripMargin.split("\n")
     )
     val t2 = Ticker("AAPL")
@@ -119,27 +119,27 @@ class TestGain extends munit.FunSuite {
         |Jan 1, 1993
         |TRADE buy 10@$4.00 balance 40 commission 9.99
         |Jan 1, 1994
-        |TRADE sell 40@4 balance 0 commission 0
+        |TRADE sell 30@4 balance 10 commission 0
         |Jan 1, 1995
-        |TRADE buy 10@3 balance 10 commission 0
+        |TRADE buy 10@3 balance 20 commission 0
         |Jan 1, 1996
-        |TRADE sell 10@7 balance 0 commission 0
+        |TRADE sell 20@7 balance 0 commission 0
         |""".stripMargin.split("\n")
     )
     val e = Stock.load(Ticker("MSFT"), "filename", g)
     assert(e.isRight)
     val stock: Stock = e.right.get
 
-    val today = Date(1994, 2, 1).get
+    val today = Date(1993, 12, 31).get
     val o1 = Gain.parseCompanyCurrentValue(stock, Currency.dollarsCents(8,0), Currency.zero, today)
     o1 match {
-      case Some(c: Gain.Company) => assertEquals(c.ms.length, 1) // one sell
+      case Some(c: Gain.Company) => assertEquals(c.mss.length, 1) // one sell
       case None => assert(false)
     }
     
     val o2 = Gain.parseCompanyDateRange(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
     o2 match {
-      case Some(c: Gain.Company) => assertEquals(c.ms.length, 2) // two sells due to date range
+      case Some(c: Gain.Company) => assertEquals(c.mss.length, 2) // two sells due to date range
       case None => assert(false)
     }
   }
@@ -174,9 +174,9 @@ class TestGain extends munit.FunSuite {
 
     // I didn't test the annual yield, just copied it from the output
     val ms2 = List[Gain.MatchedBuy](
-      Gain.MatchedBuy(b1, Shares(4,m), com, true, 0.6548754598234365),
-      Gain.MatchedBuy(b2, Shares(4,m), com, true, 0.7099759466766968),
-      Gain.MatchedBuy(b3, Shares(2,m), com, false, 8.042312756132256)
+      Gain.MatchedBuy(b1, Shares(4,m), Currency.dollarsCents(4, 0), com, com, true, 0.6548754598234365),
+      Gain.MatchedBuy(b2, Shares(4,m), Currency.dollarsCents(6, 0), com, com, true, 0.7099759466766968),
+      Gain.MatchedBuy(b3, Shares(2,m), Currency.dollarsCents(4, 0), com, com, false, 8.042312756132256)
     )
 
     assertEquals(ms, Gain.MatchedSell(s1, ms2))

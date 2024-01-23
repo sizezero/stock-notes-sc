@@ -7,20 +7,20 @@ class TestShares extends munit.FunSuite {
         val m1 = Fraction.one
         // buy 10 shares
         val s1 = Shares(10, m1)
-        assertEquals(s1.atMult(m1), 10)
+        assertEquals(s1.atMult(m1), 10.0)
         // 5:1 split, every share becomes five, multiply shares by five.
         val m2 = m1*Fraction(5,1)
-        assertEquals(s1.atMult(m2), 50)
+        assertEquals(s1.atMult(m2), 50.0)
         // buy 10 more shares at the current multiple
         val s2 = Shares(10, m2)
         // 2:1 split, every shares becomes 2, multiply shares by two
         val m3 = m2*Fraction(2,1)
-        assertEquals(s1.atMult(m3), 100)
-        assertEquals(s2.atMult(m3), 20)
+        assertEquals(s1.atMult(m3), 100.0)
+        assertEquals(s2.atMult(m3), 20.0)
         // 1:3 split, every 3 shares becomes 1, divide by three
         val m4 = m3*Fraction(1,3)
-        assertEquals(s1.atMult(m4), 33) // this is lossy and may require you to manually buy or sell a share or two for accuracy
-        assertEquals(s2.atMult(m4), 6)
+        assertEquals(s1.atMult(m4), 33.333333333333336) // this is lossy and may require you to manually buy or sell a share or two for accuracy
+        assertEquals(s2.atMult(m4), 6.666666666666666)
 
         // now add these shares and normalize them based on the new multiple
         //val s3 = s1.add(s2, m4)
@@ -51,7 +51,7 @@ class TestShares extends munit.FunSuite {
         val m = Fraction(2,1)
         val sum = s.add(s, m)
         assertEquals(sum.multiple, m) // sum should have the requested target multiple
-        assertEquals(sum.atMult(m), 4) // we should have twice as many shares as before
+        assertEquals(sum.atMult(m), 4.0) // we should have twice as many shares as before
     }
 
     test("add, both source and dest are different") {
@@ -65,7 +65,7 @@ class TestShares extends munit.FunSuite {
         val sum = s1.add(s2, m3)
         assertEquals(m3, Fraction(5,1))
         assertEquals(sum.multiple, m3)
-        assertEquals(sum.atMult(m3), 55) // 10 -split.> 100 -buy-> 110 -reverse-split-> 55
+        assertEquals(sum.atMult(m3), 55.0) // 10 -split.> 100 -buy-> 110 -reverse-split-> 55
     }
 
     test("subtraction") {

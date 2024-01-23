@@ -61,4 +61,9 @@ class TestDate extends munit.FunSuite {
     assert(d2 - d1 >= 0.99)
     assert(d2 - d1 <= 1.00)
   }
+
+  test("toString") {
+    assertEquals(Date(1900,1,1).get.toString(), "1900/01/01")
+    assertEquals(Date(2020,12,31).get.toString(), "2020/12/31")
+  }
 }

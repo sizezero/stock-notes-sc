@@ -104,15 +104,28 @@ object Gain extends Command {
     val companies: List[Company] = functionalGain(pa, ss, quotes, Date.today)
 
     // print the fuckers
+    // TODO: this could be moved to a render function that returns a string with no IO
+    // this would make for some easy end to end testing
 
     if (companies.isEmpty) {
       println("No stocks found")
     }
 
     // line items
+    val colWidth = "13"
+    val itemFmt = "%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s"
     companies.foreach{ c =>
       println(c.stock.ticker)
       println()
+      c.mss.foreach{ ms =>
+        val s = ms.sell
+        println(s"${s.date} sell ${s.shares}@${s.price} ${s.gross} commission ${s.commission}")
+        println(String.format(itemFmt, "purchase date", "", "share@price", "cost", "buy fee", "sell feel", "annual yield"))
+        ms.mbs.foreach{ mb =>
+
+        }
+        println()
+      }
     }
 
     // summary
@@ -131,8 +144,9 @@ object Gain extends Command {
     val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
 
     // if tickers is empty then replace it with the tickers of all companies
-    val tickers: List[Ticker] = if (pa.tickers.isEmpty) sm.keys.toList.sorted
-    else pa.tickers
+    val tickers: List[Ticker] =
+      if (pa.tickers.isEmpty) sm.keys.toList.sorted
+      else pa.tickers
 
     val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ s =>
       // ignore stocks that have no trades
@@ -144,14 +158,6 @@ object Gain extends Command {
     // there are two versions of this, one where we get a year range and one where we get a commision and fake a sale
     if (pa.isCurrentValueMode) {
 
-      // bug! of course we want companies with sells since we are going to add a sell to the list
-      // ignore stocks that don't have at least one sell (in the date range)
-      // val stocks3 = stocks2.filter{ s =>
-      //   s.trades.exists{ t => t match {
-      //     case _: Sell => true
-      //     case _ => false
-      //   }}
-      // }
       stocks2.flatMap{ s => parseCompanyCurrentValue(
         s, 
         if (quotes contains s.ticker) quotes.get(s.ticker).get.price else Currency.zero,
@@ -181,31 +187,33 @@ object Gain extends Command {
     * @param capGains
     * @param ltcgPercentage
     */
-  case class Company(stock: Stock, ms: List[MatchedSell], value: Currency, capGains: Currency, ltcgPercentage: Double)
+  case class Company(stock: Stock, mss: List[MatchedSell], value: Currency, capGains: Currency, ltcgPercentage: Double)
 
   def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[Company] = {
+    // this is really just a problem for testing, we only want trades that are less than today
+    var ts = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
     // need to find all outstanding shares of the company
     var currentMultiple = Fraction.one
     var acc = Shares.zero
-    stock.trades.foreach{ t => 
+    ts.foreach{ t => {
       t match {
         case Buy(date, shares, price, commission) => acc = acc.add(shares, currentMultiple)
         case Sell(date, shares, price, commission) => acc = acc.sub(shares, currentMultiple)
         case Split(date, multiple) => currentMultiple = currentMultiple*multiple
       }
-    }
+    }}
     if (acc == Shares.zero) None
     else {
       // final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
       val sell = Sell(today, acc, price, commission)
-      val t2 = stock.trades :+ sell // inefficient, but what else do we do?
+      val ts2 = ts :+ sell // inefficient, but what else do we do?
       val s = Stock(
         stock.ticker,
         stock.name,
         stock.cid,
         stock.keywords,
         stock.entries,
-        t2,
+        ts2,
         stock.buyWatch,
         stock.sellWatch)
       parseCompanyDateRange(s, Date(1900, 1, 1).get, today)
@@ -237,7 +245,8 @@ object Gain extends Command {
       // gross of each sell - sell
       val capGains: Currency = ms.foldLeft(Currency.zero){ (acc: Currency, m: MatchedSell) =>
         acc + m.sell.gross - m.sell.commission - m.mbs.foldLeft(Currency.zero) { (acc2, mb) =>
-          mb.buy.cost + mb.buy.commission
+          // this is price at the time of the buy
+          mb.proportionalCost + mb.proportionalBuyCommission
         }
       }
       // percentage of shares that are ltcg vs short
@@ -271,13 +280,15 @@ object Gain extends Command {
   /**
     * Once we have all the buys and the sell we can generate the complet MatchedBuy
     *
-    * @param buy
-    * @param sold
-    * @param fractionalSellCommission
+    * @param buy The buy trade. Not all of the shares may be sold from this trade.
+    * @param sold The number of shares sold from this buy trade. Is <= buy.shares
+    * @param proportionalCost The cost of the sold shares.
+    * @param proportionalBuyCommission The buy commission proportional to the sold shares.
+    * @param proportionalSellCommission The sell commision proportional to the sold shares.
     * @param ltcg
     * @param annualYield
     */
-  private[stocknotes] case class MatchedBuy(buy: Buy, sold: Shares, fractionalSellCommission: Currency, ltcg: Boolean, annualYield: Double)
+  private[stocknotes] case class MatchedBuy(buy: Buy, sold: Shares, proportionalCost: Currency, proportionalBuyCommission: Currency, proportionalSellCommission: Currency, ltcg: Boolean, annualYield: Double)
 
   /**
     * This is a buy that is ready to be matched with sells to take some of the shares
@@ -308,7 +319,7 @@ object Gain extends Command {
     var is: List[IncompleteMatchedBuy] = Nil // new ones placed on front
     while (toSell != Shares.zero) {
       val b: BuyReadyToSell = ready.head
-      val currentBuyShares: Int = b.buy.shares.atMult(sell.shares.multiple)
+      val currentBuyShares: Int = b.buy.shares.atMult(sell.shares.multiple).floor.toInt
       // comparisons from now on will be at the sell multiple
       if (currentBuyShares == toSell.shares) {
         // the current buy perfectly completes the sell
@@ -336,10 +347,18 @@ object Gain extends Command {
 
   def completeMatchedBuys(sell: Sell, ims: List[IncompleteMatchedBuy]): List[MatchedBuy] =
     ims.map { im =>
-      val fractionalSellCommission: Currency = Currency.fromDouble(sell.commission.toDouble * (im.buy.shares.atMult(sell.shares.multiple)/sell.shares.shares))
+      // the proportion of sold shares in this buy batch vs total shares in this buy batch
+      val proportionBuy = im.sold.atMult(sell.shares.multiple) / im.buy.shares.atMult(sell.shares.multiple)
+      // the proportion of sold shares in this buy batch vs the total shares in the sell batch
+      val proportionSell = im.sold.atMult(sell.shares.multiple) / sell.shares.atMult(sell.shares.multiple)
+
+      val proportionalSellCommission: Currency = Currency.fromDouble(sell.commission.toDouble * proportionSell)
+      val proportionalBuyCommission: Currency = Currency.fromDouble(im.buy.commission.toDouble * proportionSell)
+      val totalBuyCost = im.buy.shares.shares * im.buy.price.toDouble
+      val proportionalBuyCost: Currency = Currency.fromDouble(totalBuyCost * proportionBuy)
       val diff: Double = sell.date.decimalYear - im.buy.date.decimalYear
       val ltcg: Boolean = diff >= 1.0
-      MatchedBuy(im.buy, im.sold, fractionalSellCommission, ltcg, annualYield(im.buy.cost, sell.gross, diff))
+      MatchedBuy(im.buy, im.sold, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, annualYield(proportionalBuyCost, sell.gross, diff))
     }
 
   def annualYield(start: Currency, end: Currency, decimalYears: Double): Double =
