@@ -67,7 +67,8 @@ object GainCalc {
       if (pa.tickers.isEmpty) sm.keys.toList.sorted
       else pa.tickers
 
-    // TODO: parsing out the omit keyword seems better suited to parseargs
+    // parsing out the omit keyword seems better suited to parseargs but we need the
+    // ticker list in order to do that and it doesn't make sense to move that out
     val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ s =>
       // ignore stocks that have no trades
       // TODO: this may be an efficiency but it is not really necessary
