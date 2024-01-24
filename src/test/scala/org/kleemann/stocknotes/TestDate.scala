@@ -27,11 +27,18 @@ class TestDate extends munit.FunSuite {
   }
 
   test("parse good dates") {
-    assertNotEquals(Date.parse("Jan 1, 2005"), None)
-    assertNotEquals(Date.parse("jan 1, 2005"), None)
-    assertNotEquals(Date.parse("jAN 1, 2005"), None)
+    val jan_1_2005 = Date(2005,1,1)
+    assert(jan_1_2005.isDefined)
+    assertEquals(Date.parse("Jan 1, 2005"), jan_1_2005)
+    assertEquals(Date.parse("jan 1, 2005"), jan_1_2005)
+    assertEquals(Date.parse("jAN 1, 2005"), jan_1_2005)
+    assertEquals(Date.parse("January 1, 2005"), jan_1_2005)
+    assertEquals(Date.parse("jANuary 1, 2005"), jan_1_2005)
     assertNotEquals(Date.parse("   Dec    31,   2005    "), None)
     assertNotEquals(Date.parse("Apr 24, 1968"), None)
+    // June is a thorny one
+    assertNotEquals(Date.parse("June 1, 2005"), None)
+    assertNotEquals(Date.parse("Jun 1, 2005"), None)
   }
 
   test("parse bad dates") {
@@ -63,7 +70,7 @@ class TestDate extends munit.FunSuite {
   }
 
   test("toString") {
-    assertEquals(Date(1900,1,1).get.toString(), "1900/01/01")
-    assertEquals(Date(2020,12,31).get.toString(), "2020/12/31")
+    assertEquals(Date(1900,1,1).get.toString(), "Jan 1, 1900")
+    assertEquals(Date(2020,12,31).get.toString(), "Dec 31, 2020")
   }
 }

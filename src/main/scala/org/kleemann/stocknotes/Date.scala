@@ -7,7 +7,9 @@ final case class Date private(year: Int, month: Int, day: Int) extends Ordered[D
     else this.day - that.day
   }
 
-  override def toString(): String = f"$year%04d/$month%02d/$day%02d"
+  // TODO: don't know if I want both these representation available
+  //override def toString(): String = f"$year%04d/$month%02d/$day%02d"
+  override def toString(): String = f"${Date.number2month(month).take(3)} ${day}%d, ${year}%04d"
 
  /**
    * Represents the date as a decimal number where the year is the whole number part and the 
@@ -29,13 +31,14 @@ object Date {
     11 -> "November", 12 -> "December"
   )
 
-  /** lower case three letter abbreviation of month to one based number of month
-    * 
-    */
+  /** full lowercase month and lower case three letter abbreviation of month to one based number of month
+   * 
+   */
   private val month2number: Map[String, Int] =
-    number2month.keys.map{ (number: Int) => {
-        val abbreviation: String = number2month(number).toLowerCase().take(3)
-        abbreviation -> number
+    number2month.keys.flatMap{ (number: Int) => {
+      val fullMonth = number2month(number).toLowerCase()
+      val abbreviation: String = fullMonth.take(3)
+      List(fullMonth -> number, abbreviation -> number)
     }}.toMap
 
   /** The zero index exists so that we can use one based month indeces */

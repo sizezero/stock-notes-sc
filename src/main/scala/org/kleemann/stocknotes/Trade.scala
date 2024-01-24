@@ -53,24 +53,9 @@ object Trade {
     }
 }
 
-final case class Buy(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
-
-    /**
-      * Cost is fixed and doesn't depend on the multiple. This does not include commission.
-      * TODO: I'm not sure if this works for our purposes. We are using this to match with sells.
-      * There are probably only a fraction of the shares sold and I'm not sure what multiple the sold shares are.
-      * I think we have to do without this because it's so dubious.
-      * Let's try to just give the cost for the specified number of shares 
-      * TODO: no tests for this
-      */
-    //def cost: Currency = Currency.fromDouble(price.toDouble * shares.shares)
-
-}
+final case class Buy(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date)
 
 final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
-    // TODO: python has shareAdjust which returns shares plus an integer?
-    // TODO: python has returnAdjust which changes both the shares and price by a new multiple and subtracts the commission
-
     /**
       * Net is fixed and doesn't depend on the multiple. This does not include commission.
       * TODO: no tests for this
