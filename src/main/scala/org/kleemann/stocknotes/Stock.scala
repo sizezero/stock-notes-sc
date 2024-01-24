@@ -75,7 +75,7 @@ object Stock {
         var stockName = Option.empty[String]
         var stockCid = Option.empty[String]
         var keywords = Set[String]()
-        var entryDate = Date(1900,1,1).get
+        var entryDate = Date.earliest
         val entryText = scala.collection.mutable.StringBuilder()
         var currentShares = Shares(0, Fraction.one)
         var currentMult = Fraction.one

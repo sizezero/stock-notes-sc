@@ -5,7 +5,7 @@ class TestGain extends munit.FunSuite {
   // parsing
 
   test("succeed parse commission") {
-    val ret = Right(Gain.ParseArgs(Date(1900,1,1).get, Date(1900,1,1).get, Currency.dollarsCents(30, 0), List[Ticker](), Option.empty[String]))
+    val ret = Right(Gain.ParseArgs(Date.earliest, Date.earliest, Currency.dollarsCents(30, 0), List[Ticker](), Option.empty[String]))
     assertEquals(Gain.parse(Vector[String]()), ret)
     assertEquals(Gain.parse(Vector[String]("30.0")), ret)
   }
@@ -33,10 +33,10 @@ class TestGain extends munit.FunSuite {
   test("succeed omit") {
     assertEquals(
         Gain.parse(Vector("-omit","BigCompany")),
-        Right(Gain.ParseArgs(Date(1900,1,1).get, Date(1900,1,1).get, Currency.dollarsCents(30, 0), List[Ticker](), Option("BigCompany"))))
+        Right(Gain.ParseArgs(Date.earliest, Date.earliest, Currency.dollarsCents(30, 0), List[Ticker](), Option("BigCompany"))))
     assertEquals(
         Gain.parse(Vector("-omit","BigCompany", "30", "a", "b", "c")),
-        Right(Gain.ParseArgs(Date(1900,1,1).get, Date(1900,1,1).get, Currency.dollarsCents(30, 0), List(Ticker("A"),Ticker("B"),Ticker("C")), Option("BigCompany"))))
+        Right(Gain.ParseArgs(Date.earliest, Date.earliest, Currency.dollarsCents(30, 0), List(Ticker("A"),Ticker("B"),Ticker("C")), Option("BigCompany"))))
   }
 
   test("fail bad date") {
@@ -95,7 +95,7 @@ class TestGain extends munit.FunSuite {
     val stock2: Stock = e2.right.get
 
     val today = Date(1997, 1, 1).get
-    val pa1 = Gain.ParseArgs(Date(1900,1,1).get, Date(1900,1,1).get, Currency.dollarsCents(30, 0), Nil, None)
+    val pa1 = Gain.ParseArgs(Date.earliest, Date.earliest, Currency.dollarsCents(30, 0), Nil, None)
     val stocks = List(stock1, stock2)
     val quotes = Map( t1 -> Quote(Currency.dollarsCents(8,0), today), t2 ->  Quote(Currency.dollarsCents(9,0), today))
 

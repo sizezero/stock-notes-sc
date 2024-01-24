@@ -75,6 +75,9 @@ object Date {
     else if (day<1 || day>daysPerMonth(month)) None
     else Some(new Date(year,month,day))
 
+  val earliest: Date = Date(1900,  1,  1).get
+  val latest:   Date = Date(3000, 12, 31).get
+
   /** returns the current date
    * Note: this is not a pure function as multiple calls will return different values
    */

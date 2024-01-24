@@ -3,15 +3,12 @@ package org.kleemann.stocknotes
 class TestTrade extends munit.FunSuite {
 
     test("buy") {
-        val d = Date(1900,1,1).get
+        val d = Date.earliest
         val e = Trade.parse("TRADE buy 100@$67.20 balance 100 commission 9.99", d, Fraction.one)
         assertEquals(
             e,
             Right( (Buy(d, Shares(100, Fraction.one), Currency.dollarsCents(67, 20), Currency.dollarsCents(9, 99)), Shares(100, Fraction.one)) )
             )
-        // TODO: these signatures are making me think that the buy and sell share price are really Currency types and not Price types. Unlike Watch, 
-        // they have nothing to do with changing value over time. They are an absolute value at the time of the transation. Well, maybe they do if you use them
-        // to calculate costs...
     }
 
     test("sell") {

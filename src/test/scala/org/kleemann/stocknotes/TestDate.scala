@@ -70,7 +70,7 @@ class TestDate extends munit.FunSuite {
   }
 
   test("toString") {
-    assertEquals(Date(1900,1,1).get.toString(), "Jan 1, 1900")
-    assertEquals(Date(2020,12,31).get.toString(), "Dec 31, 2020")
+    assertEquals(Date.earliest.toString(), "Jan 1, 1900")
+    assertEquals(Date.latest.toString(),   "Dec 31, 3000")
   }
 }

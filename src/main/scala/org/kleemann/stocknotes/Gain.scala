@@ -61,11 +61,11 @@ object Gain extends Command {
 
     // args3 is now guaranteed to have at least one element
     val (start: Date, end: Date, commission: Currency) =
-      if (args3(0)==":") (Date(1900,1,1).get, Date(2100,1,1).get, Currency.dollarsCents(-100, 0))
+      if (args3(0)==":") (Date.earliest, Date.latest, Currency.dollarsCents(-100, 0))
       else args3(0).match {
-        case yearPattern(y)        => (Date(y.toInt,1,1).get, Date(y.toInt,1,1).get, Currency.dollarsCents(-100, 0))
+        case yearPattern(y)        => (Date( y.toInt,1,1).get, Date( y.toInt,1,1).get, Currency.dollarsCents(-100, 0))
         case twoYearPattern(y1,y2) => (Date(y1.toInt,1,1).get, Date(y2.toInt,1,1).get, Currency.dollarsCents(-100, 0))
-        case commissionPattern(d)  => (Date(1900,1,1).get, Date(1900,1,1).get, Currency.parse(args3(0)).get)
+        case commissionPattern(d)  => (Date.earliest, Date.earliest, Currency.parse(args3(0)).get)
         case _                     => return Left(help) //this looks non-functional
       }
 
@@ -274,7 +274,7 @@ object Gain extends Command {
         ts2,
         stock.buyWatch,
         stock.sellWatch)
-      parseCompanyDateRange(s, Date(1900, 1, 1).get, today)
+      parseCompanyDateRange(s, Date.earliest, today)
     }
   }
 
