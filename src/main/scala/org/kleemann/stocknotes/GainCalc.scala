@@ -196,12 +196,12 @@ object GainCalc {
     // loop through the BuyReadyToSell list until we have satisfied all shares in the sell
     // A mutable loop is bad but I think this is simpler than shoving all this state through 
     // and trying to conditionally stop a foldLeft.
-    var ready = buys
+    var toBuys = buys
     var toSell: Shares = sell.shares
     var imbs: List[IncompleteMatchedBuy] = Nil // new ones placed on front
 
     while (toSell != Shares.zero) {
-      val b: BuyReadyToSell = ready.head
+      val b: BuyReadyToSell = toBuys.head
 
       // can't seem to get around losing precision when converting buy shares to the current mult
       // we try to minimize it by doing nothing if the multiples match and propagating the converted values forward
@@ -212,19 +212,19 @@ object GainCalc {
       if (availableBuyShares.shares == toSell.shares) {
         // the current buy perfectly completes the sell
         imbs = IncompleteMatchedBuy(b.buy, toSell) :: imbs
-        ready = ready.tail
+        toBuys = toBuys.tail
         toSell = Shares.zero
       } else if (availableBuyShares.shares < toSell.shares) {
         // we have used up the current buy, but the sell is not done
         imbs = IncompleteMatchedBuy(b.buy, availableBuyShares) :: imbs
-        ready = ready.tail
+        toBuys = toBuys.tail
         toSell = toSell.sub(availableBuyShares, toSell.multiple)
       } else { // availableBuyShares.shares > toSell.shares
         // only some of the buy shares are needed to satisfy the sell
         imbs = IncompleteMatchedBuy(b.buy, toSell) :: imbs
         // sell is completed and the next buy is only partially completed
         val reducedShares = availableBuyShares.sub(toSell, toSell.multiple)
-        ready = ready.updated(0, BuyReadyToSell(b.buy, reducedShares))
+        toBuys = toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares))
         toSell = Shares.zero
       }
     }
@@ -232,7 +232,7 @@ object GainCalc {
     val mbs = imbs.map{ imb => completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
     val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalBuyCommission }
-    (MatchedSell(sell, net, capitalGain, mbs), ready)
+    (MatchedSell(sell, net, capitalGain, mbs), toBuys)
   }
 
   /**
