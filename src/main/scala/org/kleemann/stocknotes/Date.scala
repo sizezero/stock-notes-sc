@@ -19,7 +19,7 @@ final case class Date private(year: Int, month: Int, day: Int) extends Ordered[D
    * @return Years are whole numbers while month and days combine into the fractional part
    */
   def decimalYear: Double = 
-    year + (Date.cumulativeDaysPerMonth(month)+day)/365.0
+    year + (Date.cumulativeDaysPerMonth(month) + day) / 365.0
 
 }
 
@@ -58,16 +58,10 @@ object Date {
     31  //dec
   )
 
-  private val cumulativeDaysPerMonth: Vector[Int] = {
-    // start with the iterative solution
-    val a = scala.collection.mutable.ArrayBuffer[Int]()
-    a += daysPerMonth(0)
-    a += daysPerMonth(0)
-    for (i <- 1 to 12) {
-        a += ( a.last + daysPerMonth(i) )
-    }
-    a.toVector
-  }
+  // each month index has the sum of all previous months
+  // needed by decimalYear
+  // note: scan() produces a 365 element at index 14 that we don't need
+  private val cumulativeDaysPerMonth: Vector[Int] = daysPerMonth.scan(0){ _ + _ }.dropRight(1)
 
   def apply(year: Int, month: Int, day: Int): Option[Date] =
     if (year<1900 || year>3000) None
