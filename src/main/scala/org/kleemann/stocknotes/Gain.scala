@@ -34,7 +34,7 @@ object Gain extends Command {
       *
       * @return true if the parse args represents the current value mode
       */
-    def isCurrentValueMode: Boolean = commission != Currency.dollarsCents(-100, 0)
+    def isCurrentValueMode: Boolean = commission != Currency(-100, 0)
   }
 
   /** 
@@ -61,10 +61,10 @@ object Gain extends Command {
 
     // args3 is now guaranteed to have at least one element
     val (start: Date, end: Date, commission: Currency) =
-      if (args3(0)==":") (Date.earliest, Date.latest, Currency.dollarsCents(-100, 0))
+      if (args3(0)==":") (Date.earliest, Date.latest, Currency(-100, 0))
       else args3(0).match {
-        case yearPattern(y)        => (Date( y.toInt,1,1).get, Date( y.toInt,1,1).get, Currency.dollarsCents(-100, 0))
-        case twoYearPattern(y1,y2) => (Date(y1.toInt,1,1).get, Date(y2.toInt,1,1).get, Currency.dollarsCents(-100, 0))
+        case yearPattern(y)        => (Date( y.toInt,1,1).get, Date( y.toInt,1,1).get, Currency(-100, 0))
+        case twoYearPattern(y1,y2) => (Date(y1.toInt,1,1).get, Date(y2.toInt,1,1).get, Currency(-100, 0))
         case commissionPattern(d)  => (Date.earliest, Date.earliest, Currency.parse(args3(0)).get)
         case _                     => return Left(help) //this looks non-functional
       }

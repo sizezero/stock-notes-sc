@@ -79,6 +79,11 @@
       ~~- I've updated all the code, tests, and non-conformant data, and all the stock files now load!~~
   - ~~before I start this I should really get rid of Price. move the mult stuff to Watch where it is actually used.~~
   - I'd like to clean this up a bit before going on
+    - ~~can Currency.dollarsCents be made shorter?~~
+      - ~~If I use this all over the place we could make the default apply() do this functionality~~
+      - ~~I'm not sure if I'd confuse it with decimal.~~
+      - ~~Within the Currency code I'd just have to make sure that I use the new keyword.~~
+      - ~~while doing this I found and fixed a bug with parsing "1.01"~~
     - move all the Gain calculation into it's own file
     - clean up the code, see if it makes sense to get rid of some of the iteration
     - see if the final company value should be gross, gross-sell commisions, net, or something else

@@ -13,7 +13,7 @@ class TestCashAccount extends munit.FunSuite {
         |BALANCE: $1,000,000.00
         |last line""".stripMargin.split("\\n").toSeq)
     val obtained = CashAccount.load(accountName, cashFile, in)
-    val expected = CashAccount(accountName, Date(1968,4,24).get, Currency.dollarsCents(1_000_000, 0))
+    val expected = CashAccount(accountName, Date(1968,4,24).get, Currency(1_000_000, 0))
     assertEquals(obtained, Right(expected))
   }
 
@@ -28,7 +28,7 @@ class TestCashAccount extends munit.FunSuite {
         |Some more text
         |last line""".stripMargin.split("\\n").toSeq)
     val obtained = CashAccount.load(accountName, cashFile, in)
-    val expected = CashAccount(accountName, Date(2030,1,1).get, Currency.dollarsCents(5, 0))
+    val expected = CashAccount(accountName, Date(2030,1,1).get, Currency(5, 0))
     assertEquals(obtained, Right(expected))
   }
 

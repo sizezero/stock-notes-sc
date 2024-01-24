@@ -52,60 +52,60 @@ final case class Currency private(milliPennies: Long) {
 
 object Currency {
 
-    def dollarsCents(dollars: Long, cents: Long): Currency = 
-      if (dollars<0) dollarsCents(-1, -dollars, cents)
-      else dollarsCents(1, dollars, cents)
+    def apply(dollars: Long, cents: Long): Currency = 
+      if (dollars<0)
+        Currency(-1, -dollars, cents)
+      else
+        Currency(1, dollars, cents)
 
-    // this variant is needed to produce negative fractions
-    def dollarsCents(sign: Int, dollars: Long, cents: Long): Currency = {
-      if (sign!=1 && sign != -1) throw new java.lang.ArithmeticException(s"sign must be 1 or -1: $sign")
+    // this variant is needed to produce negative fractions E.g.: Currency(-1, 0, 25)
+    def apply(sign: Int, dollars: Long, cents: Long): Currency = {
+      if (sign!=1 && sign != -1)      throw new java.lang.ArithmeticException(s"sign must be 1 or -1: $sign")
       else if (cents<0L || cents>99L) throw new java.lang.ArithmeticException(s"cents must be between 0 and 99 inclusive: $cents")
-      else if (dollars<0L) throw new java.lang.ArithmeticException(s"dollars must be non-negative: $dollars")
-      else Currency(sign * ( dollars*100000L + cents*1000L))
+      else if (dollars<0L)            throw new java.lang.ArithmeticException(s"dollars must be non-negative: $dollars")
+      else new Currency(sign * (dollars*100_000L + cents*1_000L))
     }
 
-    def decimal(leftOfDecimal: Long, rightOfDecimal: Long): Currency =
-      if (leftOfDecimal<0) decimal(-1, -leftOfDecimal, rightOfDecimal)
-      else decimal(1, leftOfDecimal, rightOfDecimal)
+    /**
+      * This variant is used for parsing Currency(1, 1) == Currency.decimal(1, "10")
+      *
+      * @param leftOfDecimal The digits to the left of the decimal point
+      * @param rightOfDecimal The digits to the right of the decimal point
+      * @return
+      */
+    private[stocknotes] def decimal(leftOfDecimal: Long, rightOfDecimal: String): Currency =
+      if (leftOfDecimal<0)
+        decimal(-1, -leftOfDecimal, rightOfDecimal)
+      else
+        decimal(1, leftOfDecimal, rightOfDecimal)
 
-    // this variant is needed to produce negative fractions
-    def decimal(sign: Int, leftOfDecimal: Long, rightOfDecimal: Long): Currency = {
+    private val requiredRightDigits = """^\d{1,5}$""".r
 
-      // I need an integer power function
-      def pow(base: Int, exp: Int): Int = {
-          // this is so ugly
-          if (base==0) 1
-          else {
-              var acc=1
-              var count=base
-              while(count>0) {
-                  acc *= exp
-                  count = count - 1
-              }
-              acc
-          }
-      }
-
-      if (sign!=1 && sign != -1)
+    // this variant is needed to produce negative fractions E.g.: Currency(-1, 0, 25)
+    private[stocknotes] def decimal(sign: Int, leftOfDecimal: Long, rightOfDecimal: String): Currency = {
+      if (sign != 1 && sign != -1)
         throw new java.lang.ArithmeticException(s"sign must be 1 or -1: $sign")
-      else if (rightOfDecimal<0L || rightOfDecimal>99999L)
+      else if (!requiredRightDigits.matches(rightOfDecimal))
         throw new java.lang.ArithmeticException(s"rightOfDecimal must be between 0 and 99999 inclusive: $rightOfDecimal")
-      else if (leftOfDecimal<0L)
+      else if (leftOfDecimal < 0L)
         throw new java.lang.ArithmeticException(s"leftOfDecimal must be non-negative: $leftOfDecimal")
       else {
-        // length has to be at least one; max five
-        val l = rightOfDecimal.toString.length
-        val mult = pow(5-l, 10)
-        Currency(sign * (leftOfDecimal*100000L + rightOfDecimal*mult))
+        var milliPennies: Long = 0
+        var multiplier = 10_000
+        rightOfDecimal.foreach{ (digit: Char) =>
+          milliPennies = milliPennies + digit.asDigit*multiplier
+          multiplier = multiplier / 10
+        }
+        new Currency(sign * (leftOfDecimal*100_000L + milliPennies))
       }
     }
 
     /**
       * Obviously lossy but we need it for fractional commission calculations and such
       */
-    def fromDouble(d: Double) = new Currency(Math.round(d * 100000.0))
+    def fromDouble(d: Double) = new Currency(Math.round(d * 100_000.0))
 
-    val zero = Currency(0)
+    val zero = new Currency(0)
 
     private val numberPattern = """^\$?+(\d{1,17})$""".r
     private val numberPatternWithDecimal = """^\$?+(\d{1,12})\.(\d{1,5})$""".r
@@ -128,8 +128,8 @@ object Currency {
       } else (s, 1)
 
       trimmed match {
-        case numberPattern(n) => Some(Currency(sign * n.toLong * 100000L))
-        case numberPatternWithDecimal(n1, n2) => Some(decimal(sign, n1.toLong, n2.toLong))
+        case numberPattern(n) => Some(new Currency(sign * n.toLong * 100000L))
+        case numberPatternWithDecimal(n1, n2) => Some(decimal(sign, n1.toLong, n2))
         case _ => None
       }
     }

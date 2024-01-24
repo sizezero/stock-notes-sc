@@ -74,7 +74,7 @@ object CashAccount {
             case None => {
               line match {
                 case balancePattern(dollars, cents) => {
-                  curBalance = Currency.dollarsCents(dollars.replace(",","").toLong, cents.toLong)
+                  curBalance = Currency(dollars.replace(",","").toLong, cents.toLong)
                 }
                 case _ => 
               }

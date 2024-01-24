@@ -98,10 +98,10 @@ class TestStock extends munit.FunSuite {
             case Right(Stock(_, _, _, _, _, trades, _, _)) => {
                 assertEquals(trades,
                     List(
-                        Buy(Date(1990,1,1).get, Shares(10,Fraction.one), Currency.dollarsCents(5, 0), Currency.dollarsCents(9, 99)),
-                        Buy(Date(1991,1,1).get, Shares(10,Fraction.one), Currency.dollarsCents(6, 0), Currency.dollarsCents(9, 99)),
+                        Buy(Date(1990,1,1).get, Shares(10,Fraction.one), Currency(5, 0), Currency(9, 99)),
+                        Buy(Date(1991,1,1).get, Shares(10,Fraction.one), Currency(6, 0), Currency(9, 99)),
                         Split(Date(1992,1,1).get, Fraction(2,1)),
-                        Sell(Date(1993,1,1).get, Shares(40,Fraction(2,1)), Currency.dollarsCents(4, 0), Currency.zero)
+                        Sell(Date(1993,1,1).get, Shares(40,Fraction(2,1)), Currency(4, 0), Currency.zero)
 
                     )
                 )
@@ -136,7 +136,7 @@ class TestStock extends munit.FunSuite {
         Stock.load(ticker, "filename", g) match {
             case Left(msg) => assert(false, clue(msg))
             case Right(Stock(_, _, _, _, _, _, b, s)) => {
-                assertEquals(b, BuyWatch(Some(Currency.dollarsCents(12, 0)), Some(Currency.dollarsCents(34, 0)), Fraction.one))
+                assertEquals(b, BuyWatch(Some(Currency(12, 0)), Some(Currency(34, 0)), Fraction.one))
                 assertEquals(s, SellWatch.none)
             }
         }

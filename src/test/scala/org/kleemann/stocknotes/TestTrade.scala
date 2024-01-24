@@ -7,7 +7,7 @@ class TestTrade extends munit.FunSuite {
         val e = Trade.parse("TRADE buy 100@$67.20 balance 100 commission 9.99", d, Fraction.one)
         assertEquals(
             e,
-            Right( (Buy(d, Shares(100, Fraction.one), Currency.dollarsCents(67, 20), Currency.dollarsCents(9, 99)), Shares(100, Fraction.one)) )
+            Right( (Buy(d, Shares(100, Fraction.one), Currency(67, 20), Currency(9, 99)), Shares(100, Fraction.one)) )
             )
     }
 
@@ -16,7 +16,7 @@ class TestTrade extends munit.FunSuite {
         val e = Trade.parse("TRADE sell 420@$354 balance 10000 commission 0", d, Fraction.one)
         assertEquals(
             e,
-            Right( (Sell(d, Shares(420, Fraction.one), Currency.dollarsCents(354, 0), Currency.zero), Shares(10000, Fraction.one)) )
+            Right( (Sell(d, Shares(420, Fraction.one), Currency(354, 0), Currency.zero), Shares(10000, Fraction.one)) )
             )
     }
 
