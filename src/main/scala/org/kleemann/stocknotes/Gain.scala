@@ -101,13 +101,13 @@ object Gain extends Command {
       }
     }
 
-    val companies: List[GainCalc.Company] = GainCalc.calc(pa, ss, quotes, Date.today)
+    val srs: List[GainCalc.StockReport] = GainCalc.calc(pa, ss, quotes, Date.today)
 
     // print the fuckers
     // TODO: this could be moved to a render function that returns a string with no IO
     // this would make for some easy end to end testing
 
-    if (companies.isEmpty) {
+    if (srs.isEmpty) {
       println("No stocks found")
       sys.exit(0)
     }
@@ -117,10 +117,10 @@ object Gain extends Command {
     // line items
     val colWidth = "13"
     val itemFmt = "%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s"
-    companies.foreach{ c =>
-      println(c.stock.ticker)
+    srs.foreach{ sr =>
+      println(sr.stock.ticker)
       println()
-      c.mss.foreach{ ms =>
+      sr.mss.foreach{ ms =>
         val s = ms.sell
         val m = s.shares.multiple
         println(s"${s.date} sell ${s.shares.toString(m)}@${s.price} ${s.gross} commission ${s.commission}")
@@ -155,11 +155,11 @@ object Gain extends Command {
     println("Summary")
     val itemFmt2 = "%10s%18s%7s%15s%15s"
     println(String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg"))
-    val totalGross = companies.foldLeft(Currency.zero){ (acc, c) => acc + c.gross }
-    val totalCapGains = companies.foldLeft(Currency.zero){ (acc, c) => acc + c.capGains }
-    companies.foreach{ c =>
-      val percentageGross = c.gross.toDouble / totalGross.toDouble
-      println(String.format(itemFmt2, c.stock.ticker, c.gross, percentString(percentageGross), c.capGains, percentString(c.ltcgPercentage)))
+    val totalGross = srs.foldLeft(Currency.zero){ (acc, c) => acc + c.gross }
+    val totalCapGains = srs.foldLeft(Currency.zero){ (acc, c) => acc + c.capGains }
+    srs.foreach{ sr =>
+      val percentageGross = sr.gross.toDouble / totalGross.toDouble
+      println(String.format(itemFmt2, sr.stock.ticker, sr.gross, percentString(percentageGross), sr.capGains, percentString(sr.ltcgPercentage)))
     }
     println("="*50)
     println(String.format(itemFmt2,"", totalGross, "100%", totalCapGains, ""))

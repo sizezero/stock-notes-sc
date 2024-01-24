@@ -5,7 +5,7 @@ package org.kleemann.stocknotes
   */
 object GainCalc {
    /**
-    * I guess we're calling a Company the data needed to display a Company/Stock info on the gain report.
+    * The top level report for the Gain Report is a list of StockReport objects.
     * This is just the relevant data from the date range or just the current data.
     *
     * @param stock The underlying stock date from the log directory.
@@ -14,7 +14,7 @@ object GainCalc {
     * @param capGains The capital gains of this sale (gross-cost). This includes commissions.
     * @param ltcgPercentage This is the percentage of shares sold that are ltcg.
     */
-  case class Company(stock: Stock, mss: List[MatchedSell], gross: Currency, capGains: Currency, ltcgPercentage: Double)
+  case class StockReport(stock: Stock, mss: List[MatchedSell], gross: Currency, capGains: Currency, ltcgPercentage: Double)
 
   /**
     * This represents a sale of a block of stock.
@@ -58,7 +58,7 @@ object GainCalc {
     * @param today today's date passed in to make this pure functional and testable
     * @return a list of Company objects for each company that had sales in the indicated period
     */
-  def calc(pa: Gain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[Company] = {
+  def calc(pa: Gain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
 
     val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
 
@@ -99,7 +99,7 @@ object GainCalc {
     }
   }
 
-  private[stocknotes] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[Company] = {
+  private[stocknotes] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
     // this is really just a problem for testing, we only want trades that are less than today
     var ts = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
@@ -138,7 +138,7 @@ object GainCalc {
     def apply(buy: Buy) = new BuyReadyToSell(buy, buy.shares)
   }
 
-  private[stocknotes] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[Company] = {
+  private[stocknotes] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
     // I'm breaking my head trying to get this to work with foldLeft or other method. Going back to iterative.
     // TODO: I think we can try this will foldLeft now
     // Generate the BuyReadyToSells and feed the ongoing list of them to the MatchedSells as they pop up.
@@ -183,7 +183,7 @@ object GainCalc {
       val denominator: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m)}
       val ltcgPercentage = numerator / denominator
         
-      Some(Company(stock, mss, gross, capGains, ltcgPercentage))
+      Some(StockReport(stock, mss, gross, capGains, ltcgPercentage))
     }
   }
 

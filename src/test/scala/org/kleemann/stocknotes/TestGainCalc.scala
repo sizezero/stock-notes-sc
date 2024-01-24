@@ -56,10 +56,9 @@ class TestGainCalc extends munit.FunSuite {
     val stocks = List(stock1, stock2)
     val quotes = Map( t1 -> Quote(Currency(8,0), today), t2 ->  Quote(Currency(9,0), today))
 
-    val companies = GainCalc.calc(pa1, stocks, quotes, today)
-    //private[stocknotes] def functionalGain(pa: ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[Company] = {
+    val srs = GainCalc.calc(pa1, stocks, quotes, today)
 
-    assertEquals(companies.length, 2)
+    assertEquals(srs.length, 2)
   }
 
   test("gain aapl") {
@@ -165,19 +164,19 @@ class TestGainCalc extends munit.FunSuite {
     assertEquals(capGainsTotal1, capGainsTotal2)
     assertEquals(capGainsTotal1, capGainsTotal3)
 
-    val company = GainCalc.Company(stock, List(ms1, ms2), gross, capGainsTotal1, 1.0)
+    val stockReport = GainCalc.StockReport(stock, List(ms1, ms2), gross, capGainsTotal1, 1.0)
 
     val o = GainCalc.parseCompanyDateRange(stock, Date(2010, 1, 1).get, Date(2015, 2, 1).get)
     o match {
-      case Some(c: GainCalc.Company) => {
+      case Some(sr: GainCalc.StockReport) => {
         // company is a big object that doesn't display diffs well so we break it up into multiple assertions
-        assertEquals(c.stock, company.stock)
-        assert(c.mss.length == 2)
-        assertEquals(c.mss.head, ms1)
-        assertEquals(c.mss.tail.head, ms2)
-        assertEquals(c.gross, company.gross)
-        assertEquals(c.capGains, company.capGains)
-        assertEquals(c.ltcgPercentage, company.ltcgPercentage)
+        assertEquals(sr.stock, stockReport.stock)
+        assert(sr.mss.length == 2)
+        assertEquals(sr.mss.head, ms1)
+        assertEquals(sr.mss.tail.head, ms2)
+        assertEquals(sr.gross, stockReport.gross)
+        assertEquals(sr.capGains, stockReport.capGains)
+        assertEquals(sr.ltcgPercentage, stockReport.ltcgPercentage)
       }
       case None => assert(false)
     }
@@ -211,7 +210,7 @@ class TestGainCalc extends munit.FunSuite {
     val today = Date(1993, 12, 31).get
     val o1 = GainCalc.parseCompanyCurrentValue(stock, Currency(8,0), Currency.zero, today)
     o1 match {
-      case Some(c: GainCalc.Company) => {
+      case Some(c: GainCalc.StockReport) => {
         assertEquals(c.mss.length, 1) // one sell
         val cost = Currency(10*5, 0) + Currency(5*6, 0) + Currency(10*4, 0)
         val capGains = Currency(40*8, 0) - cost - Currency(29,97)
@@ -222,7 +221,7 @@ class TestGainCalc extends munit.FunSuite {
     
     val o2 = GainCalc.parseCompanyDateRange(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
     o2 match {
-      case Some(c: GainCalc.Company) => assertEquals(c.mss.length, 2) // two sells due to date range
+      case Some(sr: GainCalc.StockReport) => assertEquals(sr.mss.length, 2) // two sells due to date range
       case None => assert(false)
     }
   }
