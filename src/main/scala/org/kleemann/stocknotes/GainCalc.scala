@@ -136,25 +136,23 @@ object GainCalc {
   }
 
   private[stocknotes] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
-    // I'm breaking my head trying to get this to work with foldLeft or other method. Going back to iterative.
-    // TODO: I think we can try this will foldLeft now
-    // Generate the BuyReadyToSells and feed the ongoing list of them to the MatchedSells as they pop up.
-    var brss = Vector[BuyReadyToSell]()
-    var mss = List[MatchedSell]() // we will be accumulating these in reverse order
-    stock.trades.foreach{ t =>
-      t match {
-        case b: Buy  => brss = brss :+ BuyReadyToSell(b)
-        case s: Sell => {
+
+    // When a buy is encountered we add it to brss which is our accumulating list of BuyReadyToSells.
+    // When a sell is encountered, the accumulated buy list is passed to the sell parser which may consume some of the buys
+    // and a matched sell is returned that we accumulate.
+    val (brss:Vector[BuyReadyToSell], mssReversed: List[MatchedSell]) = 
+      stock.trades.foldLeft( (Vector[BuyReadyToSell](), List[MatchedSell]() ) ){ case ((brss, mss), t) =>
+        t match {
+          case b: Buy  => (brss :+ BuyReadyToSell(b), mss)
+          case s: Sell =>
             if (s.date>=start && s.date<=end) {
-            val (ms: MatchedSell, brss2: Vector[BuyReadyToSell]) = parseMatchedSell(s, brss)
-            brss = brss2
-            mss = ms :: mss
-          }
+              val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = parseMatchedSell(s, brss)
+              (unconsumed, ms :: mss)
+            } else (brss, mss)
+          case _: Split => (brss, mss)
         }
-        case p: Split => Nil
       }
-    }
-    mss = mss.reverse
+    val mss = mssReversed.reverse
 
     // if there are no matched sells for the company, then there's nothing to report
     if (mss.isEmpty) None
