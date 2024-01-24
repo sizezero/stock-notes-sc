@@ -153,7 +153,7 @@ object Gain extends Command {
     }
 
     // add cash accounts as pseudo StockReports
-    val srs2 = if (pa.isCurrentValueMode) {
+    val srs2 = if (pa.isCurrentValueMode && srs.length>1) {
       srs ++ cash.map{ c => {
         val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
         GainCalc.StockReport(s, List(), c.balance, Currency.zero, 1.0)
