@@ -86,7 +86,7 @@
       - ~~while doing this I found and fixed a bug with parsing "1.01"~~
     - ~~move all the Gain calculation into it's own file; GainCalc, GailFunc,~~
     - ~~clean up the code, see if it makes sense to get rid of some of the iteration~~
-    - ~~see if the final company value should be gross, gross-sell commisions, net, or something else~~
+    - ~~see if the final company value should be gross, gross-sell commisions, net, or something else. Using value as gross-sell commission makes the most sense.~~
     - add cash accounts
     - play around with it a bit and see if I can break it
 - next research (oldest)

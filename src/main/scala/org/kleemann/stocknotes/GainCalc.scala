@@ -10,11 +10,11 @@ object GainCalc {
     *
     * @param stock The underlying stock date from the log directory.
     * @param mss The set of matched sells that have occurred. For current data, there is only one matched sell.
-    * @param gross The total value of all sales, sale price times shares without commission
+    * @param value The total value of all sales minus the sell commission
     * @param capGains The capital gains of this sale (gross-cost). This includes commissions.
     * @param ltcgPercentage This is the percentage of shares sold that are ltcg.
     */
-  case class StockReport(stock: Stock, mss: List[MatchedSell], gross: Currency, capGains: Currency, ltcgPercentage: Double)
+  case class StockReport(stock: Stock, mss: List[MatchedSell], value: Currency, capGains: Currency, ltcgPercentage: Double)
 
   /**
     * This represents a sale of a block of stock.
@@ -159,7 +159,7 @@ object GainCalc {
     else {
 
       // the sum of each Matched sell, commissions are left out of it
-      val gross: Currency = mss.foldLeft(Currency.zero){ (acc, ms) => acc + ms.sell.gross }
+      val value: Currency = mss.foldLeft(Currency.zero){ (acc, ms) => acc + ms.sell.gross - ms.sell.commission }
 
       // gross of each sell - sell commission - cost - buy commisions proportional to sold shares
       val capGains: Currency = mss.foldLeft(Currency.zero){ (acc: Currency, ms: MatchedSell) =>
@@ -178,7 +178,7 @@ object GainCalc {
       val denominator: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m)}
       val ltcgPercentage = numerator / denominator
         
-      Some(StockReport(stock, mss, gross, capGains, ltcgPercentage))
+      Some(StockReport(stock, mss, value, capGains, ltcgPercentage))
     }
   }
 

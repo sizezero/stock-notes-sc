@@ -141,14 +141,14 @@ class TestGainCalc extends munit.FunSuite {
     val capGains2 = net2 - com - mb3.proportionalBuyCommission - mb4.proportionalBuyCommission
     val ms2 = GainCalc.MatchedSell(s2, net2, capGains2, List(mb3,mb4))
 
-    val gross = s1.gross + s2.gross
-    val capGainsTotal1 = gross
+    val value = s1.gross - s1.commission + s2.gross - s1.commission
+    val capGainsTotal1 = s1.gross + s2.gross
       - Currency.fromDouble(b1.shares.shares * b1.price.toDouble) // all buys in this example are at multiple 1
       - Currency.fromDouble(b2.shares.shares * b2.price.toDouble) // all buys in this example are at multiple 1
       - Currency.fromDouble(b3.shares.shares * b3.price.toDouble) // all buys in this example are at multiple 1
       - s1.commission - s2.commission
       - b1.commission - b2.commission - b3.commission
-    val capGainsTotal2 = gross
+    val capGainsTotal2 = s1.gross + s2.gross
       - s1.commission - s2.commission
       - mb1.proportionalCost - mb1.proportionalBuyCommission
       - mb2.proportionalCost - mb2.proportionalBuyCommission
@@ -164,7 +164,7 @@ class TestGainCalc extends munit.FunSuite {
     assertEquals(capGainsTotal1, capGainsTotal2)
     assertEquals(capGainsTotal1, capGainsTotal3)
 
-    val stockReport = GainCalc.StockReport(stock, List(ms1, ms2), gross, capGainsTotal1, 1.0)
+    val stockReport = GainCalc.StockReport(stock, List(ms1, ms2), value, capGainsTotal1, 1.0)
 
     val o = GainCalc.parseCompanyDateRange(stock, Date(2010, 1, 1).get, Date(2015, 2, 1).get)
     o match {
@@ -174,7 +174,7 @@ class TestGainCalc extends munit.FunSuite {
         assert(sr.mss.length == 2)
         assertEquals(sr.mss.head, ms1)
         assertEquals(sr.mss.tail.head, ms2)
-        assertEquals(sr.gross, stockReport.gross)
+        assertEquals(sr.value, stockReport.value)
         assertEquals(sr.capGains, stockReport.capGains)
         assertEquals(sr.ltcgPercentage, stockReport.ltcgPercentage)
       }
