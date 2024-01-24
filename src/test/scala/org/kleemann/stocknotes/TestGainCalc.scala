@@ -1,7 +1,5 @@
 package org.kleemann.stocknotes
 
-package org.kleemann.stocknotes
-
 class TestGainCalc extends munit.FunSuite {
 
   test("calc") {
