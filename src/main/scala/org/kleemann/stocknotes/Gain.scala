@@ -92,6 +92,7 @@ object Gain extends Command {
     val ss: List[Stock] = Stock.load(config)
     val stocks: Map[Ticker,Stock] = ss.map{ s => s.ticker -> s }.toMap
     val quotes: Map[Ticker, Quote] = Quote.load(config)
+    val cash: List[CashAccount] = CashAccount.load(config)
 
     // verify that every parsearg ticker is a valid ticker
     pa.tickers.foreach{ t => 
@@ -151,13 +152,21 @@ object Gain extends Command {
       }
     }
 
+    // add cash accounts as pseudo StockReports
+    val srs2 = if (pa.isCurrentValueMode) {
+      srs ++ cash.map{ c => {
+        val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
+        GainCalc.StockReport(s, List(), c.balance, Currency.zero, 1.0)
+      }}
+    } else srs
+
     // summary
     println("Summary")
     val itemFmt2 = "%10s%18s%7s%15s%15s"
-    println(String.format(itemFmt2, "ticker", "gross", "%", "cap gains", "ltcg"))
-    val totalValue = srs.foldLeft(Currency.zero){ (acc, sr) => acc + sr.value }
-    val totalCapGains = srs.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
-    srs.foreach{ sr =>
+    println(String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg"))
+    val totalValue = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.value }
+    val totalCapGains = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
+    srs2.foreach{ sr =>
       val percentageValue = sr.value.toDouble / totalValue.toDouble
       println(String.format(itemFmt2, sr.stock.ticker, sr.value, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage)))
     }

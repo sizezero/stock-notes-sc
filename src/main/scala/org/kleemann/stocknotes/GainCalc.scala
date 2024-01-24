@@ -78,8 +78,9 @@ object GainCalc {
       (if (pa.omitKeyword.isDefined) !(s.keywords contains pa.omitKeyword.get) else true)
     }
         
-    // there are two versions of this, one where we get a year range and one where we get a commision and fake a sale
+    // there are two versions of this... 
     if (pa.isCurrentValueMode) {
+      // ...one where we get a commision and fake a sale...
 
       stocks2.flatMap{ s => parseCompanyCurrentValue(
         s, 
@@ -88,6 +89,7 @@ object GainCalc {
         today)}
 
     } else {
+      // ...and one where we get a year range
 
       // ignore stocks that don't have at least one sell in the date range
       val stocks3 = stocks2.filter{ s =>
