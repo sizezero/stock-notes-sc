@@ -154,7 +154,7 @@ object Gain extends Command {
     // summary
     println("Summary")
     val itemFmt2 = "%10s%18s%7s%15s%15s"
-    println(String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg"))
+    println(String.format(itemFmt2, "ticker", "gross", "%", "cap gains", "ltcg"))
     val totalGross = srs.foldLeft(Currency.zero){ (acc, c) => acc + c.gross }
     val totalCapGains = srs.foldLeft(Currency.zero){ (acc, c) => acc + c.capGains }
     srs.foreach{ sr =>
