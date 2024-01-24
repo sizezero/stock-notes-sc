@@ -15,11 +15,11 @@
 - ~~configuration file has necessary data~~
   - ~~log dir, cash dir, notify quotes file, buy sell quotes file, temp file (???), no cik url, finnhub access key~~
   - ~~make this a high level object, maybe we can just read JSON from a dot file in the home directory~~
-- IO object
+- ~~IO object~~
   - I'm not sure if we need this. It would be created at a hight level and passed down.
   - The alterative is to have each command handle whatever IO it needs to do and build the functions in a way that allows easy testing.
   - I think most IO results in a failure of the command so it may not matter.
-- parse everything
+- ~~parse everything~~
   - ~~date~~
   - notify (maybe don't need this)
   - ~~fraction~~
@@ -30,7 +30,7 @@
   - cash
   - buysell
   - trade
-- Hierarchy / Typeing
+- ~~Hierarchy / Typeing~~
   - ~~Quote(price: Double, date: Date)~~
     - need special parser for CSVs; makes sense for this to be close to the quote download file not date
     - object method to load the existing cache of tickers
@@ -71,13 +71,18 @@
 - gain
   - ~~currency precision~~
     - ~~mini disaster: it turns out the many buy prices have more than two digits to the right of the decimal point~~
-      - this makes it a bad choice for currency. I can't think of why I wouldn't just make it a Typed version of Double
-      - I still need price for Watch, but it makes even more sense to incorporate Price Watch at that point
-      - alternatively I could change currency to allow for 5 digits on the right, this sounds a little strange
-      - I'm not sure what that would do to intuitive constructors. I think we would need a dollar one and a dollar and thousandCents?
-      - the common case is dollars and cents, maybe factories would be better than constructors
-      - I've updated all the code, tests, and non-conformant data, and all the stock files now load!o
+      ~~- this makes it a bad choice for currency. I can't think of why I wouldn't just make it a Typed version of Double~~
+      ~~- I still need price for Watch, but it makes even more sense to incorporate Price Watch at that point~~
+      ~~- alternatively I could change currency to allow for 5 digits on the right, this sounds a little strange~~
+      ~~- I'm not sure what that would do to intuitive constructors. I think we would need a dollar one and a dollar and thousandCents?~~
+      ~~- the common case is dollars and cents, maybe factories would be better than constructors~~
+      ~~- I've updated all the code, tests, and non-conformant data, and all the stock files now load!~~
   - ~~before I start this I should really get rid of Price. move the mult stuff to Watch where it is actually used.~~
+  - I'd like to clean this up a bit before going on
+    - move all the Gain calculation into it's own file
+    - clean up the code, see if it makes sense to get rid of some of the iteration
+    - see if the final company value should be gross, gross-sell commisions, net, or something else
+    - play around with it a bit and see if I can break it
 - next research (oldest)
 - download quotes
 - browse ticker
