@@ -90,18 +90,18 @@ class TestStock extends munit.FunSuite {
             |Jan 1, 1992
             |TRADE split 2:1 balance 40
             |Jan 1, 1993
-            |TRADE sell 40@4 balance 0 commission 0
+            |TRADE sell 30@4 balance 10 commission 0
             |""".stripMargin.split("\n")
         )
         Stock.load(ticker, "filename", g) match {
             case Left(msg) => assert(false, clue(msg))
-            case Right(Stock(_, _, _, _, _, trades, _, _)) => {
-                assertEquals(trades,
+            case Right(s) => {
+                assertEquals(s.trades,
                     List(
                         Buy(Date(1990,1,1).get, Shares(10,Fraction.one), Currency(5, 0), Currency(9, 99)),
                         Buy(Date(1991,1,1).get, Shares(10,Fraction.one), Currency(6, 0), Currency(9, 99)),
                         Split(Date(1992,1,1).get, Fraction(2,1)),
-                        Sell(Date(1993,1,1).get, Shares(40,Fraction(2,1)), Currency(4, 0), Currency.zero)
+                        Sell(Date(1993,1,1).get, Shares(30,Fraction(2,1)), Currency(4, 0), Currency.zero)
 
                     )
                 )

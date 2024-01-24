@@ -71,7 +71,8 @@ object GainCalc {
     // ticker list in order to do that and it doesn't make sense to move that out
     val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ s =>
       // ignore stocks that have no trades
-      // TODO: this may be an efficiency but it is not really necessary
+      // this is efficiency but it is not really necessary
+      // the code below will ignore companies without sells
       !s.trades.isEmpty &&
       // ignore the stock if it contains the specified keyword
       (if (pa.omitKeyword.isDefined) !(s.keywords contains pa.omitKeyword.get) else true)
@@ -105,22 +106,17 @@ object GainCalc {
     var ts = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
     // need to find all outstanding shares of the company
-    // TODO: make a functional version of this with foldLeft just for giggles
-    // TODO: it also is possible that this is better placed as a lazy val in Stock
-    var currentMultiple = Fraction.one
-    var acc = Shares.zero
-    ts.foreach{ t => {
-      t match {
-        case Buy(_, shares, _, _)  => acc = acc.add(shares, currentMultiple)
-        case Sell(_, shares, _, _) => acc = acc.sub(shares, currentMultiple)
-        case Split(_, multiple)    => currentMultiple = currentMultiple*multiple
-      }
+    val (_, currentOwnedShares: Shares) =
+      ts.foldLeft( (Fraction.one, Shares.zero) ) { case ((accMultiple, accShares), t) => t match {
+        case Buy(_, shares, _, _)  => (accMultiple,            accShares.add(shares, accMultiple))
+        case Sell(_, shares, _, _) => (accMultiple,            accShares.sub(shares, accMultiple))
+        case Split(_, multiple)    => (accMultiple * multiple, accShares)
     }}
 
-    if (acc == Shares.zero) None // nothing to sell so no report
+    if (currentOwnedShares == Shares.zero) None // nothing to sell so no report
     else {
       // final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
-      val sell = Sell(today, acc, price, commission)
+      val sell = Sell(today, currentOwnedShares, price, commission)
       val s = stock.copy(trades = ts :+ sell)
       parseCompanyDateRange(s, Date.earliest, today)
     }
