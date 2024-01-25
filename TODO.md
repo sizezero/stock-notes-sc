@@ -91,6 +91,7 @@
     - ~~something is wrong with value calculations. look at GOOG.~~
       - ~~It turns the fake sell we create needs shares at the current multiple because the price is at the current multiple~~
     - ~~there'a a problem with the display of pre split purchase prices and shares~~
+    - ~~gain 2006 produces no stocks~~
     - play around with it a bit and see if I can break it
 - next research (oldest)
 - download quotes

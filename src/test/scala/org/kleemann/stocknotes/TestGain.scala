@@ -11,23 +11,25 @@ class TestGain extends munit.FunSuite {
   }
 
   test("succeed single year") {
-    val y = Date(1970,1,1).get
+    val y1 = Date(1970,1,1).get
+    val y2 = Date(y1.year,12,31).get
     assertEquals(
         Gain.parse(Vector("1970")), 
-        Right(Gain.ParseArgs(y,y,Currency(-100, 0),List[Ticker](), Option.empty[String])))
+        Right(Gain.ParseArgs(y1,y2,Currency(-100, 0),List[Ticker](), Option.empty[String])))
   }
 
   test("succeed double year") {
     assertEquals(
         Gain.parse(Vector("1970:1980")), 
-        Right(Gain.ParseArgs(Date(1970,1,1).get,Date(1980,1,1).get,Currency(-100,0),List[Ticker](), Option.empty[String])))
+        Right(Gain.ParseArgs(Date(1970,1,1).get,Date(1980,12,31).get,Currency(-100,0),List[Ticker](), Option.empty[String])))
   }
 
   test("succeed tickers") {
-    val y = Date(1970,1,1).get
+    val y1 = Date(1970,1,1).get
+    val y2 = Date(y1.year,12,31).get
     assertEquals(
         Gain.parse(Vector("1970", "msFt", "gooG", "cScO")), 
-        Right(Gain.ParseArgs(y,y,Currency(-100,0),List(Ticker("CSCO"),Ticker("GOOG"),Ticker("MSFT")), Option.empty[String])))
+        Right(Gain.ParseArgs(y1,y2,Currency(-100,0),List(Ticker("CSCO"),Ticker("GOOG"),Ticker("MSFT")), Option.empty[String])))
   }
 
   test("succeed omit") {
@@ -42,6 +44,5 @@ class TestGain extends munit.FunSuite {
   test("fail bad date") {
       assert(Gain.parse(Vector("1000000:2000000")).isLeft)
   }
-
 
 }
