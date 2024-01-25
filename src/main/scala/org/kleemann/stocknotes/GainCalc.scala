@@ -110,14 +110,18 @@ object GainCalc {
     // need to find all outstanding shares of the company
     val (_, currentOwnedShares: Shares) =
       ts.foldLeft( (Fraction.one, Shares.zero) ) { case ((accMultiple, accShares), t) => t match {
-        case Buy(_, shares, _, _)  => (accMultiple,            accShares.add(shares, accMultiple))
-        case Sell(_, shares, _, _) => (accMultiple,            accShares.sub(shares, accMultiple))
-        case Split(_, multiple)    => (accMultiple * multiple, accShares)
+        case Buy(_, shares, _, _)  => (accMultiple, accShares.add(shares, accMultiple))
+        case Sell(_, shares, _, _) => (accMultiple, accShares.sub(shares, accMultiple))
+        case Split(_, multiple)    => {
+          val newMultiple = accMultiple * multiple
+          // shares need to be adjusted since the fake sell has a price at the new multiple
+          val sharesAtNewMultiple = accShares.add(Shares.zero, newMultiple)
+          (newMultiple, sharesAtNewMultiple)
+        }
     }}
 
     if (currentOwnedShares == Shares.zero) None // nothing to sell so no report
     else {
-      // final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
       val sell = Sell(today, currentOwnedShares, price, commission)
       val s = stock.copy(trades = ts :+ sell)
       parseCompanyDateRange(s, Date.earliest, today)

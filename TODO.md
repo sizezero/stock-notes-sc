@@ -88,7 +88,8 @@
     - ~~clean up the code, see if it makes sense to get rid of some of the iteration~~
     - ~~see if the final company value should be gross, gross-sell commisions, net, or something else. Using value as gross-sell commission makes the most sense.~~
     - ~~add cash accounts~~
-    - something is wrong with value calculations. look at GOOG
+    - ~~something is wrong with value calculations. look at GOOG.~~
+      - ~~It turns the fake sell we create needs shares at the current multiple because the price is at the current multiple~~
     - play around with it a bit and see if I can break it
 - next research (oldest)
 - download quotes
