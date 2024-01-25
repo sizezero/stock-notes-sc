@@ -63,9 +63,9 @@ object Gain extends Command {
     val (start: Date, end: Date, commission: Currency) =
       if (args3(0)==":") (Date.earliest, Date.latest, Currency(-100, 0))
       else args3(0).match {
-        case yearPattern(y)        => (Date( y.toInt,1,1).get, Date( y.toInt,12,31).get, Currency(-100, 0))
-        case twoYearPattern(y1,y2) => (Date(y1.toInt,1,1).get, Date(y2.toInt,12,31).get, Currency(-100, 0))
-        case commissionPattern(d)  => (Date.earliest, Date.earliest, Currency.parse(args3(0)).get)
+        case yearPattern(y)        => (Date.earliest( y.toInt).get, Date.latest( y.toInt).get, Currency(-100, 0))
+        case twoYearPattern(y1,y2) => (Date.earliest(y1.toInt).get, Date.latest(y2.toInt).get, Currency(-100, 0))
+        case commissionPattern(d)  => (Date.earliest, Date.earliest, Currency.parse(args3(0)).get) // dates don't matter for this case
         case _                     => return Left(help) //this looks non-functional
       }
 

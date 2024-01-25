@@ -231,6 +231,38 @@ class TestGainCalc extends munit.FunSuite {
     }
   }
 
+  test("parseCompanyDateRange fractional matching") {
+    // running "gain 2014 dgly" caused parseMatchSell to blow up due to fractional shares not getting correctly match
+    // this required me to rewrite the code using doubles instead of ints with multiples
+    // the test replicates the symptom
+
+    val ticker = Ticker("DGLY")
+    val g: os.Generator[String] = os.Generator.from(
+      """
+      |Sep 24, 2010
+      |TRADE buy 1225@1.60 balance 1225 commission 7.00
+      |Nov 11, 2010
+      |TRADE buy 1875@1.60 balance 3100 commission 7.00
+      |Jan 11, 2011
+      |TRADE buy 2923@1.71 balance 6023 commission 7.00
+      |Aug 24, 2012
+      |TRADE sell 7@1.0 balance 6016 commission 0.0
+      |TRADE split 1:8 balance 752
+      |Aug 28, 2014
+      |TRADE sell 752@17.32 balance 0  commission 7.29 
+      |""".stripMargin.split("\n")
+    )
+    val e = Stock.load(ticker, "filename", g)
+    assert(e.isRight)
+    val stock = e.right.get
+    assert(stock.trades.length == 6)
+
+    val o = GainCalc.parseCompanyDateRange(stock, Date.earliest(2014).get, Date.latest(2014).get)
+    assert(o.isDefined)
+    val sr = o.get
+    // we're really testing that the above didn't blow up; not sure what else to look at
+  }
+
   test("parsedMatchedSell") {
     // test all three cases of sell equals buy, and each exceeds
 
@@ -269,7 +301,7 @@ class TestGainCalc extends munit.FunSuite {
     assertEquals(ms, GainCalc.MatchedSell(s1, Currency(16, 0), Currency(16, 0), ms2))
 
     val brss3 = Vector[GainCalc.BuyReadyToSell](
-      GainCalc.BuyReadyToSell(b4, Shares(2,m))  // none of the shares were sold from this, still at two
+      GainCalc.BuyReadyToSell(b4, Shares(2,m).atMult(Fraction.one))  // none of the shares were sold from this, still at two
     )
 
     assertEquals(brss2, brss3)

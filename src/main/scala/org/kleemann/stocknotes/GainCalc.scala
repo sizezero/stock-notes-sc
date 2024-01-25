@@ -126,7 +126,7 @@ object GainCalc {
     else {
       val sell = Sell(today, currentOwnedShares, price, commission)
       val s = stock.copy(trades = ts :+ sell)
-      parseCompanyDateRange(s, Date.earliest, today)
+      parseCompanyDateRange(s, today, today)
     }
   }
 
@@ -134,13 +134,13 @@ object GainCalc {
     * This is a buy that is ready to be matched with sells to take some of the shares.
     *
     * @param buy The buy associated with these shares to sell.
-    * @param unsold unsold shares
+    * @param unsold unsold shares at the multiple Fraction.one
     */
-  private[stocknotes] case class BuyReadyToSell(buy: Buy, unsold: Shares)
+  private[stocknotes] case class BuyReadyToSell(buy: Buy, unsold: Double)
 
   private[stocknotes] object BuyReadyToSell {
     // default has all shares unsold
-    def apply(buy: Buy) = new BuyReadyToSell(buy, buy.shares)
+    def apply(buy: Buy) = new BuyReadyToSell(buy, buy.shares.atMult(Fraction.one))
   }
 
   private[stocknotes] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
@@ -199,42 +199,51 @@ object GainCalc {
     */
   private[stocknotes] def parseMatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
 
+    // Unfortunately it's not possible to do this calculation with integer share values plus multiples.
+    // We need to use lossy Doubles. This is highlighted in the test case "parseCompanyDateRange fractional matching"
+    // which caused the old code to blow up.
+
+    // this is some tiny share value at multiple one that we are comfortable that share counts will never get below
+    // we use this to see if share counts are equal or at zero since we can't use equality on a Double
+    //val quantum: Double = 0.0000000001
+    val quantum: Double = 0.0001
+
+    // all double calculations and all conversion to Shares are done with the sell multiple
+    val m = sell.shares.multiple
+
     // a tempory structure to build our eventual matched buys
-    case class IncompleteMatchedBuy(buy: Buy, sold: Shares)
+    case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
 
     // loop through the BuyReadyToSell list until we have satisfied all shares in the sell
     // A mutable loop is bad but I think this is simpler than shoving all this state through 
     // and trying to conditionally stop a foldLeft.
     var toBuys = buys
-    var toSell: Shares = sell.shares
+    var toSell: Double = sell.shares.atMult(Fraction.one)
     var imbs: List[IncompleteMatchedBuy] = Nil // new ones placed on front
 
-    while (toSell != Shares.zero) {
+    while (toSell > quantum) { // toSell > zero
       val b: BuyReadyToSell = toBuys.head
 
-      // can't seem to get around losing precision when converting buy shares to the current mult
-      // we try to minimize it by doing nothing if the multiples match and propagating the converted values forward
-      val availableBuyShares: Shares = if (b.unsold.multiple == toSell.multiple) b.unsold
-        else Shares(b.unsold.atMult(toSell.multiple).floor.toInt, toSell.multiple)
-      // comparisons from now on will be at the sell multiple
-
-      if (availableBuyShares.shares == toSell.shares) {
+      if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
         // the current buy perfectly completes the sell
-        imbs = IncompleteMatchedBuy(b.buy, toSell) :: imbs
+        val s = Shares((toSell * m.toDouble).round.toInt, m)
+        imbs = IncompleteMatchedBuy(b.buy, s) :: imbs
         toBuys = toBuys.tail
-        toSell = Shares.zero
-      } else if (availableBuyShares.shares < toSell.shares) {
+        toSell = 0.0
+      } else if (b.unsold < toSell) {
         // we have used up the current buy, but the sell is not done
-        imbs = IncompleteMatchedBuy(b.buy, availableBuyShares) :: imbs
+        val s = Shares((b.unsold * m.toDouble).round.toInt, m)
+        imbs = IncompleteMatchedBuy(b.buy, s) :: imbs
         toBuys = toBuys.tail
-        toSell = toSell.sub(availableBuyShares, toSell.multiple)
-      } else { // availableBuyShares.shares > toSell.shares
+        toSell = toSell - b.unsold
+      } else { // b.unsold > toSell
         // only some of the buy shares are needed to satisfy the sell
-        imbs = IncompleteMatchedBuy(b.buy, toSell) :: imbs
+        val s = Shares((toSell * m.toDouble).round.toInt, m)
+        imbs = IncompleteMatchedBuy(b.buy, s) :: imbs
         // sell is completed and the next buy is only partially completed
-        val reducedShares = availableBuyShares.sub(toSell, toSell.multiple)
+        val reducedShares: Double = b.unsold - toSell
         toBuys = toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares))
-        toSell = Shares.zero
+        toSell = 0.0
       }
     }
 

@@ -100,6 +100,12 @@
       - ~~the trade is being paired with a 1991 buy that should have been long ago sold~~
       - ~~gain 1995:2014 gives similar results in p and s~~
       - ~~it turns out that we incorrectly filtering out the sells too early and not processing them so they consume the necessary buys~~
+    - ~~gain 2014 dgly blows up~~
+      - ~~I think the problem is that we are trying to maintain integer share counts which is not possible~~
+      - ~~we may need to convert all of these to doubles in the sell multiples, do all calcs, and then convert back~~
+      - ~~converted to doubles, capital gains seem way worse, some sales are now off in value by a lot~~
+        - ~~BSV has a value problem because quantum is too high, I guess it needs a lot of digits~~
+        - ~~the bug seems to be that the current report is showing previous sales, fixed~~
     - The annual yield difference is bugging me. I should verify that the scala version is correct.
     - play around with it a bit and see if I can break it
 - next research (oldest)

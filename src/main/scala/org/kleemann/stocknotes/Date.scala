@@ -69,8 +69,13 @@ object Date {
     else if (day<1 || day>daysPerMonth(month)) None
     else Some(new Date(year,month,day))
 
-  val earliest: Date = Date(1900,  1,  1).get
-  val latest:   Date = Date(3000, 12, 31).get
+  def earliest(year: Int): Option[Date] = Date(year,  1,  1)
+  def latest  (year: Int): Option[Date] = Date(year, 12, 31)
+
+  // It's a little inconsistent to have these return Dates while the above returns Options
+  // but it's accurate and type checking will catch problems
+  val earliest: Date = earliest(1900).get
+  val latest:   Date = latest  (3000).get
 
   /** returns the current date
    * Note: this is not a pure function as multiple calls will return different values
