@@ -117,6 +117,10 @@
 - next research (oldest)
   - ~~implemented simple version of oldest~~
   - next research is mostly within a bash script, figure out how to deploy a scala cl app
+    - ~~went through a roller coaster to see how an sbt scala jar can be run outside of sbt. blogged about it~~
+    - ~~next research is all handled by a bash script, copying that to the scala project~~
+    - need to implement the watching keyword
+    - I think some stocks without dates are now showing up when they weren't before. I'm not sure what behavior I want.
 - download quotes
 - browse ticker
 - calc

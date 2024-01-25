@@ -1,0 +1,19 @@
+#!/bin/bash
+
+SD=$(dirname "$(readlink -f "$0")")
+D="$SD/../.."
+
+function list-companies-by-keyword {
+    echo
+    echo "*** $1 ***"
+    echo
+
+    $D/src/scripts/stock-notes oldest $2 | ( head -5 ; ( dd of=/dev/null &> /dev/null ) )
+}
+
+list-companies-by-keyword New "-k new"
+list-companies-by-keyword Owned "-k owned"
+list-companies-by-keyword Sold "-k sold"
+list-companies-by-keyword Watching "-k watching"
+list-companies-by-keyword All ""
+echo
