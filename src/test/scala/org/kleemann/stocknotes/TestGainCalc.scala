@@ -120,7 +120,7 @@ class TestGainCalc extends munit.FunSuite {
       0.5363864184585441)
     val net1 = s1.gross - (mb1.proportionalCost + mb2.proportionalCost)
     val capGains1 = net1 - com - mb1.proportionalBuyCommission - mb2.proportionalBuyCommission
-    val ms1 = GainCalc.MatchedSell(s1, net1, capGains1, List(mb1,mb2))
+    val ms1 = GainCalc.MatchedSell(s1, net1.truncate, capGains1.truncate, List(mb1,mb2))
 
     // sell remaining 77 shares from b2
     val mb3 = GainCalc.MatchedBuy(
@@ -144,7 +144,7 @@ class TestGainCalc extends munit.FunSuite {
       0.6706370504190582)
     val net2 = s2.gross - (mb3.proportionalCost + mb4.proportionalCost)
     val capGains2 = net2 - com - mb3.proportionalBuyCommission - mb4.proportionalBuyCommission
-    val ms2 = GainCalc.MatchedSell(s2, net2, capGains2, List(mb3,mb4))
+    val ms2 = GainCalc.MatchedSell(s2, net2.truncate, capGains2.truncate, List(mb3,mb4))
 
     val value = s1.gross - s1.commission + s2.gross - s1.commission
     val capGainsTotal1 = s1.gross + s2.gross

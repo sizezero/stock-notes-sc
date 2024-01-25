@@ -100,4 +100,10 @@ class TestCurrency extends munit.FunSuite {
     assertEquals(Currency(10,0).priceMultipleAdjust(Fraction.one,  Fraction(2,1)), Currency(5, 0))
     assertEquals(Currency(10,0).priceMultipleAdjust(Fraction(3,1), Fraction(6,1)), Currency(5, 0))
   }
+
+  test("truncate") {
+    assertEquals(Currency.decimal(0, "12345").truncate, Currency.decimal(0, "12"))
+    val c = Currency.decimal(12, "34")
+    assertEquals(c.truncate, c)
+  }
 }

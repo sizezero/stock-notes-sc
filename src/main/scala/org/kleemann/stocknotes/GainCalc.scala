@@ -33,10 +33,10 @@ object GainCalc {
     *
     * @param buy the Buy Trade
     * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares. This is in the Sell multiple.
-    * @param price this is the price of the shares in the Sell multiple
-    * @param proportionalCost the cost proportional to the sold shares
-    * @param proportionalBuyCommission the buy commission proportional to the sold shares.
-    * @param proportionalSellCommission the sell commision proportional to the sold shares.
+    * @param price this is the price of the shares in the Sell multiple. This may have sub-penny precision.
+    * @param proportionalCost the cost proportional to the sold shares. This may have sub-penny precision.
+    * @param proportionalBuyCommission the buy commission proportional to the sold shares. This may have sub-penny precision.
+    * @param proportionalSellCommission the sell commision proportional to the sold shares. This may have sub-penny precision.
     * @param ltcg true if the shares were purchased at least a year before the sale.
     * @param annualYield The annual yield from cost+proportionalBuyCommission to the gross-proportionalSellCommission
     */
@@ -190,7 +190,7 @@ object GainCalc {
       val denominator: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m) }
       val ltcgPercentage = numerator / denominator
         
-      Some(StockReport(stock, mss, value, capGains, ltcgPercentage))
+      Some(StockReport(stock, mss, value.truncate, capGains.truncate, ltcgPercentage))
     }
   }
 
@@ -253,7 +253,7 @@ object GainCalc {
     val mbs = imbs.map{ imb => completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
     val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalBuyCommission }
-    (MatchedSell(sell, net, capitalGain, mbs), toBuys)
+    (MatchedSell(sell, net.truncate, capitalGain.truncate, mbs), toBuys)
   }
 
   /**

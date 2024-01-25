@@ -109,6 +109,10 @@
     - ~~The annual yield difference is bugging me. I should verify that the scala version is correct.~~
       - ~~It looks like python code does not include commissions in the annual yield~~
       - ~~It is still off but now it's a rounding error~~
+      - ~~gain dgly 2014 shows python with an incorrect cost post split~~
+    - "gain 2016" shows two stocks with the sum of their capital gains off by a penny. This is due to sub penny values of the cap gains.
+      - ~~do we want to truncate some of these currency values after creating them?~~
+      - ~~added truncate on Currency and used it on some "final" values~~
     - play around with it a bit and see if I can break it
 - next research (oldest)
 - download quotes

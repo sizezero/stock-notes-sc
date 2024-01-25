@@ -62,6 +62,13 @@ final case class Currency private(milliPennies: Long) {
         val m = to / from
         Currency.fromDouble(this.toDouble / m.toDouble)
       }
+
+    /**
+      * Gets rid of any sub pennie values.
+      *
+      * @return millipennies that are a multiple of a thousand. E.g.: whole pennies.
+      */
+    def truncate: Currency = new Currency(milliPennies - (milliPennies % 1000))
 }
 
 object Currency {
