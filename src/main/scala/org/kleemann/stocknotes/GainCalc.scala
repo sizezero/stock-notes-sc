@@ -152,11 +152,12 @@ object GainCalc {
       stock.trades.foldLeft( (Vector[BuyReadyToSell](), List[MatchedSell]() ) ){ case ((brss, mss), t) =>
         t match {
           case b: Buy  => (brss :+ BuyReadyToSell(b), mss)
-          case s: Sell =>
-            if (s.date>=start && s.date<=end) {
-              val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = parseMatchedSell(s, brss)
-              (unconsumed, ms :: mss)
-            } else (brss, mss)
+          case s: Sell => {
+            // even if we the sell isn't in our date range, we have to process it so it will consume earlier buys
+            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = parseMatchedSell(s, brss)
+            if (s.date>=start && s.date<=end) (unconsumed, ms :: mss)
+            else                              (unconsumed,       mss)
+          }
           case _: Split => (brss, mss)
         }
       }

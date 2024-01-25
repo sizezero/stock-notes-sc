@@ -92,6 +92,15 @@
       - ~~It turns the fake sell we create needs shares at the current multiple because the price is at the current multiple~~
     - ~~there'a a problem with the display of pre split purchase prices and shares~~
     - ~~gain 2006 produces no stocks~~
+    - ~~2012 dgly~~
+      - ~~blows up in python, strange values in scala, it looks like scala is doing the right thing~~
+    - ~~2013 MSFT is fucked up in scala~~
+      - ~~      MSFT     $30963.81  3.5%      $9255.99          100.0%~~
+      - ~~      MSFT        $30,963.81  11.5%     $29,247.81         100.0%~~
+      - ~~the trade is being paired with a 1991 buy that should have been long ago sold~~
+      - ~~gain 1995:2014 gives similar results in p and s~~
+      - ~~it turns out that we incorrectly filtering out the sells too early and not processing them so they consume the necessary buys~~
+    - The annual yield difference is bugging me. I should verify that the scala version is correct.
     - play around with it a bit and see if I can break it
 - next research (oldest)
 - download quotes
