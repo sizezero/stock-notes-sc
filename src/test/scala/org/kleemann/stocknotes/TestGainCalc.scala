@@ -100,7 +100,8 @@ class TestGainCalc extends munit.FunSuite {
     // sell all 154 shares of b1, proportion values are 100%
     val mb1 = GainCalc.MatchedBuy(
       b1, 
-      Shares(154,m2), 
+      Shares(154,m2),
+      b1.price.priceMultipleAdjust(m1,m2),
       Currency(22*445, 0), 
       com, // full buy commision
       Currency.fromDouble(com.toDouble*(154.0/252)),
@@ -108,8 +109,10 @@ class TestGainCalc extends munit.FunSuite {
       0.3513183447677446)
     // sell needs 98 more shares, less that b2 has
     // 98 of these are sold, 77 remain, cost and commission are proportional
-    val mb2 = GainCalc.MatchedBuy(b2, 
+    val mb2 = GainCalc.MatchedBuy(
+      b2, 
       Shares(98,m2), 
+      b2.price.priceMultipleAdjust(m1,m2),
       Currency(14*399, 0), 
       Currency.fromDouble(com.toDouble*(98.0/175)), 
       Currency.fromDouble(com.toDouble*(98.0/252)), 
@@ -123,6 +126,7 @@ class TestGainCalc extends munit.FunSuite {
     val mb3 = GainCalc.MatchedBuy(
       b2, 
       Shares(77,m2), 
+      b2.price.priceMultipleAdjust(m1,m2),
       Currency(11*399, 0), 
       Currency.fromDouble(com.toDouble*(77.0/175)), 
       Currency.fromDouble(com.toDouble*(77.0/252)), 
@@ -132,6 +136,7 @@ class TestGainCalc extends munit.FunSuite {
     val mb4 = GainCalc.MatchedBuy(
       b3, 
       Shares(175,m2), 
+      b3.price.priceMultipleAdjust(m1,m2),
       Currency(25*395, 0), // original shares and price
       com, // full buy commission
       Currency.fromDouble(com.toDouble*(175.0/252)), 
@@ -256,9 +261,9 @@ class TestGainCalc extends munit.FunSuite {
 
     // I didn't test the annual yield, just copied it from the output
     val ms2 = List[GainCalc.MatchedBuy](
-      GainCalc.MatchedBuy(b1, Shares(4,m), Currency(4, 0), com, com, true, 0.3160740129524924),
-      GainCalc.MatchedBuy(b2, Shares(4,m), Currency(6, 0), com, com, true, 0.2599210498948732),
-      GainCalc.MatchedBuy(b3, Shares(2,m), Currency(4, 0), com, com, false, 0.5575251156760133)
+      GainCalc.MatchedBuy(b1, Shares(4,m), b1.price.priceMultipleAdjust(Fraction.one,m), Currency(4, 0), com, com, true, 0.3160740129524924),
+      GainCalc.MatchedBuy(b2, Shares(4,m), b2.price.priceMultipleAdjust(Fraction.one,m), Currency(6, 0), com, com, true, 0.2599210498948732),
+      GainCalc.MatchedBuy(b3, Shares(2,m), b3.price.priceMultipleAdjust(m,m),            Currency(4, 0), com, com, false, 0.5575251156760133)
     )
 
     assertEquals(ms, GainCalc.MatchedSell(s1, Currency(16, 0), Currency(16, 0), ms2))

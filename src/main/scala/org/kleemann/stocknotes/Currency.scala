@@ -48,6 +48,20 @@ final case class Currency private(milliPennies: Long) {
         if (pennies < 0) out = '(' :: out
         out.mkString
     }
+
+    /**
+      * Shares have multiples not currencies but sometimes we want to see a price viewed at a different multiple.
+      * An example of this is an old purchase price that you want to see what it would be to current shares.
+      *
+      * @param from the multiple that the currency is associated with
+      * @param to the different multiple that we would like to see the price adjusted for
+      */
+    def priceMultipleAdjust(from: Fraction, to: Fraction): Currency =
+      if (from == to) this
+      else {
+        val m = to / from
+        Currency.fromDouble(this.toDouble / m.toDouble)
+      }
 }
 
 object Currency {

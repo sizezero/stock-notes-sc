@@ -32,7 +32,8 @@ object GainCalc {
     * Note: not all of the shares of the buy block may have been sold.
     *
     * @param buy the Buy Trade
-    * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares
+    * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares. This is in the Sell multiple.
+    * @param price this is the price of the shares in the sell multiple
     * @param proportionalCost the cost proportional to the sold shares
     * @param proportionalBuyCommission the buy commission proportional to the sold shares.
     * @param proportionalSellCommission The sell commision proportional to the sold shares.
@@ -42,6 +43,7 @@ object GainCalc {
   case class MatchedBuy(
     buy: Buy, 
     sold: Shares, 
+    price: Currency,
     proportionalCost: Currency, 
     proportionalBuyCommission: Currency, 
     proportionalSellCommission: Currency, 
@@ -250,6 +252,10 @@ object GainCalc {
     * @return
     */
   private[stocknotes] def completeMatchedBuy(sell: Sell, buy: Buy, sold: Shares): MatchedBuy = {
+
+    // we need to convert the buy price to the sell multiple
+    val price = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
+
     // the proportion of sold shares in this buy batch vs total shares in this buy batch
     // If all shares in this batch are sold then this is 1.0
     val proportionBuy: Double = sold.atMult(sell.shares.multiple) / buy.shares.atMult(sell.shares.multiple)
@@ -274,7 +280,7 @@ object GainCalc {
         proportionalSellGross - proportionalSellCommission, 
         diff)
 
-    MatchedBuy(buy, sold, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
+    MatchedBuy(buy, sold, price, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
   }
 
   private[stocknotes] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =

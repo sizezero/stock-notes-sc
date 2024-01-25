@@ -95,4 +95,9 @@ class TestCurrency extends munit.FunSuite {
     assertEquals(Currency.fromDouble(0.0), Currency.zero)
     assertEquals(Currency.fromDouble(1.0), Currency.decimal(1,"0"))
   }
+
+  test("priceMultipleAdjust") {
+    assertEquals(Currency(10,0).priceMultipleAdjust(Fraction.one,  Fraction(2,1)), Currency(5, 0))
+    assertEquals(Currency(10,0).priceMultipleAdjust(Fraction(3,1), Fraction(6,1)), Currency(5, 0))
+  }
 }

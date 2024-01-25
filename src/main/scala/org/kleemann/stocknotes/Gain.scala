@@ -130,7 +130,7 @@ object Gain extends Command {
           println(String.format(itemFmt, 
             mb.buy.date, 
             if (mb.ltcg) "(ltcg)" else "", 
-            s"${mb.sold.toString(m)}@${mb.buy.price}", 
+            s"${mb.sold.toString(m)}@${mb.price}", 
             mb.proportionalCost, 
             mb.proportionalBuyCommission, 
             mb.proportionalSellCommission, 
