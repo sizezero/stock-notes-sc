@@ -106,7 +106,9 @@
       - ~~converted to doubles, capital gains seem way worse, some sales are now off in value by a lot~~
         - ~~BSV has a value problem because quantum is too high, I guess it needs a lot of digits~~
         - ~~the bug seems to be that the current report is showing previous sales, fixed~~
-    - The annual yield difference is bugging me. I should verify that the scala version is correct.
+    - ~~The annual yield difference is bugging me. I should verify that the scala version is correct.~~
+      - ~~It looks like python code does not include commissions in the annual yield~~
+      - ~~It is still off but now it's a rounding error~~
     - play around with it a bit and see if I can break it
 - next research (oldest)
 - download quotes

@@ -8,10 +8,10 @@ object GainCalc {
     * The top level report for the Gain Report is a list of StockReport objects.
     * This is just the relevant data from the date range or just the current data.
     *
-    * @param stock The underlying stock date from the log directory.
+    * @param stock The underlying stock data from the log directory.
     * @param mss The set of matched sells that have occurred. For current data, there is only one matched sell.
     * @param value The total value of all sales minus the sell commission
-    * @param capGains The capital gains of this sale (gross-cost). This includes commissions.
+    * @param capGains The capital gains of this sale (gross-cost). This includes buy and sell commissions.
     * @param ltcgPercentage This is the percentage of shares sold that are ltcg.
     */
   case class StockReport(stock: Stock, mss: List[MatchedSell], value: Currency, capGains: Currency, ltcgPercentage: Double)
@@ -20,7 +20,7 @@ object GainCalc {
     * This represents a sale of a block of stock.
     * It is matched up with perhaps multiple buy blocks of stock.
     *
-    * @param sell The Trade Sell that is associated with this sale. All shares of this sell are sold.
+    * @param sell The Trade Sell that is associated with this sale. All shares of this Sell are sold.
     * @param net gross - cost, no buy or sell commisions
     * @param capitalGain net - sell commissions - buy commissions proportional to the shares sold from the buy batch
     * @param mbs A list of Matched buys that add up to this sale from oldest to newest.
@@ -33,10 +33,10 @@ object GainCalc {
     *
     * @param buy the Buy Trade
     * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares. This is in the Sell multiple.
-    * @param price this is the price of the shares in the sell multiple
+    * @param price this is the price of the shares in the Sell multiple
     * @param proportionalCost the cost proportional to the sold shares
     * @param proportionalBuyCommission the buy commission proportional to the sold shares.
-    * @param proportionalSellCommission The sell commision proportional to the sold shares.
+    * @param proportionalSellCommission the sell commision proportional to the sold shares.
     * @param ltcg true if the shares were purchased at least a year before the sale.
     * @param annualYield The annual yield from cost+proportionalBuyCommission to the gross-proportionalSellCommission
     */
@@ -88,7 +88,8 @@ object GainCalc {
         s, 
         if (quotes contains s.ticker) quotes.get(s.ticker).get.price else Currency.zero,
         pa.commission,
-        today)}
+        today)
+      }
 
     } else {
       // ...and one where we get a year range
@@ -148,6 +149,7 @@ object GainCalc {
     // When a buy is encountered we add it to brss which is our accumulating list of BuyReadyToSells.
     // When a sell is encountered, the accumulated buy list is passed to the sell parser which may consume some of the buys
     // and a matched sell is returned that we accumulate.
+    // We can ignore splits since the share values in the buys and sells already have multiples associated with them.
     val (brss:Vector[BuyReadyToSell], mssReversed: List[MatchedSell]) = 
       stock.trades.foldLeft( (Vector[BuyReadyToSell](), List[MatchedSell]() ) ){ case ((brss, mss), t) =>
         t match {
@@ -167,7 +169,8 @@ object GainCalc {
     if (mss.isEmpty) None
     else {
 
-      // the sum of each Matched sell, commissions are left out of it
+      // the sum of each Matched sell, only count sell commission, not buy commission or buys cost
+      // this is the cash you get when you sell
       val value: Currency = mss.foldLeft(Currency.zero){ (acc, ms) => acc + ms.sell.gross - ms.sell.commission }
 
       // gross of each sell - sell commission - cost - buy commisions proportional to sold shares
@@ -184,7 +187,7 @@ object GainCalc {
           acc + (if (mb.ltcg) mb.sold.atMult(m) else 0.0)
         } 
       }
-      val denominator: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m)}
+      val denominator: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m) }
       val ltcgPercentage = numerator / denominator
         
       Some(StockReport(stock, mss, value, capGains, ltcgPercentage))
@@ -286,7 +289,7 @@ object GainCalc {
     // include commissions in annual yield calc
     val proportionalSellGross: Currency = Currency.fromDouble(sell.gross.toDouble * proportionSell)
     val ay: Double = annualYield(
-        proportionalBuyCost + proportionalBuyCommission, 
+        proportionalBuyCost   + proportionalBuyCommission, 
         proportionalSellGross - proportionalSellCommission, 
         diff)
 
