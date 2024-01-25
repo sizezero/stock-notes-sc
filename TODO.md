@@ -113,8 +113,10 @@
     - "gain 2016" shows two stocks with the sum of their capital gains off by a penny. This is due to sub penny values of the cap gains.
       - ~~do we want to truncate some of these currency values after creating them?~~
       - ~~added truncate on Currency and used it on some "final" values~~
-    - play around with it a bit and see if I can break it
+    - ~~play around with it a bit and see if I can break it~~
 - next research (oldest)
+  - ~~implemented simple version of oldest~~
+  - next research is mostly within a bash script, figure out how to deploy a scala cl app
 - download quotes
 - browse ticker
 - calc
