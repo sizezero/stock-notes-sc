@@ -121,7 +121,10 @@
     - ~~next research is all handled by a bash script, copying that to the scala project~~
     - ~~need to implement the watching keyword~~
     - I think some stocks without dates are now showing up when they weren't before. I'm not sure what behavior I want.
-    - AAPL is showing up in the new watch but not the old
+    - ~~AAPL is showing up in the scala watch but not the python~~
+      - ~~the stock was watched and then set to none so it has values of none,none,7/1 which doesn't equal the none values~~
+      - ~~I think the best solution is to get rid of the None type and have the parse return option None instead of an actual object. This way it won't have a    multiple associated with it which is what I want.~~
+      - ~~Actually this doesn't work. Watches are complicated as each of the low and high values are options. I think having a singular none type is the best bet.~~
 - download quotes
 - browse ticker
 - calc

@@ -84,4 +84,10 @@ class TestWatch extends munit.FunSuite {
         val m4 = m3*Fraction(1,3)
         assertEquals(w1.lowAtMult(m4), Some(Currency(3, 0)))
     }
+
+    test("canonical none") {
+        assertEquals(BuyWatch(None,None,Fraction(1,3)), BuyWatch.none)
+        assertEquals(Watch.parse("BUY None",  Fraction(7,1)), Right(BuyWatch.none))
+        assertEquals(Watch.parse("SELL none", Fraction(9,1)), Right(SellWatch.none))
+    }
 }

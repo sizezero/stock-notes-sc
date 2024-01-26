@@ -70,12 +70,15 @@ object Watch {
   * @param low the lower of the two prices (back in the truck)
   * @param high the higher of the two prices (nibble)
   */
-final case class BuyWatch(low: Option[Currency], high: Option[Currency], multiple: Fraction) extends Watch(low, high, multiple)
+final case class BuyWatch private (low: Option[Currency], high: Option[Currency], multiple: Fraction) extends Watch(low, high, multiple)
 
 object BuyWatch {
 
-    val none = BuyWatch(None, None, Fraction.one)
+    val none = new BuyWatch(None, None, Fraction.one)
 
+    def apply(low: Option[Currency], high: Option[Currency], multiple: Fraction): BuyWatch =
+        if (low==None && high==None) none
+        else                         new BuyWatch(low, high, multiple)
 }
 
 /**
@@ -84,10 +87,13 @@ object BuyWatch {
   * @param low the lower of the two prices (sell it all)
   * @param high the higher of the two prices (take some profits)
   */
-final case class SellWatch(low: Option[Currency], high: Option[Currency], multiple: Fraction) extends Watch(low, high, multiple)
+final case class SellWatch private (low: Option[Currency], high: Option[Currency], multiple: Fraction) extends Watch(low, high, multiple)
 
 object SellWatch {
 
-    val none = SellWatch(None, None, Fraction.one)
+    val none = new SellWatch(None, None, Fraction.one)
 
+    def apply(low: Option[Currency], high: Option[Currency], multiple: Fraction): SellWatch =
+        if (low==None && high==None) none
+        else                         new SellWatch(low, high, multiple)
 }
