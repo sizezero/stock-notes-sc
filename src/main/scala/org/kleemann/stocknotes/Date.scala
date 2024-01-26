@@ -9,7 +9,7 @@ final case class Date private(year: Int, month: Int, day: Int) extends Ordered[D
 
   // TODO: don't know if I want both these representation available
   //override def toString(): String = f"$year%04d/$month%02d/$day%02d"
-  override def toString(): String = f"${Date.number2month(month).take(3)} ${day}%d, ${year}%04d"
+  override def toString(): String = f"${Date.number2month(month).take(3)} ${day}%2d, ${year}%04d"
 
  /**
    * Represents the date as a decimal number where the year is the whole number part and the 

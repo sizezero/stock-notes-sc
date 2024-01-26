@@ -68,7 +68,7 @@ object Oldest extends Command {
       ss4.foreach{ s => {
         val d = if (s.entries.length > 0) s.entries.last.date.toString() else "NODATE"
         val n = s.name.getOrElse("NONAME")
-        println(s"${s.ticker} $d $n")
+        println(s"$d ${s.ticker} $n")
       }}
 
     None

@@ -65,7 +65,7 @@ class TestStock extends munit.FunSuite {
             |""".stripMargin.split("\n")
         )
         val obtained = Stock.load(ticker, "filename", g)
-        assertEquals(obtained, Left("filename(4): date Jan 1, 1980 is not greater than previous date Jan 1, 1992"))
+        assertEquals(obtained, Left("filename(4): date Jan  1, 1980 is not greater than previous date Jan  1, 1992"))
     }
 
     test("bad keywords") {

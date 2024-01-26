@@ -165,6 +165,9 @@ object Stock {
             else if (trades.length > 0)
                 // no shares but some trades means we once owned this and now have sold it
                 keywords = keywords + "sold"
+            if (buyWatch != BuyWatch.none || sellWatch != SellWatch.none)
+                keywords = keywords + "watching"
+
             // wrap up the final entry
             entries = Entry(ticker, entryDate, entryText.result()) :: entries
             // build our return object
