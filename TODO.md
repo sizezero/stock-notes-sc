@@ -131,7 +131,7 @@
       - ~~the stock was watched and then set to none so it has values of none,none,7/1 which doesn't equal the none values~~
       - ~~I think the best solution is to get rid of the None type and have the parse return option None instead of an actual object. This way it won't have a    multiple associated with it which is what I want.~~
       - ~~Actually this doesn't work. Watches are complicated as each of the low and high values are options. I think having a singular none type is the best bet.~~
-    - Change dates to have multiple tostring formats. oldest uses fixed length
+    - ~~Change dates to have multiple tostring formats. oldest uses fixed length~~
 - download quotes
 - browse ticker
 - calc

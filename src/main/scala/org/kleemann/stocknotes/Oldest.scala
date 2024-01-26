@@ -65,8 +65,10 @@ object Oldest extends Command {
         println(s.ticker)
       }
     else
+      // TODO: I'm not sure if it's possible for a Stock to have no entries but doing this anyway
+      val noDate = "NODATE".padTo(Date.earliest.toStringEnglishFixedWidth().length() , " ")
       ss4.foreach{ s => {
-        val d = if (s.entries.length > 0) s.entries.last.date.toString() else "NODATE"
+        val d = if (s.entries.length > 0) s.entries.last.date.toStringEnglishFixedWidth() else "NODATE"
         val n = s.name.getOrElse("NONAME")
         println(s"$d ${s.ticker} $n")
       }}
