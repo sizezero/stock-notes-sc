@@ -120,11 +120,18 @@
     - ~~went through a roller coaster to see how an sbt scala jar can be run outside of sbt. blogged about it~~
     - ~~next research is all handled by a bash script, copying that to the scala project~~
     - ~~need to implement the watching keyword~~
-    - I think some stocks without dates are now showing up when they weren't before. I'm not sure what behavior I want.
+    - ~~I think some stocks without dates are now showing up when they weren't before. I'm not sure what behavior I want.~~
+      - ~~MDSO has a mistyped date entry "Oct, 2, 2017" so it has no entries~~
+      - ~~in python the file parses as a that has no entries~~
+      - ~~oldest then treats no entry as no date and excludes it from the list~~
+      - ~~this seems just wrong, not parse error by silently never see it~~
+      - ~~the scala behavior of no date entry results in a date that is the oldest seems correct. The result will be me seeing it and adding a correct date.~~
+      - ~~no changes need to be made~~
     - ~~AAPL is showing up in the scala watch but not the python~~
       - ~~the stock was watched and then set to none so it has values of none,none,7/1 which doesn't equal the none values~~
       - ~~I think the best solution is to get rid of the None type and have the parse return option None instead of an actual object. This way it won't have a    multiple associated with it which is what I want.~~
       - ~~Actually this doesn't work. Watches are complicated as each of the low and high values are options. I think having a singular none type is the best bet.~~
+    - Change dates to have multiple tostring formats. oldest uses fixed length
 - download quotes
 - browse ticker
 - calc
