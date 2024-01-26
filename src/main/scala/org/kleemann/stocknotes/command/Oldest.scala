@@ -1,4 +1,7 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.command
+
+import org.kleemann.stocknotes.{Config}
+import org.kleemann.stocknotes.stock.{Date, Stock}
 
 object Oldest extends Command {
 
@@ -6,13 +9,6 @@ object Oldest extends Command {
   |  -r reverse the order
   |  -t display ticker only
   |  -k restrict the list to the specified keyword""".stripMargin
-
-  def command(args: IndexedSeq[String]): Option[String] = {
-    parse(args) match {
-      case Right(parseArgs) => display(parseArgs)
-      case Left(error)      => Option(error)
-    }
-  }
 
   private[stocknotes] case class ParseArgs(reverse: Boolean, tickerOnly: Boolean, keyword: Option[String])
 
@@ -41,7 +37,7 @@ object Oldest extends Command {
     Right(ParseArgs(r,t,k))
   }
 
-  def display(pa: ParseArgs): Option[String] = {
+  private def display(pa: ParseArgs): Unit = {
     // both config and stock loading blow us out with a sys.exit(1) not sure if that's what I want
     // we're not really returning anything at this point, may as well be Unit
     val config = Config.load()
@@ -74,5 +70,15 @@ object Oldest extends Command {
       }}
 
     None
+  }
+
+  def command(args: IndexedSeq[String]): Option[String] = {
+    parse(args) match {
+      case Right(parseArgs) => {
+        display(parseArgs)
+        None
+      }
+      case Left(error)      => Option(error)
+    }
   }
 }

@@ -133,6 +133,10 @@
       - ~~Actually this doesn't work. Watches are complicated as each of the low and high values are options. I think having a singular none type is the best bet.~~
     - ~~Change dates to have multiple tostring formats. oldest uses fixed length~~
 - download quotes
+  - ~~lets start by moving some classes to packages~~
+    - ~~command: BrowseTicker, Command, DownloadQuotes, Gain, Oldest, ~~
+    - ~~stock: CashAccount, Currency, Date, Entry, Fraction, Shares, Stock, Trade, Watch~~
+    - ~~stocknotes: Config, GainCalc, Quote, Ticker~~
 - browse ticker
 - calc
 - www pages

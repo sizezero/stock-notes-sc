@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.command
 
 class TestOldest extends munit.FunSuite {
 

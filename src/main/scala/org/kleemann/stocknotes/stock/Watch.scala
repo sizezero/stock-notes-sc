@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
 
 sealed trait Watch(low: Option[Currency], high: Option[Currency], multiple: Fraction) {
 

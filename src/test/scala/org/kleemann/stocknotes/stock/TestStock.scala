@@ -1,4 +1,6 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
+
+import org.kleemann.stocknotes.Ticker
 
 class TestStock extends munit.FunSuite {
 

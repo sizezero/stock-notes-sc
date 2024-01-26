@@ -1,5 +1,9 @@
 package org.kleemann.stocknotes
 
+import org.kleemann.stocknotes.command.{Gain}
+import org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
+import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
+
 /**
   * This is where all the calculations are performed for the Gain report. All this code is pure functional.
   */

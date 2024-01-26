@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
 
 import scala.annotation.tailrec
 
@@ -28,7 +28,7 @@ final case class Fraction private(numerator: Int, denominator: Int) extends Orde
       *
       * @return
       */
-    private[stocknotes] def normalize: Fraction = {
+    private def normalize: Fraction = {
         // only the numerator is signed, denominator is never negative
         val (n, d) =
             if (numerator>=0 && denominator>=0)     ( numerator,  denominator) // both are positive
@@ -82,7 +82,7 @@ object Fraction {
      * @param b another integer
      * @return the largest integer that divides into both a and b
      */
-    private[stocknotes] def gcd(a: Int, b: Int): Int = gcdIterative(a.abs,b.abs)
+    private[stock] def gcd(a: Int, b: Int): Int = gcdIterative(a.abs,b.abs)
 
     /**
       * @param a must be positive
@@ -90,7 +90,7 @@ object Fraction {
       * @return the largest integer that divides into both a and b
       */
     @tailrec
-    private[stocknotes] def gcdRecursive(a: Int, b: Int): Int =
+    private[stock] def gcdRecursive(a: Int, b: Int): Int =
         if (b == 0) a
         else gcdRecursive(b,a%b)
 
@@ -99,7 +99,7 @@ object Fraction {
       * @param b must be positive
       * @return the largest integer that divides into both a and b
       */
-    private[stocknotes] def gcdIterative(a: Int, b: Int): Int = {
+    private[stock] def gcdIterative(a: Int, b: Int): Int = {
         var pair = (a, b)
         while (true) {
             if (pair._2 == 0) return pair._1

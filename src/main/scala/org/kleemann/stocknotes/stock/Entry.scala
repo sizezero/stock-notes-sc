@@ -1,4 +1,6 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
+
+import org.kleemann.stocknotes.Ticker
 
 /**
   * Stocks are written about in a single file with a date separating different sections.

@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.command
 
 object DownloadQuotes extends Command {
 
@@ -6,7 +6,7 @@ object DownloadQuotes extends Command {
     |stock-notes download-quotes
   """.stripMargin)
 
-  def command(args: IndexedSeq[String]): Option[String] =
+  override def command(args: IndexedSeq[String]): Option[String] =
     if (args.length==0) {
       downloadQuotes()
       None

@@ -1,5 +1,9 @@
 package org.kleemann.stocknotes
 
+import _root_.org.kleemann.stocknotes.command.{Gain}
+import _root_.org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
+import _root_.org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
+
 class TestGainCalc extends munit.FunSuite {
 
   test("calc") {

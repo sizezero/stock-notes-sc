@@ -1,6 +1,8 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
 
 import scala.util.control.Breaks.{break, breakable}
+
+import org.kleemann.stocknotes.{Config}
 
 /**
   * Represents cash and cash equivalents in an investment account
@@ -54,7 +56,7 @@ object CashAccount {
       * @param cashFile the string representation of the input file used for error reporting
       * @param g the generator that produces all the text lines to parse
       */
-    private[stocknotes] def load(accountName: String, cashFile: String, g: os.Generator[String]): Either[String, CashAccount] = {
+    private[stock] def load(accountName: String, cashFile: String, g: os.Generator[String]): Either[String, CashAccount] = {
       // oh god, this is some old school iteration
       var lineNo = 0
       var curDate: Date = null

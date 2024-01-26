@@ -1,4 +1,6 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.command
+
+import org.kleemann.stocknotes.Ticker
 
 // some things this needs
 // - its all about side effects; I probably need some pure functional fns in here to make sure this works.
@@ -15,7 +17,7 @@ object BrowseTicker extends Command {
         -n: do not open an editor
   """.stripMargin)
 
-  def command(args: IndexedSeq[String]): Option[String] = {
+  override def command(args: IndexedSeq[String]): Option[String] = {
     if (args.length == 1) browseTicker(Ticker(args(0)), true)
     else if (args.length == 2) {
         val opt = args(0)

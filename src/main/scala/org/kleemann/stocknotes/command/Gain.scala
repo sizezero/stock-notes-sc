@@ -1,17 +1,13 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.command
+
+import org.kleemann.stocknotes.{Config, GainCalc, Quote, Ticker}
+import org.kleemann.stocknotes.stock.{CashAccount, Currency, Date, Stock}
 
 object Gain extends Command {
 
   val help = s"""gain [-omit <ticker> ] (<year>[:<year>] | <commission>) [ <ticker> <ticker> ... ]
   |""".stripMargin
 
-  def command(args: IndexedSeq[String]): Option[String] = {
-    parse(args) match {
-      case Right(parseArgs) => gain(parseArgs)
-      case Left(error)      => Option(error)
-    }
-  }
-  
   /**
     * The arguments either take a date range OR a commission. If I modelled this with Either, I would lose the ability to name the arguments.
     * Leaving this alone for now.
@@ -22,7 +18,7 @@ object Gain extends Command {
     * @param tickers
     * @param omitKeyword
     */
-  private[stocknotes] case class ParseArgs(start: Date, end: Date, commission: Currency, tickers: List[Ticker], omitKeyword: Option[String]) {
+  case class ParseArgs(start: Date, end: Date, commission: Currency, tickers: List[Ticker], omitKeyword: Option[String]) {
 
     /**
       * There are two modes for the gain report:
@@ -43,7 +39,7 @@ object Gain extends Command {
     * @param args
     * @return
     */
-  private[stocknotes] def parse(args: IndexedSeq[String]): Either[String, ParseArgs] = {
+  private[command] def parse(args: IndexedSeq[String]): Either[String, ParseArgs] = {
 
     val (args2: IndexedSeq[String], omitKeyword: Option[String]) = 
       if (args.length >= 2 && args(0)=="-omit") (args.drop(2), Some(args(1)))
@@ -76,18 +72,15 @@ object Gain extends Command {
     Right(ParseArgs(start, end, commission, tickers, omitKeyword))
   }
 
-  /** For now we are just using the same strange arguments as the original python code.
+  /** 
+    * For now we are just using the same strange arguments as the original python code.
     * I should be able to make this better in the future.
     * 
-    * Does this command have the side effect of printing? Right now our return value consists of only output text in the error case.
-    * Maybe we should use Either to enable output in both cases.
-    *
     * @param pa
     * @return
     */
-  private def gain(pa: ParseArgs): Option[String] = {
-    // both config and stock loading blow us out with a sys.exit(1) not sure if that's what I want
-    // we're not really returning anything at this point, may as well be Unit
+  private def gain(pa: ParseArgs): Unit = {
+  
     val config = Config.load()
     val ss: List[Stock] = Stock.load(config)
     val stocks: Map[Ticker,Stock] = ss.map{ s => s.ticker -> s }.toMap
@@ -173,8 +166,15 @@ object Gain extends Command {
     println("="*50)
     println(String.format(itemFmt2,"", totalValue, "100%", totalCapGains, ""))
     println()
-
-    None
   }
 
+  override def command(args: IndexedSeq[String]): Option[String] = {
+    parse(args) match {
+      case Right(parseArgs) => {
+        gain(parseArgs)
+        None
+      }
+      case Left(error) => Option(error)
+    }
+  }
 }

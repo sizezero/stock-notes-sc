@@ -1,5 +1,7 @@
 import org.kleemann.stocknotes.*
 
+import org.kleemann.stocknotes.command.*
+
 val commands: Map[String, Command] = Map(
   "browse-ticker" -> BrowseTicker,
   "download-quotes" -> DownloadQuotes,

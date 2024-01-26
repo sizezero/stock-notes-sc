@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
 
 /**
   * This represents a number of shares that were transacted at a particular multiple.

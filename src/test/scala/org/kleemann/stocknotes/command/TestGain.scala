@@ -1,4 +1,7 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.command
+
+import org.kleemann.stocknotes.{Ticker}
+import org.kleemann.stocknotes.stock.{Currency, Date}
 
 class TestGain extends munit.FunSuite {
 

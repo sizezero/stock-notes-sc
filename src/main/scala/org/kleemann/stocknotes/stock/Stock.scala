@@ -1,6 +1,8 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
 
 import scala.util.control.Breaks.{break, breakable}
+
+import org.kleemann.stocknotes.{Config, Ticker}
 
 /**
   * The stock class is an extraction of the log/<ticker>.txt file.
@@ -37,20 +39,19 @@ object Stock {
       * @return
       */
     def load(config: Config): List[Stock] = 
-      os.list(config.logDir).flatMap { f =>
-        if (f.ext == "txt") {
-          List(load(f))
-        } else Nil
+      os.list(config.logDir).flatMap{ f =>
+        if (f.ext == "txt") List(load(f))
+        else                Nil
       }.toList
 
     /**
       * Loads the specified stock file. Errors in parsing will result in a sys.exit(1)
       *
-      * @param ticker The
       * @param f
       * @return
       */
     def load(f: os.Path): Stock = {
+        // TODO: maybe the ticker/file conversion should be moved to the inner load()
         val ticker = Ticker(f.baseName)
         val e = load(ticker, f.toString, os.read.lines.stream(f))
         e match {
@@ -69,6 +70,15 @@ object Stock {
     private val tradePattern = """^(TRADE)\s.*$""".r
     private val buySellWatchPattern = """^(BUY|SELL)\s.*$""".r
 
+    /**
+      * This is where the bulk of the file parsing happens.
+      * The signature was designed for testing.
+      *
+      * @param ticker this usually comes from the filename
+      * @param filename
+      * @param g
+      * @return
+      */
     def load(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
 
         var lineNo = 0

@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.stock
 
 sealed trait Trade(date: Date) {
     def getDate(): Date = date

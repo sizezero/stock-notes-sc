@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes
 
+import org.kleemann.stocknotes.stock.{Currency, Date}
+
 /**
   * Represets a quote downloaded from some authoritative source on the internet.
   *
@@ -36,7 +38,7 @@ object Quote {
       * @param g
       * @return
       */
-    private[kleemann] def load(g: os.Generator[String]): Map[Ticker, Quote] =
+    private[stocknotes] def load(g: os.Generator[String]): Map[Ticker, Quote] =
         g.flatMap{ parseCsvLine(_) }.toSeq.toMap
 
     private val datePattern = """^(\d{2})/(\d{2})/(\d{4})$""".r
@@ -50,7 +52,7 @@ object Quote {
       * @param line
       * @return
       */
-    private[kleemann] def parseCsvLine(line: String): Option[(Ticker, Quote)] = {
+    private[stocknotes] def parseCsvLine(line: String): Option[(Ticker, Quote)] = {
         val a = line.split(",", 4)
         if (a.length == 4) {
             val ticker = Ticker(a(0))
@@ -93,7 +95,7 @@ object Quote {
       * @param func I function that, given two duplicate values, returns the one to use in the resultant Map
       * @return A new merged map.
       */
-    private[kleemann] def merge[K,V](m1: Map[K,V], m2: Map[K,V], func: (V,V) => V): Map[K,V] = {
+    private[stocknotes] def merge[K,V](m1: Map[K,V], m2: Map[K,V], func: (V,V) => V): Map[K,V] = {
         val keys = m1.keySet.union(m2.keySet)
         keys.map{ k =>
             if (m1.contains(k) && m2.contains(k))
