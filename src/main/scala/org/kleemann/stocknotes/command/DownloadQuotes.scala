@@ -6,7 +6,13 @@ import org.kleemann.stocknotes.{Config, Ticker}
 import org.kleemann.stocknotes.stock.{Date, Stock}
 import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch}
 import sttp.model.StatusCode
+import scala.collection.mutable
 
+/**
+  * Downloads needed quotes from an online quote service into the file config.quotesFile
+  * 
+  * Almost everything in this file has side effects so there are no tests for this.
+  */
 object DownloadQuotes extends Command {
 
   private val delayInSeconds = 2
@@ -23,6 +29,7 @@ object DownloadQuotes extends Command {
     val delay: Double = (delayInSeconds/60.0) * tickers.length
     println(f"The download is estimated to take ${delay}%2.2f minutes.")
 
+    // TODO: I can't find good docs on os-lib so I'm just going to collect the quotes in memory and write the file all at once.
     os.write.over(config.quotesFile, quotesFileContent(tickers, config.finnhubAccessKey))
 
     println("Download Complete")
@@ -35,19 +42,20 @@ object DownloadQuotes extends Command {
       case Date(year, month, day) => f"$month%02d/$day%02d/$year%04d"
     }
 
-    // TODO: I can't find good docs on os-lib so I'm just going to collect the quotes in memory and write the file all at once.
     tickers.map{ t =>
+      // call the webservice to get a single quote
       downloadSingleQuote(t, finnhubAccessKey) match {
+        // format the result to a CSV line
         case Left(e)  => f"${t.ticker},0.0,${today},${e}\n"
         case Right(q) => f"${t.ticker},${q},${today},\n" 
       }
-    }.foldLeft(""){ _ + _ }  // TODO: consider replacing with some efficient string accumulator like StringBuilder
+    }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
   }
 
   /**
     * We either return an error or a decimal stock price.
     * We could return it as something besides a string but since we're just going 
-    * to write it to a file there's no value in making a complicated type
+    * to write it to a file there's no advantage in making a complicated type
     *
     * @param ticker
     * @return
@@ -55,7 +63,7 @@ object DownloadQuotes extends Command {
   private def downloadSingleQuote(ticker: Ticker, finnhubAccessKey: String): Either[String, String] = {
 
     // finnhub doesn't allows us to spam their service so we need to slow it down a bit
-    Thread.sleep(delayInSeconds * 1000L)
+    Thread.sleep(delayInSeconds * 1_000L)
 
     val queryParams = Map("symbol" -> ticker.ticker,  "token" -> finnhubAccessKey)
     val u = uri"https://finnhub.io/api/v1/quote?${queryParams}"
