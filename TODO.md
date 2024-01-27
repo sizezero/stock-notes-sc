@@ -137,9 +137,9 @@
     - ~~command: BrowseTicker, Command, DownloadQuotes, Gain, Oldest, ~~
     - ~~stock: CashAccount, Currency, Date, Entry, Fraction, Shares, Stock, Trade, Watch~~
     - ~~stocknotes: Config, GainCalc, Quote, Ticker~~
-- browse ticker
+- ~~browse ticker~~
   - ~~mostly done~~
-  - sec page is not showing anything
+  - ~~sec page is not showing anything~~
 - calc
 - www pages
   - https://com-lihaoyi.github.io/scalatags/

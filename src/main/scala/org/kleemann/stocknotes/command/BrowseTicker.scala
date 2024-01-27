@@ -32,17 +32,16 @@ object BrowseTicker extends Command {
     val stocks = Stock.load(config).map{ s => (s.ticker -> s) }.toMap
     val cik: Option[String] = stocks.get(ticker).flatMap{ _.cid }
     val secUrls: List[String] = cik match {
-      case Some(cik) => List(f"'http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${cik}&filenum=&State=&SIC=&owner=include&action=getcompany'")
+      case Some(cik) => List(f"'https://www.sec.gov/edgar/browse/?CIK=${cik}&owner=include'")
       case None => List(
         f"http://sec.gov/edgar/searchedgar/companysearch.html",
-        f"'http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${ticker.ticker}&filenum=&State=&SIC=&owner=include&action=getcompany'",
+        f"http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${ticker.ticker}&filenum=&State=&SIC=&owner=include&action=getcompany",
         config.noCikUrl.toString
       )
     }
 
     val urls = yahooUrls ++ morningstarUrls ++ secUrls
 
-    //println(urls.mkString("\n"))
     val cmd = Shellable("open_as_chrome_tabs" :: urls)
     println(f"running command: ${cmd.toString}")
     os.proc(cmd).call(check=false)
