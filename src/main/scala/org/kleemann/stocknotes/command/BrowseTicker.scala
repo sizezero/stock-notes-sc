@@ -29,10 +29,10 @@ object BrowseTicker extends Command {
       List(f"http://www.morningstar.com/content/morningstarcom/en_us/stocks/xnas/${ticker.ticker}/quote.html")
 
     val config = Config.load()
-    val stocks = Stock.load(config).map{ s => (s.ticker -> s) }.toMap
-    val cik: Option[String] = stocks.get(ticker).flatMap{ _.cid }
+    val stocks = Stock.load(config)
+    val cik: Option[String] = stocks.find{ _.ticker == ticker}.flatMap{ _.cid }
     val secUrls: List[String] = cik match {
-      case Some(cik) => List(f"'https://www.sec.gov/edgar/browse/?CIK=${cik}&owner=include'")
+      case Some(cik) => List(f"https://www.sec.gov/edgar/browse/?CIK=${cik}&owner=include")
       case None => List(
         f"http://sec.gov/edgar/searchedgar/companysearch.html",
         f"http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${ticker.ticker}&filenum=&State=&SIC=&owner=include&action=getcompany",
