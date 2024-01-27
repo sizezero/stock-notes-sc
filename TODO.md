@@ -132,7 +132,7 @@
       - ~~I think the best solution is to get rid of the None type and have the parse return option None instead of an actual object. This way it won't have a    multiple associated with it which is what I want.~~
       - ~~Actually this doesn't work. Watches are complicated as each of the low and high values are options. I think having a singular none type is the best bet.~~
     - ~~Change dates to have multiple tostring formats. oldest uses fixed length~~
-- download quotes
+- ~~download quotes~~
   - ~~lets start by moving some classes to packages~~
     - ~~command: BrowseTicker, Command, DownloadQuotes, Gain, Oldest, ~~
     - ~~stock: CashAccount, Currency, Date, Entry, Fraction, Shares, Stock, Trade, Watch~~
