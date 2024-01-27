@@ -138,6 +138,8 @@
     - ~~stock: CashAccount, Currency, Date, Entry, Fraction, Shares, Stock, Trade, Watch~~
     - ~~stocknotes: Config, GainCalc, Quote, Ticker~~
 - browse ticker
+  - ~~mostly done~~
+  - sec page is not showing anything
 - calc
 - www pages
   - https://com-lihaoyi.github.io/scalatags/

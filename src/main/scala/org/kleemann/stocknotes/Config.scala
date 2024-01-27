@@ -52,7 +52,7 @@ final case class Config (shared: String, projectDir: String, finnhubAccessKey: S
     /**
       * Used by browse_ticker to display the SEC page for an unknown company.
       */
-    def noCikUrl: Uri = uri"file://${projectDir.toString}/src/res/nocik.html"
+    def noCikUrl: String = "file://" + (os.home / projectDir / "src" / "res" / "nocik.html").toString
 }
 
 object Config {

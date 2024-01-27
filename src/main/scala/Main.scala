@@ -1,13 +1,5 @@
 import org.kleemann.stocknotes.*
-
 import org.kleemann.stocknotes.command.*
-
-val commands: Map[String, Command] = Map(
-  "browse-ticker" -> BrowseTicker,
-  "download-quotes" -> DownloadQuotes,
-  "gain" -> Gain,
-  "oldest" -> Oldest
-)
 
 /** a functional main that is easier to test
  *  
@@ -17,14 +9,14 @@ val commands: Map[String, Command] = Map(
 def funcMain(args: Seq[String]): Option[String] = {
   val help = Some(s"""
                 |stocknotes <command> [ <args> ... ]
-                |    where <command> is one of: ${commands.keys.mkString(" ")}
+                |    where <command> is one of: ${Command.all.keys.mkString(" ")}
   """.stripMargin)
 
   if (args.isEmpty) help
   else {
     val commandText = args.head
-    val rest = args.tail
-    commands.get(commandText) match {
+    val rest        = args.tail
+    Command.all.get(commandText) match {
       case Some(c) => c.command(rest.toVector)
       case None => help
     }

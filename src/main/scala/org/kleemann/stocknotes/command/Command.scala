@@ -13,3 +13,14 @@ trait Command {
 
   // TODO: consider adding a method that can return the help, this way the caller can reconstruct the full help text for all commands.
 }
+
+object Command {
+
+  val all: Map[String, Command] = Map(
+    "browse-ticker"   -> BrowseTicker,
+    "download-quotes" -> DownloadQuotes,
+    "gain"            -> Gain,
+    "oldest"          -> Oldest
+  )
+
+}
