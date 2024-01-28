@@ -59,42 +59,69 @@ object Calc {
         else           co.map( c => Currency.fromDouble(c.toDouble * mult))
     }
 
+    private def parseIncomeOrRevenue(args: Array[String]): Either[String, Currency] = {
+        if (args.length > 4) Left("can't have more than four quarters of values")
+        else {
+            val parsed: Array[Either[String,Currency]] = args.map{ s => parseDollar(s, 1_000) match {
+                case Some(c) => Right(c)
+                case None => Left(f"failed to parse quarterly value: $s")
+            }}
+            if (parsed.find{ _.isLeft }.isDefined) {
+                val cumulativeErrors = parsed.collect{ case Left(s) => s }.mkString("\n")
+                Left(cumulativeErrors)
+            } else {
+                val sum = parsed.collect{ case Right(c) => c }.reduce{ _ + _ }
+                val annualized: Currency = Currency.fromDouble(sum.toDouble * (4.0/args.length))
+                Right(annualized)
+            }
+        }
+    }
+
     private object Income extends Processor("^inc(ome)?$".r) {
 
         override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = {
-            if (args.length > 4) Left("income can't have more than four quarters")
-            else {
-                val parsed: Array[Either[String,Currency]] = args.map{ s => parseDollar(s, 1_000) match {
-                    case Some(c) => Right(c)
-                    case None => Left(f"failed to parse income number: $s")
-                }}
-                if (parsed.find{ _.isLeft }.isDefined) {
-                    val cumulativeErrors = parsed.collect{ case Left(s) => s }.mkString("\n")
-                    Left(cumulativeErrors)
-                } else {
-                    val sum = parsed.collect{ case Right(c) => c }.reduce{ _ + _ }
-                    val annualized: Currency = Currency.fromDouble(sum.toDouble * (4.0/args.length))
-                    Right(att.copy(income=Some(annualized)))
-                }
+            parseIncomeOrRevenue(args) match {
+                case Right(c)     => Right(att.copy(income=Some(c)))
+                case Left(errors) => Left(errors)
             }
         }
 
         override def generate(ats: Attributes): Attributes = ats
             
         override def display(ats: Attributes): String = ats.income match {
-            case Some(income) => income.toString + "\n"
-            case None         => ""
+            case Some(c) => c.toString + "\n"
+            case None    => ""
+        }
+    }
+
+    private object Revenue extends Processor("^rev(enue)?$".r) {
+
+        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = {
+            parseIncomeOrRevenue(args) match {
+                case Right(c)     => Right(att.copy(revenue=Some(c)))
+                case Left(errors) => Left(errors)
+            }
+        }
+
+        override def generate(ats: Attributes): Attributes = ats
+
+        override def display(ats: Attributes): String = ats.revenue match {
+            case Some(c) => c.toString + "\n"
+            case None    => ""
         }
     }
 
     private case class Attributes(
 
-        income: Option[Currency] = None
+        income:  Option[Currency] = None,
+        revenue: Option[Currency] = None
     )
 
-
+    // The order of these parsers is significant.
+    // Parsers that depend on other values come later.
     private val processors: List[Processor] = List(
-        Income
+        Income,
+        Revenue
     )
 
     def calc(it: Iterator[String]): String = {
