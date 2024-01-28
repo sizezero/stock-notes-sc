@@ -19,6 +19,7 @@ object Command {
   val all: Map[String, Command] = Map(
     "browse-ticker"   -> BrowseTicker,
     "download-quotes" -> DownloadQuotes,
+    "calc"            -> Calc,
     "gain"            -> Gain,
     "oldest"          -> Oldest
   )

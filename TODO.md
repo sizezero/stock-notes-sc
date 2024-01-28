@@ -141,6 +141,10 @@
   - ~~mostly done~~
   - ~~sec page is not showing anything~~
 - calc
+  - ~~start buy testing the existing calc, I think it was broken some time ago~~
+    - ~~it seems to work fine now~~
+  - ~~I have the basic framework setup and have implemented income~~
+  -
 - www pages
   - https://com-lihaoyi.github.io/scalatags/
   - buysell
