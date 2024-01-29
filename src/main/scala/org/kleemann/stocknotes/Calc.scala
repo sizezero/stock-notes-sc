@@ -296,7 +296,7 @@ object Calc {
             } else att
 
         override def display(att: Attributes): String = att.margins match {
-            case Some(d) => f"Margin ${d/100}%.2f%%\n"
+            case Some(d) => f"Margin ${d*100}%.2f%%\n"
             case None    => ""
         }
     }
