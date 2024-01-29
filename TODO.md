@@ -145,9 +145,10 @@
     - ~~it seems to work fine now~~
   - ~~I have the basic framework setup and have implemented income~~
   - ~~use Vector for args instead of Array~~
-  - add unit tests
+  - ~~add unit tests~~
   - run generate until att doesn't change, maybe recursive fn
   - conflicts
+  - add extra way to generate income
   - run from gedit, play around
   - add help command
 - www pages

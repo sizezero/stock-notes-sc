@@ -92,7 +92,7 @@ object Calc {
 
     private def parseDollar(s: String, defaultMult: Int): Option[Currency] = {
         val (s2, mult) = parsesMegaKilo(s.strip(), defaultMult)
-        val co = Currency.parse(s2)
+        val co = Currency.parse(s2.replace(",",""))
         if (mult == 1) co
         else           co.map( c => Currency.fromDouble(c.toDouble * mult))
     }
@@ -109,7 +109,7 @@ object Calc {
 
     private def parseNumber(s: String, defaultMult: Int): Option[Int] = {
         val (s2, mult) = parsesMegaKilo(s.strip(), defaultMult)
-        s2.replace(",","").toIntOption
+        s2.replace(",","").toIntOption.map{ _ * mult }
     }
 
     private def parseSingleArgumentDoubleValue(attribute: String, args: Vector[String]): Either[String, Double] = {
@@ -147,6 +147,7 @@ object Calc {
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
             parseIncomeOrRevenue(args).map{ c => att.copy(income = Some(c)) }
 
+        // TODO: if we have eps and shares we should compute this
         override def generate(att: Attributes): Attributes = att
             
         override def display(att: Attributes): String = att.income match {
@@ -314,8 +315,8 @@ object Calc {
 
         override def generate(att: Attributes): Attributes =
             if (att.dividendYield.isDefined) att
-            else if (att.price.isDefined && att.dividend.isDefined) {
-                val d = att.price.get.toDouble / att.dividend.get.toDouble
+            else if (att.dividend.isDefined && att.price.isDefined) {
+                val d = att.dividend.get.toDouble / att.price.get.toDouble
                 att.copy(dividendYield = Some(d))
             } else att
 
@@ -332,7 +333,7 @@ object Calc {
 
         override def generate(att: Attributes): Attributes =
             if (att.payoutRatio.isDefined) att
-            else if (att.eps.isDefined && att.dividend.isDefined) {
+            else if (att.dividend.isDefined && att.eps.isDefined) {
                 val d = att.dividend.get.toDouble / att.eps.get.toDouble
                 att.copy(payoutRatio = Some(d))
             } else att
@@ -361,7 +362,7 @@ object Calc {
 
     /**
       * Takes the multi line input and parses it either successfully into an Attributes object that contains
-      * both parsed and generated attributes, or returns a list of Errors. This parse version of calc
+      * both parsed and generated attributes, or returns a list of Errors. This version of calc
       * that returns objects instead of a monolithic String, is good for testing.
       *
       * @param it
