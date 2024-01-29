@@ -5,6 +5,7 @@ import scala.util.matching.Regex
 
 import org.kleemann.stocknotes.stock.Currency
 import scala.collection.mutable
+import scala.annotation.tailrec
 
 object Calc {
 
@@ -401,7 +402,16 @@ object Calc {
             // TODO
 
             // if values are missing then attempt to generate them
-            val cumulativeAttributes = processors.foldLeft(parsedAttributes){ case (a, p) => p.generate(a) }
+            @tailrec
+            def generate(prev: Attributes): Attributes = {
+                // run through all the generators
+                val next = processors.foldLeft(prev){ case (a, p) => p.generate(a) }
+                // if anything changed then run through it again until there are no changes
+                if (next == prev) prev
+                else              generate(next)
+            }
+            val cumulativeAttributes = generate(parsedAttributes)
+
             Right(cumulativeAttributes)
         }
     }
