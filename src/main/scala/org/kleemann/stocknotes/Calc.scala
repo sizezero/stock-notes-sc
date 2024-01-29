@@ -141,7 +141,7 @@ object Calc {
         }
     }
 
-    // *************** Attribute Parsers *************** 
+    // *************** Attribute Processors *************** 
 
     private object Income extends Processor("^inc(ome)?$".r) {
 
@@ -149,7 +149,12 @@ object Calc {
             parseIncomeOrRevenue(args).map{ c => att.copy(income = Some(c)) }
 
         // TODO: if we have eps and shares we should compute this
-        override def generate(att: Attributes): Attributes = att
+        override def generate(att: Attributes): Attributes =
+            if (att.income.isDefined) att
+            else if (att.eps.isDefined && att.shares.isDefined) {
+                val income: Currency = Currency.fromDouble(att.eps.get.toDouble * att.shares.get)
+                att.copy(income = Some(income))
+            } else att
             
         override def display(att: Attributes): String = att.income match {
             case Some(c) => f"Income $c\n"
@@ -376,7 +381,7 @@ object Calc {
         // parse failures are accumulated in reverseParseErrors
         val ignore = """^(\s*|=+>)$""".r
         val tokenDelimiters = """[\s:=]+""".r
-        val (parsedAttributes, reverseParseErrors): (Attributes, List[String]) =
+        val (parsedAtt, reverseParseErrors): (Attributes, List[String]) =
             it.filter{ s => !ignore.matches(s) } // each line is now guaranteed to match at least one Processor
             .map{ s => tokenDelimiters.split(s.strip()).toVector } // convert lines to tokens of strings in a scala Vector
             // from tokens, accumulate Attribute values and error strings
@@ -393,26 +398,37 @@ object Calc {
                 }
             }
 
-        // if we have any errors we need to stop
+        // if we have any parse errors we need to stop
         if (!reverseParseErrors.isEmpty) Left(reverseParseErrors.reverse)
         else {
 
-            // conflicts
             // one value in each set has to be unspecified
-            // TODO
-
-            // if values are missing then attempt to generate them
-            @tailrec
-            def generate(prev: Attributes): Attributes = {
-                // run through all the generators
-                val next = processors.foldLeft(prev){ case (a, p) => p.generate(a) }
-                // if anything changed then run through it again until there are no changes
-                if (next == prev) prev
-                else              generate(next)
+            val conflicts: List[(String, List[Option[Any]])] = List(
+                ("shares, income, eps",      List(parsedAtt.shares, parsedAtt.income, parsedAtt.eps)),
+                ("price, eps, pe",           List(parsedAtt.price,  parsedAtt.eps,    parsedAtt.pe)),
+                ("shares, price, marketCap", List(parsedAtt.shares, parsedAtt.price,  parsedAtt.marketCap))
+            )
+            val reverseConflictErrors: List[String] = conflicts.foldLeft( List[String]() ){ case (errors, (msg, conflict)) => 
+                if (conflict.count{ _.isDefined } == conflict.length) f"all cannot be specified: $msg" :: errors
+                else                                                  errors
             }
-            val cumulativeAttributes = generate(parsedAttributes)
 
-            Right(cumulativeAttributes)
+            if (!reverseConflictErrors.isEmpty) Left(reverseConflictErrors) // there's no real order to conflicts so leave them reversed
+            else {
+
+                // if values are missing then attempt to generate them
+                @tailrec
+                def generate(prev: Attributes): Attributes = {
+                    // run through all the generators
+                    val next = processors.foldLeft(prev){ case (a, p) => p.generate(a) }
+                    // if anything changed then run through it again until there are no changes
+                    if (next == prev) prev
+                    else              generate(next)
+                }
+                val cumulativeAtt = generate(parsedAtt)
+
+                Right(cumulativeAtt)
+            }
         }
     }
 

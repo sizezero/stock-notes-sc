@@ -15,7 +15,6 @@ class TestCalc extends munit.FunSuite {
             }
             case Left(_) => assert(false)
         }
-
     }
 
     test("parse income m") {
@@ -39,6 +38,20 @@ class TestCalc extends munit.FunSuite {
         Calc.inputToAttributes(it) match {
             case Right(att) => {
                 assertEquals(att.income, Some(Currency(400_000, 0)))
+            }
+            case Left(_) => assert(false)
+        }
+    }
+
+    test("income from eps and shares") {
+        val it: Iterator[String] =
+            """
+            |eps $3.00
+            |shares 100k
+            |""".stripMargin.split("\n").iterator
+        Calc.inputToAttributes(it) match {
+            case Right(att) => {
+                assertEquals(att.income, Some(Currency(300_000, 0)))
             }
             case Left(_) => assert(false)
         }
@@ -166,4 +179,16 @@ class TestCalc extends munit.FunSuite {
         }
     }
 
+    test("conflict") {
+        val it: Iterator[String] =
+            """
+            |income 0.50
+            |eps $2.50
+            |shares 20
+            |""".stripMargin.split("\n").iterator
+        Calc.inputToAttributes(it) match {
+            case Right(att) => assert(false)
+            case Left(e)    => assert(true)
+        }
+    }
 }
