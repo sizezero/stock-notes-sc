@@ -157,7 +157,7 @@ object Calc {
             } else att
             
         override def display(att: Attributes): String = att.income match {
-            case Some(c) => f"Income $c\n"
+            case Some(c) => f"Income ${c.toDouble/1_000_000}%.1fM\n"
             case None    => ""
         }
     }
@@ -170,7 +170,7 @@ object Calc {
         override def generate(att: Attributes): Attributes = att
 
         override def display(att: Attributes): String = att.revenue match {
-            case Some(c) => f"Revenue $c\n"
+            case Some(c) => f"Revenue ${c.toDouble/1_000_000}%.1fM\n"
             case None    => ""
         }
     }
