@@ -144,7 +144,12 @@
   - ~~start buy testing the existing calc, I think it was broken some time ago~~
     - ~~it seems to work fine now~~
   - ~~I have the basic framework setup and have implemented income~~
-  -
+  - ~~use Vector for args instead of Array~~
+  - add unit tests
+  - run generate until att doesn't change, maybe recursive fn
+  - conflicts
+  - run from gedit, play around
+  - add help command
 - www pages
   - https://com-lihaoyi.github.io/scalatags/
   - buysell

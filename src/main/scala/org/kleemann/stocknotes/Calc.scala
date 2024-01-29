@@ -8,6 +8,41 @@ import scala.collection.mutable
 
 object Calc {
 
+    /**
+      * This is the list of all possible attributes both parsed and generated.
+      * Any attribute may be missing.
+      *
+      * @param income annual income in dollars
+      * @param revenue annual revenue in dollars
+      * @param shares share count, hopefully fully diluted
+      * @param eps earnings per share in dollars
+      * @param pe price earnings multiple
+      * @param marketCap total market capitalization in dollars
+      * @param price price per share in dollars
+      * @param margins net margins: income/revenue
+      * @param dividend annual dividend per share
+      * @param dividendYield annual dividend yield
+      * @param payoutRatio dividend / income
+      */
+    private[stocknotes] case class Attributes(
+        income:        Option[Currency] = None,
+        revenue:       Option[Currency] = None,
+        shares:        Option[Int]      = None,
+        eps:           Option[Currency] = None,
+        pe:            Option[Double]   = None,
+        marketCap:     Option[Currency] = None,
+        price:         Option[Currency] = None,
+        margins:       Option[Double]   = None,
+        dividend:      Option[Currency] = None,
+        dividendYield: Option[Double]   = None,
+        payoutRatio:   Option[Double]   = None
+    )
+
+    /**
+      * Code associated with a single attribute in the attributes class.
+      *
+      * @param re a regular expression that matches an input line as a candidate for parsing.
+      */
     private sealed trait Processor(re: Regex) {
 
         /**
@@ -17,16 +52,16 @@ object Calc {
         def matches(firstToken: String): Boolean = re.matches(firstToken)
 
         /**
-          * Attempt to parse the tokens and return an updated Attributes with the parsed value.
+          * Attempt to parse the tokens and return an updated Attributes containing the parsed value.
           * On failure an error message is returned.
           */
-        def parse(args: Array[String], att: Attributes): Either[String, Attributes]
+        def parse(args: Vector[String], att: Attributes): Either[String, Attributes]
 
         /**
           * If the attribute wasn't specified on input, then we attempt to generate it.
-          * We will likely use the other values to generate this value.
+          * We will likely use the other values in the passed Attribute to generate this value.
           * If the value cannot be generated, then the original Attributes is returned.
-          * The method must check that the value is not defined.
+          * The method will only overrite the attribute if it is not defined.
           */
         def generate(att: Attributes): Attributes
 
@@ -38,6 +73,8 @@ object Calc {
           */
         def display(att: Attributes): String
     }
+
+    // *************** Utility Functions *************** 
 
     /**
       * If the string ends in M or K then replace the default multiplier with the specified one.
@@ -60,7 +97,7 @@ object Calc {
         else           co.map( c => Currency.fromDouble(c.toDouble * mult))
     }
 
-    private def parseSingleCurrency(attribute: String, args: Array[String]): Either[String, Currency] = {
+    private def parseSingleArgumentCurrency(attribute: String, args: Vector[String]): Either[String, Currency] = {
         if (args.length != 1) Left(f"$attribute takes a single argument")
         else {
             parseDollar(args(0),1) match {
@@ -75,7 +112,7 @@ object Calc {
         s2.replace(",","").toIntOption
     }
 
-    private def parseSingleArgumentDoubleValue(attribute: String, args: Array[String]): Either[String, Double] = {
+    private def parseSingleArgumentDoubleValue(attribute: String, args: Vector[String]): Either[String, Double] = {
         if (args.length != 1) Left(f"$attribute takes a single argument")
         else {
             args(0).toDoubleOption match {
@@ -85,10 +122,10 @@ object Calc {
         }
     }
 
-    private def parseIncomeOrRevenue(args: Array[String]): Either[String, Currency] = {
+    private def parseIncomeOrRevenue(args: Vector[String]): Either[String, Currency] = {
         if (args.length > 4) Left("can't have more than four quarters of values")
         else {
-            val parsed: Array[Either[String,Currency]] = args.map{ s => parseDollar(s, 1_000) match {
+            val parsed: Vector[Either[String,Currency]] = args.map{ s => parseDollar(s, 1_000) match {
                 case Some(c) => Right(c)
                 case None => Left(f"failed to parse quarterly value: $s")
             }}
@@ -103,10 +140,12 @@ object Calc {
         }
     }
 
+    // *************** Attribute Parsers *************** 
+
     private object Income extends Processor("^inc(ome)?$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] =
-            parseIncomeOrRevenue(args).map{ c => att.copy(income=Some(c)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
+            parseIncomeOrRevenue(args).map{ c => att.copy(income = Some(c)) }
 
         override def generate(att: Attributes): Attributes = att
             
@@ -118,8 +157,8 @@ object Calc {
 
     private object Revenue extends Processor("^rev(enue)?$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] =
-            parseIncomeOrRevenue(args).map{ c => att.copy(revenue=Some(c)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
+            parseIncomeOrRevenue(args).map{ c => att.copy(revenue = Some(c)) }
 
         override def generate(att: Attributes): Attributes = att
 
@@ -131,14 +170,14 @@ object Calc {
 
     private object Eps extends Processor("^eps$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = 
-            parseSingleCurrency("eps", args).map{ d => att.copy(eps=Some(d)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
+            parseSingleArgumentCurrency("eps", args).map{ d => att.copy(eps = Some(d)) }
 
         override def generate(att: Attributes): Attributes = {
             if (att.eps.isDefined) att
             else if (att.income.isDefined && att.shares.isDefined) {
                 val eps: Currency = Currency.fromDouble(att.income.get.toDouble / att.shares.get)
-                att.copy(eps=Some(eps))
+                att.copy(eps = Some(eps))
             } else att
         }
 
@@ -150,11 +189,11 @@ object Calc {
 
     private object Shares extends Processor("^shares$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = {
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = {
             if (args.length==1 || (args.length==2 && args(1)=="(diluted)")) {
                 val arg = args(0)
                 parseNumber(arg, 1) match {
-                    case Some(i) => Right(att.copy(shares=Some(i)))
+                    case Some(i) => Right(att.copy(shares = Some(i)))
                     case None    => Left(f"can't parse share argument: $arg")
                 }
             } else Left("incorrect number of share arguments")
@@ -171,17 +210,17 @@ object Calc {
 
     private object Pe extends Processor("^pe$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = 
-            parseSingleArgumentDoubleValue("pe", args).map{ d => att.copy(pe=Some(d)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
+            parseSingleArgumentDoubleValue("pe", args).map{ d => att.copy(pe = Some(d)) }
 
         override def generate(att: Attributes): Attributes = 
             if (att.pe.isDefined) att
             else if (att.price.isDefined && att.eps.isDefined) {
                 val d = att.price.get.toDouble / att.eps.get.toDouble
-                att.copy(pe=Some(d))
+                att.copy(pe = Some(d))
             } else if (att.marketCap.isDefined && att.income.isDefined) {
                 val d = att.marketCap.get.toDouble / att.income.get.toDouble
-                att.copy(pe=Some(d))
+                att.copy(pe = Some(d))
             } else att
 
         override def display(att: Attributes): String = att.pe match {
@@ -193,14 +232,14 @@ object Calc {
 
     private object MarketCap extends Processor("^mc$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = 
-            parseSingleCurrency("mc", args).map{ c => att.copy(marketCap=Some(c)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
+            parseSingleArgumentCurrency("mc", args).map{ c => att.copy(marketCap = Some(c)) }
 
         override def generate(att: Attributes): Attributes = 
             if (att.marketCap.isDefined) att
             else if (att.price.isDefined && att.shares.isDefined) {
                 val c = Currency.fromDouble(att.price.get.toDouble * att.shares.get)
-                att.copy(marketCap=Some(c))
+                att.copy(marketCap = Some(c))
             } else att
 
         override def display(att: Attributes): String = att.marketCap match {
@@ -215,17 +254,17 @@ object Calc {
 
     private object Price extends Processor("^price$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] =
-            parseSingleCurrency("price", args).map{ c => att.copy(price=Some(c)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
+            parseSingleArgumentCurrency("price", args).map{ c => att.copy(price = Some(c)) }
 
         override def generate(att: Attributes): Attributes = 
             if (att.price.isDefined) att
             else if (att.marketCap.isDefined && att.shares.isDefined) {
                 val c = Currency.fromDouble(att.marketCap.get.toDouble / att.shares.get.toDouble)
-                att.copy(price=Some(c))
+                att.copy(price = Some(c))
             } else if (att.pe.isDefined && att.eps.isDefined) {
                 val c = Currency.fromDouble(att.pe.get.toDouble * att.eps.get.toDouble)
-                att.copy(price=Some(c))
+                att.copy(price = Some(c))
             } else att
 
         override def display(att: Attributes): String = att.price match {
@@ -237,7 +276,7 @@ object Calc {
 
     private object Margins extends Processor("^margins$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = 
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
             Left("Margins are not allowed as input.")
 
         override def generate(att: Attributes): Attributes = 
@@ -257,8 +296,8 @@ object Calc {
 
     private object Dividend extends Processor("^div$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] = 
-            parseSingleCurrency("dividend", args).map{ c => att.copy(dividend=Some(c)) }
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
+            parseSingleArgumentCurrency("dividend", args).map{ c => att.copy(dividend = Some(c)) }
 
         override def generate(att: Attributes): Attributes = att
 
@@ -270,7 +309,7 @@ object Calc {
 
     private object DividendYield extends Processor("^yield$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] =
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
             Left("Dividend yield is not allowed as input.")
 
         override def generate(att: Attributes): Attributes =
@@ -288,7 +327,7 @@ object Calc {
 
     private object PayoutRatio extends Processor("^payout$".r) {
 
-        override def parse(args: Array[String], att: Attributes): Either[String, Attributes] =
+        override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
             Left("Payout Ratio is not allowed as input.")
 
         override def generate(att: Attributes): Attributes =
@@ -303,21 +342,6 @@ object Calc {
             case None    => ""
         }
     }
-
-    private case class Attributes(
-
-        income:        Option[Currency] = None,
-        revenue:       Option[Currency] = None,
-        shares:        Option[Int]      = None,
-        eps:           Option[Currency] = None,
-        pe:            Option[Double]   = None,
-        marketCap:     Option[Currency] = None,
-        price:         Option[Currency] = None,
-        margins:       Option[Double]   = None,
-        dividend:      Option[Currency] = None,
-        dividendYield: Option[Double]   = None,
-        payoutRatio:   Option[Double]   = None
-    )
 
     // The order of these parsers is significant.
     // Parsers that depend on other values come later.
@@ -335,7 +359,15 @@ object Calc {
         PayoutRatio
     )
 
-    def calc(it: Iterator[String]): String = {
+    /**
+      * Takes the multi line input and parses it either successfully into an Attributes object that contains
+      * both parsed and generated attributes, or returns a list of Errors. This parse version of calc
+      * that returns objects instead of a monolithic String, is good for testing.
+      *
+      * @param it
+      * @return
+      */
+    private[stocknotes] def inputToAttributes(it: Iterator[String]): Either[List[String], Attributes] = {
 
         // loop through input and parse every line
         // correctly parsed values are accumulated in parsedAttributes
@@ -343,24 +375,24 @@ object Calc {
         val ignore = """^(\s*|=+>)$""".r
         val tokenDelimiters = """[\s:=]+""".r
         val (parsedAttributes, reverseParseErrors): (Attributes, List[String]) =
-            it.filter{ s => !ignore.matches(s) } // each line is now guaranteed to match at least one token
-            .map{ s => tokenDelimiters.split(s.strip()) } // convert lines to scala Array of String tokens
+            it.filter{ s => !ignore.matches(s) } // each line is now guaranteed to match at least one Processor
+            .map{ s => tokenDelimiters.split(s.strip()).toVector } // convert lines to tokens of strings in a scala Vector
             // from tokens, accumulate Attribute values and error strings
-            .foldLeft((Attributes(), List[String]())){ case ((att: Attributes, errors: List[String]), args: Array[String]) => 
-                val attribute = args.head // we have at least one token
+            .foldLeft((Attributes(), List[String]())){ case ((att: Attributes, errors: List[String]), args: Vector[String]) => 
+                val attributeToken = args.head // we have at least one token
                 val rest = args.tail
                 // find the first processor that can handle the args
-                processors.find{ _.matches(attribute) } match {
-                    case Some(p) => p.parse(rest, att) match {
+                processors.find{ _.matches(attributeToken) } match {
+                    case Some(proc) => proc.parse(rest, att) match {
                         case Right(updatedA) => (updatedA, errors)
                         case Left(e)         => (att,      e :: errors)
                     }
-                    case None => (att, "no processor found to parse line" :: errors)
+                    case None => (att, f"no processor found to parse line: $attributeToken" :: errors)
                 }
             }
 
         // if we have any errors we need to stop
-        if (!reverseParseErrors.isEmpty) reverseParseErrors.reverse.mkString("\n") + "\n"
+        if (!reverseParseErrors.isEmpty) Left(reverseParseErrors.reverse)
         else {
 
             // conflicts
@@ -369,9 +401,31 @@ object Calc {
 
             // if values are missing then attempt to generate them
             val cumulativeAttributes = processors.foldLeft(parsedAttributes){ case (a, p) => p.generate(a) }
+            Right(cumulativeAttributes)
+        }
+    }
 
-            // display the values we can, there may be errors embedded in the result
-            processors.foldLeft(mutable.StringBuilder()){ case (sb, p) => sb ++= p.display(cumulativeAttributes) }.result
+    /**
+      * Given an attributes object, display it as a string.
+      *
+      * @param att
+      * @return
+      */
+    private[stocknotes] def attributesToString(att: Attributes): String =
+        // display the values we can, there may be errors embedded in the result
+        processors.foldLeft(mutable.StringBuilder()){ case (sb, proc) => sb ++= proc.display(att) }.result        
+
+    /**
+      * The main entrypoint of the program.
+      * Turns input lines of attributes into a multiline output string of calculated attributes.
+      *
+      * @param it
+      * @return
+      */
+    def calc(it: Iterator[String]): String = {
+        inputToAttributes(it) match {
+            case Right(att) => attributesToString(att)
+            case Left(errors) => errors.mkString("\n") + "\n"
         }
     }
 }

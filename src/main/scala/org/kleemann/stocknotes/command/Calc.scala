@@ -14,7 +14,7 @@ object Calc extends Command {
   override def command(args: IndexedSeq[String]): Option[String] = {
     if (args.length == 0) {
         // read stdin
-        val it :Iterator[String] = Source.stdin.getLines()
+        val it: Iterator[String] = Source.stdin.getLines()
         val out = org.kleemann.stocknotes.Calc.calc(it)
         // write stdout
         print(out) // no println because we don't want an extra newline
