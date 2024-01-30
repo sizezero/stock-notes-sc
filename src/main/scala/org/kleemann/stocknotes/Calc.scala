@@ -1,6 +1,5 @@
 package org.kleemann.stocknotes
 
-import scala.util.control.Breaks.{break, breakable}
 import scala.util.matching.Regex
 
 import org.kleemann.stocknotes.stock.Currency
@@ -148,7 +147,6 @@ object Calc {
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
             parseIncomeOrRevenue(args).map{ c => att.copy(income = Some(c)) }
 
-        // TODO: if we have eps and shares we should compute this
         override def generate(att: Attributes): Attributes =
             if (att.income.isDefined) att
             else if (att.eps.isDefined && att.shares.isDefined) {
@@ -498,7 +496,7 @@ object Calc {
                 @tailrec
                 def generate(prev: Attributes): Attributes = {
                     // run through all the generators
-                    val next = processors.foldLeft(prev){ case (a, p) => p.generate(a) }
+                    val next = processors.foldLeft(prev){ case (att, proc) => proc.generate(att) }
                     // if anything changed then run through it again until there are no changes
                     if (next == prev) prev
                     else              generate(next)
