@@ -10,7 +10,9 @@ lazy val root = project
 
     exportJars := true,
 
-    //libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
-    libraryDependencies += "org.scala-lang" %% "toolkit" % "0.1.7",
-    libraryDependencies += "org.scala-lang" %% "toolkit-test" % "0.1.7" % Test
+    // updated to latest scala three versions at maven central
+    // on Jan 2024
+    libraryDependencies += "org.scala-lang" %% "toolkit" % "0.2.1",
+    libraryDependencies += "org.scala-lang" %% "toolkit-test" % "0.2.1" % Test,
+    libraryDependencies += "com.lihaoyi" %% "scalatags" % "0.12.0"
   )
