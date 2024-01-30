@@ -153,6 +153,10 @@
   - ~~add help command~~
   - ~~add more generators for attributes~~
 - www pages
+  - ~~update config to get www creation location~~
+    - ~~.stocknotes/~~
+    - ~~ config.json~~
+    - ~~ www/~~
   - https://com-lihaoyi.github.io/scalatags/
   - buysell
   - bydate
