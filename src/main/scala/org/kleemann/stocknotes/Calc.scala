@@ -167,7 +167,12 @@ object Calc {
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
             parseIncomeOrRevenue(args).map{ c => att.copy(revenue = Some(c)) }
 
-        override def generate(att: Attributes): Attributes = att
+        override def generate(att: Attributes): Attributes =
+            if (att.revenue.isDefined) att
+            else if (att.income.isDefined && att.margins.isDefined) {
+                val revenue: Currency = Currency.fromDouble(att.income.get.toDouble / att.margins.get)
+                att.copy(revenue = Some(revenue))
+            } else att
 
         override def display(att: Attributes): String = att.revenue match {
             case Some(c) => f"Revenue ${c.toDouble/1_000_000}%.1fM\n"
@@ -206,7 +211,16 @@ object Calc {
             } else Left("incorrect number of share arguments")
         }
 
-        override def generate(att: Attributes): Attributes = att
+        override def generate(att: Attributes): Attributes =
+            if (att.shares.isDefined) att
+            else if (att.price.isDefined && att.marketCap.isDefined) {
+                val shares: Int = (att.marketCap.get.toDouble / att.price.get.toDouble).toInt
+                att.copy(shares = Some(shares))
+            } else if (att.income.isDefined && att.eps.isDefined) {
+                val shares: Int = (att.income.get.toDouble / att.eps.get.toDouble).toInt
+                att.copy(shares = Some(shares))
+            } else att
+
 
         override def display(att: Attributes): String = att.shares match {
             case Some(i) => if (i < 0) "WTF? negative shares\n"
@@ -284,7 +298,7 @@ object Calc {
     private object Margins extends Processor("^margins$".r) {
 
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
-            Left("Margins are not allowed as input.")
+            parseSingleArgumentDoubleValue("margins", args).map{ d => att.copy(margins = Some(d)) }
 
         override def generate(att: Attributes): Attributes = 
             if (att.margins.isDefined) att
@@ -306,7 +320,12 @@ object Calc {
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = 
             parseSingleArgumentCurrency("dividend", args).map{ c => att.copy(dividend = Some(c)) }
 
-        override def generate(att: Attributes): Attributes = att
+        override def generate(att: Attributes): Attributes =
+            if (att.dividend.isDefined) att
+            else if (att.dividendYield.isDefined && att.price.isDefined) {
+                val c = Currency.fromDouble(att.dividendYield.get * att.price.get.toDouble)
+                att.copy(dividend = Some(c))
+            } else att
 
         override def display(att: Attributes): String = att.dividend match {
             case Some(c) => f"Dividend $c\n"
@@ -317,7 +336,7 @@ object Calc {
     private object DividendYield extends Processor("^yield$".r) {
 
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] =
-            Left("Dividend yield is not allowed as input.")
+            parseSingleArgumentDoubleValue("yield", args).map{ d => att.copy(dividendYield = Some(d)) }
 
         override def generate(att: Attributes): Attributes =
             if (att.dividendYield.isDefined) att
@@ -455,10 +474,17 @@ object Calc {
         else {
 
             // one value in each set has to be unspecified
+            // TODO: this is not a foolproof check since it doesn't check transitive stuff
+            // e.g. specifying shares, income would produce eps
+            // and specifying price and pe would produce eps
+            // that those eps could be in conflict
             val conflicts: List[(String, List[Option[Any]])] = List(
-                ("shares, income, eps",      List(parsedAtt.shares, parsedAtt.income, parsedAtt.eps)),
-                ("price, eps, pe",           List(parsedAtt.price,  parsedAtt.eps,    parsedAtt.pe)),
-                ("shares, price, marketCap", List(parsedAtt.shares, parsedAtt.price,  parsedAtt.marketCap))
+                ("shares, income, eps",        List(parsedAtt.shares,   parsedAtt.income,        parsedAtt.eps)),
+                ("price, eps, pe",             List(parsedAtt.price,    parsedAtt.eps,           parsedAtt.pe)),
+                ("shares, price, marketCap",   List(parsedAtt.shares,   parsedAtt.price,         parsedAtt.marketCap)),
+                ("income, revenue, margins",   List(parsedAtt.income,   parsedAtt.revenue,       parsedAtt.margins)),
+                ("dividend, yield, price",     List(parsedAtt.dividend, parsedAtt.dividendYield, parsedAtt.eps)),
+                ("dividend, eps, payoutRatio", List(parsedAtt.dividend, parsedAtt.eps,           parsedAtt.payoutRatio))
             )
             val reverseConflictErrors: List[String] = conflicts.foldLeft( List[String]() ){ case (errors, (msg, conflict)) => 
                 if (conflict.count{ _.isDefined } == conflict.length) f"all cannot be specified: $msg" :: errors

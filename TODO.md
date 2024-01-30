@@ -151,6 +151,7 @@
   - ~~add extra way to generate income~~
   - ~~run from gedit, play around~~
   - ~~add help command~~
+  - ~~add more generators for attributes~~
 - www pages
   - https://com-lihaoyi.github.io/scalatags/
   - buysell
