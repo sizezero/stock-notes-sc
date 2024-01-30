@@ -1,10 +1,12 @@
 package org.kleemann.stocknotes.command
 
 class TestDownloadQuotes extends munit.FunSuite {
-  test("succeed on no arguments") {
-    val args = Vector[String]()
-    assertEquals(DownloadQuotes.command(args), None)
-  }
+
+  // I don't think we can test now that we've implemented downloading
+  // test("succeed on no arguments") {
+  //   val args = Vector[String]()
+  //   assertEquals(DownloadQuotes.command(args), None)
+  // }
 
   test("fail on various single arguments") {
     assertNotEquals(DownloadQuotes.command(Vector("foo")), None)
