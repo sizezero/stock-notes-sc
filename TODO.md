@@ -160,7 +160,7 @@
   - ~~ https ://com-lihaoyi.github.io/scalatags/ ~~
   - www/
   -   ~~index.html~~
-  -   log/<ticker>.txt.html
+  -   ~~log/<ticker>.txt.html~~
   -   buysell.html
   -   bydate.html
   -   byticker.html
