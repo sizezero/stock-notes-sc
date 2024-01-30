@@ -1,6 +1,6 @@
 package org.kleemann.stocknotes.command
 
-trait Command {
+protected trait Command {
   /**
     * A command defined by the first argument of the command line program.
     * This command is assumed to possibly perform side effects such as 
@@ -21,6 +21,7 @@ object Command {
     "download-quotes" -> DownloadQuotes,
     "calc"            -> Calc,
     "gain"            -> Gain,
+    "generate-www"    -> GenerateWww,
     "oldest"          -> Oldest
   )
 

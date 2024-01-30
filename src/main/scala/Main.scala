@@ -23,7 +23,6 @@ def funcMain(args: Seq[String]): Option[String] = {
   }
 }
 
-
 /** A non functional main with all the IO and side effects
   * 
   * @param args all command line args

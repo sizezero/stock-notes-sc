@@ -157,8 +157,11 @@
     - ~~.stocknotes/~~
     - ~~ config.json~~
     - ~~ www/~~
-  - https://com-lihaoyi.github.io/scalatags/
-  - buysell
-  - bydate
-  - byticker
-  - ticker
+  - ~~ https ://com-lihaoyi.github.io/scalatags/ ~~
+  - www/
+  -   ~~index.html~~
+  -   log/<ticker>.txt.html
+  -   buysell.html
+  -   bydate.html
+  -   byticker.html
+  - run on dreamhost
