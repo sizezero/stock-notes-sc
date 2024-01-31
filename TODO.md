@@ -161,11 +161,11 @@
   - www/
     - ~~index.html~~
     - ~~log/<ticker>.txt.html~~
-    - buysell.html
-      - buysell-ticker.html
-      - buysell-ticker-reverse.html
-      - buysell-date.html
-      - buysell-date-reverse.html
+    - ~~buysell.html~~
+      - ~~buysell-ticker.html~~
+      - ~~buysell-ticker-reverse.html~~
+      - ~~buysell-date.html~~
+      - ~~buysell-date-reverse.html~~
     - all
       - all-ticker.html
       - all-ticker-reverse.html

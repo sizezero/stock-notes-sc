@@ -106,4 +106,10 @@ class TestCurrency extends munit.FunSuite {
     val c = Currency.decimal(12, "34")
     assertEquals(c.truncate, c)
   }
+
+  test("compare") {
+    assert(Currency.zero < Currency(1,0))
+    assert(Currency(1,0) > Currency.zero )
+    assert(Currency(-2,0) < Currency(-1,0))
+  }
 }

@@ -9,7 +9,13 @@ package org.kleemann.stocknotes.stock
   *
   * @param milliPennies The number of pennies divided by 1000
   */
-final case class Currency private(milliPennies: Long) {
+final case class Currency private(milliPennies: Long) extends Ordered[Currency] {
+
+    override def compare(that: Currency): Int =
+      // can't subtract because we're going from long to int
+      if (this.milliPennies == that.milliPennies) 0
+      else if (this.milliPennies < that.milliPennies) -1
+      else 1
 
     /**
       * @return the amount in dollars
