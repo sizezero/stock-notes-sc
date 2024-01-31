@@ -43,11 +43,7 @@ object Oldest extends Command {
     val config = Config.load()
     val ss1: List[Stock] = Stock.load(config)
 
-    val ss2: List[Stock] = ss1.sortWith{ (s1,s2) => {
-      val d1: Date = if (s1.entries.length > 0) s1.entries.last.date else Date.earliest
-      val d2: Date = if (s2.entries.length > 0) s2.entries.last.date else Date.earliest
-      d1 < d2
-    }}
+    val ss2: List[Stock] = ss1.sortWith{ (s1,s2) => s1.latestDate < s2.latestDate }
 
     val ss3: List[Stock] = if (pa.reverse) ss2.reverse else ss2
 

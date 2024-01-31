@@ -28,7 +28,14 @@ final case class Stock(
     entries: List[Entry], 
     trades: List[Trade], 
     buyWatch: BuyWatch, 
-    sellWatch: SellWatch)
+    sellWatch: SellWatch) {
+
+        /**
+          * Return the date of the most recent Entries value.
+          * Useful for sorting.
+          */
+        lazy val latestDate: Date = if (entries.isEmpty) Date.earliest else entries.last.date
+    }
 
 object Stock {
 

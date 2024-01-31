@@ -159,9 +159,16 @@
     - ~~ www/~~
   - ~~ https ://com-lihaoyi.github.io/scalatags/ ~~
   - www/
-  -   ~~index.html~~
-  -   ~~log/<ticker>.txt.html~~
-  -   buysell.html
-  -   bydate.html
-  -   byticker.html
+    - ~~index.html~~
+    - ~~log/<ticker>.txt.html~~
+    - buysell.html
+      - buysell-ticker.html
+      - buysell-ticker-reverse.html
+      - buysell-date.html
+      - buysell-date-reverse.html
+    - all
+      - all-ticker.html
+      - all-ticker-reverse.html
+      - all-date.html
+      - all-date-reverse.html
   - run on dreamhost
