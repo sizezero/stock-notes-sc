@@ -166,9 +166,9 @@
       - ~~buysell-ticker-reverse.html~~
       - ~~buysell-date.html~~
       - ~~buysell-date-reverse.html~~
-    - all
-      - all-ticker.html
-      - all-ticker-reverse.html
-      - all-date.html
-      - all-date-reverse.html
+    - ~~all~~
+      - ~~all-ticker.html~~
+      - ~~all-ticker-reverse.html~~
+      - ~~all-date.html~~
+      - ~~all-date-reverse.html~~
   - run on dreamhost
