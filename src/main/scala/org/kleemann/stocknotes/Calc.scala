@@ -91,7 +91,7 @@ object Calc {
         }
 
     private def parseDollar(s: String, defaultMult: Int): Option[Currency] = {
-        val (s2, mult) = parsesMegaKilo(s.strip(), defaultMult)
+        val (s2, mult) = parsesMegaKilo(s.trim(), defaultMult)
         val co = Currency.parse(s2.replace(",",""))
         if (mult == 1) co
         else           co.map( c => Currency.fromDouble(c.toDouble * mult))
@@ -108,7 +108,7 @@ object Calc {
     }
 
     private def parseNumber(s: String, defaultMult: Int): Option[Int] = {
-        val (s2, mult) = parsesMegaKilo(s.strip(), defaultMult)
+        val (s2, mult) = parsesMegaKilo(s.trim(), defaultMult)
         s2.replace(",","").toIntOption.map{ _ * mult }
     }
 
@@ -452,7 +452,7 @@ object Calc {
         val tokenDelimiters = """[\s:=]+""".r
         val (parsedAtt, reverseParseErrors): (Attributes, List[String]) =
             it.filter{ s => !ignore.matches(s) } // each line is now guaranteed to match at least one Processor
-            .map{ s => tokenDelimiters.split(s.strip()).toVector } // convert lines to tokens of strings in a scala Vector
+            .map{ s => tokenDelimiters.split(s.trim()).toVector } // convert lines to tokens of strings in a scala Vector
             // from tokens, accumulate Attribute values and error strings
             .foldLeft((Attributes(), List[String]())){ case ((att: Attributes, errors: List[String]), args: Vector[String]) => 
                 val attributeToken = args.head // we have at least one token

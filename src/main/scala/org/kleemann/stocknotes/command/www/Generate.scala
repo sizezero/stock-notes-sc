@@ -115,7 +115,7 @@ object Generate {
         os.remove.all(config.wwwDir)
         os.makeDir(   config.wwwDir)
 
-        os.write(config.wwwDir/"index.html", "<p>Hello World\n")
+        os.write(config.wwwDir/"index.html", """<meta HTTP-EQUIV="REFRESH" content="0; url=http://www.kleemann.org/stocks/buysell-ticker.html">\n\n""")
 
         // generate all log files
         val logDstDir = config.wwwDir/"log"

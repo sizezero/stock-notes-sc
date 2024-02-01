@@ -172,7 +172,10 @@
       - ~~all-date.html~~
       - ~~all-date-reverse.html~~
   - run on dreamhost
-    - hand deploy the jar
-    - setup symlink(s)
-    - cron to download quotes followed by generating www
-    - see if www can be referenced by symlink or has to be copied; maybe need bash script instead of cron
+    - ~~hand deploy the jar~~
+    - ~~setup symlink(s)~~
+    - ~~cron to download quotes followed by generating www~~
+    - ~~see if www can be referenced by symlink or has to be copied; maybe need bash script instead of cron~~
+    - ~~blog strangeness on dreamhost~~
+    - ~~cleanup and checkin change~~
+    - change dreamhost cron to run once a day

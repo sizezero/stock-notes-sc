@@ -119,8 +119,8 @@ object Stock {
                     case _ => {
                         // continue parsing
                         line match {
-                            case namePattern(name) => stockName = Some(name.strip())
-                            case cidPattern(cid) => stockCid = Some(cid.strip())
+                            case namePattern(name) => stockName = Some(name.trim())
+                            case cidPattern(cid) => stockCid = Some(cid.trim())
                             case keywordsPattern(ks) => {
                                 val kws: Array[String] = ks.split("\\s+")
                                 kws.find{ !keywordPattern.matches(_) }.map { k =>
