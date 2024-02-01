@@ -179,3 +179,7 @@
     - ~~blog strangeness on dreamhost~~
     - ~~cleanup and checkin change~~
     - ~~change dreamhost cron to run once a day~~
+  - ~~dividends on calc are messed up~~
+    - ~~entered price 46.24 div 1.28 shows yield and payout ratio of zero~~
+    - ~~issue with display~~
+

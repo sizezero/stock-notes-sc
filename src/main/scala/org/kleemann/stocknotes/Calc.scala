@@ -345,7 +345,7 @@ object Calc {
             } else att
 
         override def display(att: Attributes): String = att.dividendYield match {
-            case Some(d) => f"Dividend Yield ${d/100}%.2f%%\n"
+            case Some(d) => f"Dividend Yield ${d*100}%.2f%%\n"
             case None    => ""
         }
     }
@@ -363,7 +363,7 @@ object Calc {
             } else att
 
         override def display(att: Attributes): String = att.payoutRatio match {
-            case Some(d) => f"Payout Ratio ${d/100}%.2f%%\n"
+            case Some(d) => f"Payout Ratio ${d*100}%.2f%%\n"
             case None    => ""
         }
     }
