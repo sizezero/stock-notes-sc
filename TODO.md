@@ -178,4 +178,4 @@
     - ~~see if www can be referenced by symlink or has to be copied; maybe need bash script instead of cron~~
     - ~~blog strangeness on dreamhost~~
     - ~~cleanup and checkin change~~
-    - change dreamhost cron to run once a day
+    - ~~change dreamhost cron to run once a day~~
