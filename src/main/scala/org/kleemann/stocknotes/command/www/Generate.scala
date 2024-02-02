@@ -1,8 +1,8 @@
 package org.kleemann.stocknotes.command.www
 
 import org.kleemann.stocknotes.{Config, Quote, Ticker}
-import org.kleemann.stocknotes.stock.{Currency, Stock}
-import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch}
+import org.kleemann.stocknotes.stock.{Currency, Stock, Trade}
+import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch, Watch}
 
 object Generate {
 
@@ -12,14 +12,29 @@ object Generate {
         val content = {
             import scalatags.Text.all._
             html (
-                head(),
+                head(
+                    link(rel := "stylesheet", href := "https://www.w3.org/StyleSheets/Core/Midnight", `type` := "text/css")
+                ), "\n",
                 body(
+                    h1(stock.ticker.ticker),
+                    if (stock.name.isDefined) div(stock.name.get, br(), "\n") else "",
+                    if (stock.cid.isDefined) div("CIK: ",stock.cid.get, br(), "\n")  else "",
+                    if (!stock.keywords.isEmpty) div(stock.keywords.toList.sorted.mkString(", "), br(), "\n") else "",
+
                     for (
                         entry <- stock.entries
                     ) yield div( // can't figure out how not to put a div here
                         hr(),
-                        entry.date.toString(), br(), "\n",
-                        for (line <- entry.text.split("\n")) yield div(line, br(), "\n")
+                        h3(entry.date.toString()), "\n",
+                        for (c <- entry.content) yield div (
+                            c match {
+                                case s: String => for (line <- s.split("\n")) yield div(
+                                    line, br(), "\n"
+                                )
+                                case t: Trade => div( t.toString, "\n")
+                                case w: Watch => div( w.toString, "\n" )
+                            }
+                        )
                     )
                 )
             )

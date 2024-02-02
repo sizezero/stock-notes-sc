@@ -94,6 +94,7 @@ object Stock {
         var keywords = Set[String]()
         var entryDate = Date.earliest
         val entryText = scala.collection.mutable.StringBuilder()
+        var entryContent = List[String | Trade | Watch]()
         var currentShares = Shares(0, Fraction.one)
         var currentMult = Fraction.one
         var entries = List[Entry]() // we add new entries to the head of the list so reverse before making the final list
@@ -101,6 +102,15 @@ object Stock {
         var buyWatch = BuyWatch.none
         var sellWatch = SellWatch.none
         var error: String = null
+        def addContent(content: Trade | Watch): Unit = {
+            // first add any accumulated text content
+            val s = entryText.result()
+            if (!s.isEmpty) 
+                entryContent = s :: entryContent
+            entryText.clear()
+            if (content != null)
+                entryContent = content :: entryContent
+        }
         breakable {
             g.foreach { line => { 
                 lineNo = lineNo + 1
@@ -111,9 +121,10 @@ object Stock {
                             error = s"date $d is not greater than previous date $entryDate"
                             break
                         } else {
-                            entries = Entry(ticker, entryDate, entryText.result()) :: entries
+                            addContent(null)
+                            entries = Entry(ticker, entryDate, entryContent.reverse) :: entries
                             entryDate = d
-                            entryText.clear()
+                            entryContent = Nil
                         }
                     }
                     case _ => {
@@ -151,6 +162,7 @@ object Stock {
                                             break
                                         }
                                         trades = trade :: trades
+                                        addContent(trade)
                                     }
                                     case Left(e) => {
                                         error = e
@@ -159,18 +171,24 @@ object Stock {
                                 }
                             case buySellWatchPattern(_) =>
                                 Watch.parse(line, currentMult) match {
-                                    case Right(b: BuyWatch) => buyWatch = b
-                                    case Right(s: SellWatch) => sellWatch = s
+                                    case Right(b: BuyWatch) => {
+                                        buyWatch = b
+                                        addContent(b)
+                                    }
+                                    case Right(s: SellWatch) => {
+                                        sellWatch = s
+                                        addContent(s)
+                                    }
                                     case Left(e) => {
                                         error = e
                                         break
                                     }
                                 }
-                            case _ =>
+                            case _ => {
+                                entryText.append(line)
+                                entryText.append("\n")
+                            }
                         }
-                        // all of the above special text is also placed in the entry text
-                        entryText.append(line)
-                        entryText.append("\n")
                     }
                 }
             }}
@@ -186,7 +204,8 @@ object Stock {
                 keywords = keywords + "watching"
 
             // wrap up the final entry
-            entries = Entry(ticker, entryDate, entryText.result()) :: entries
+            addContent(null)
+            entries = Entry(ticker, entryDate, entryContent.reverse) :: entries
             // build our return object
             Right(Stock(ticker, stockName, stockCid, keywords, entries.reverse, trades.reverse, buyWatch, sellWatch))
         }
