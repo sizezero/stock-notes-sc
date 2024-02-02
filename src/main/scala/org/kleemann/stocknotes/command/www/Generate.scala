@@ -81,7 +81,6 @@ object Generate {
                     link(rel := "stylesheet", href := "https://www.w3.org/StyleSheets/Core/Midnight", `type` := "text/css")
                 ), "\n",
                 body (
-                    //h1( ," ", "BuySell Tickers" ),
                     table (
                         tr(
                             td(colspan := "3")(h1(a(href := allFile)("All Tickers"))),
