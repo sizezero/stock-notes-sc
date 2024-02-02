@@ -1,7 +1,8 @@
 package org.kleemann.stocknotes.command.www
 
 import org.kleemann.stocknotes.{Config, Quote, Ticker}
-import org.kleemann.stocknotes.stock.{Currency, Stock, Trade}
+import org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
+import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch, Watch}
 
 object Generate {
@@ -11,6 +12,47 @@ object Generate {
     private def stockToHtml(stock: Stock): String = {
         val content = {
             import scalatags.Text.all._
+            import scalatags.Text.TypedTag
+            def dispMult(multiple: Fraction): String = 
+                multiple.toString().replace("/",":")
+            def dispShares(shares: Shares): String = 
+                f"""${shares.shares}(${dispMult(shares.multiple)})"""
+            def dispOptionCurrency(oc: Option[Currency]): String =
+                if (oc.isDefined) oc.get.toString else "none"
+            def dispTrade(t: Trade): TypedTag[String] = t match {
+                case buy: Buy => div(
+                    span(color := "LightGreen")("BUY"), " ",
+                    dispShares(buy.shares), "@", buy.price.toString, " ",
+                    "commission", " ",
+                    buy.commission.toString,
+                    "\n"
+                )
+                case sell: Sell => div(
+                    span(color := "IndianRed")("SELL"), " ",
+                    dispShares(sell.shares), "@", sell.price.toString, " ",
+                    "commission", " ",
+                    sell.commission.toString,
+                    "\n"
+                )
+                case split: Split => div(
+                    span(color := "LightSkyBlue")("SPLIT"), " ",
+                    dispMult(split.multiple)
+                )
+            }
+            def dispWatch(w: Watch): TypedTag[String] = w match {
+                case buy: BuyWatch => div(
+                    span(color := "LightGreen")("BUY WATCH"), " ",
+                    dispOptionCurrency(buy.low), " ",
+                    dispOptionCurrency(buy.high), " ",
+                    dispMult(buy.multiple)
+                )
+                case sell: SellWatch => div(
+                    span(color := "IndianRed")("SELL WATCH"), " ",
+                    dispOptionCurrency(sell.low), " ",
+                    dispOptionCurrency(sell.high), " ",
+                    dispMult(sell.multiple)
+                )
+            }
             html (
                 head(
                     link(rel := "stylesheet", href := "https://www.w3.org/StyleSheets/Core/Midnight", `type` := "text/css")
@@ -25,14 +67,15 @@ object Generate {
                         entry <- stock.entries
                     ) yield div( // can't figure out how not to put a div here
                         hr(),
-                        h3(entry.date.toString()), "\n",
+                        if (entry.date != Date.earliest) h5(entry.date.toString()) else "",
+                        "\n",
                         for (c <- entry.content) yield div (
                             c match {
                                 case s: String => for (line <- s.split("\n")) yield div(
                                     line, br(), "\n"
                                 )
-                                case t: Trade => div( t.toString, "\n")
-                                case w: Watch => div( w.toString, "\n" )
+                                case t: Trade => div( dispTrade(t), "\n" )
+                                case w: Watch => div( dispWatch(w), "\n" )
                             }
                         )
                     )
@@ -53,8 +96,8 @@ object Generate {
                 body (
                     table (
                         tr(
-                            td(border := "20px solid black")(h1( "All Tickers")),
-                            td(h1(a(href := buySellFile)("BuySell Tickers")))
+                            td(border := "20px solid black")(h1( "All")),
+                            td(h1(a(href := buySellFile)("Watch")))
 
                         ),
                         tr(
@@ -98,9 +141,9 @@ object Generate {
                 body (
                     table (
                         tr(
-                            td(colspan := "3")(h1(a(href := allFile)("All Tickers"))),
+                            td(colspan := "3")(h1(a(href := allFile)("All"))),
                             td(""),
-                            td(colspan := "3")(h1("BuySell Tickers"))
+                            td(colspan := "3")(h1("Watch"))
                         ),
                         tr(
                             td(border := bd)(h3(a(href := otherTicker)("Ticker"))), "\n",
