@@ -28,76 +28,84 @@ object Generate {
     }
 
     private def generateAll(stocks: List[Stock], buySellFile: String, otherTicker: String, otherDate: String): String = {
-        val bd = "1px solid black"
         val content = {
             import scalatags.Text.all._
             import scalatags.Text.TypedTag
             html (
                 head(
-                    h1( "All Tickers", " ", a(href := buySellFile)("BuySell Tickers") )
+                    link(rel := "stylesheet", href := "https://www.w3.org/StyleSheets/Core/Midnight", `type` := "text/css")
                 ), "\n",
                 body (
-                    table(border := bd ) (
+                    table (
                         tr(
-                            td(border := bd)(a(href := otherTicker)("ticker")), "\n",
-                            td(border := bd)(a(href := otherDate)("last note")), "\n"
+                            td(border := "20px solid black")(h1( "All Tickers")),
+                            td(h1(a(href := buySellFile)("BuySell Tickers")))
+
+                        ),
+                        tr(
+                            td(h3(a(href := otherTicker)("Ticker"))), "\n",
+                            td(h3(a(href := otherDate)("Last note"))), "\n"
                         ), "\n",
                         for (
                             s <- stocks
                         ) yield tr(
-                            td(border := bd)(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.ticker)), "\n",
-                            td(border := bd)(a(href := f"log/${s.ticker.ticker.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
+                            td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.ticker)), "\n",
+                            td(a(href := f"log/${s.ticker.ticker.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
                         ), "\n"
                     )
                 )
-            )
+            );
         }
         content.toString
     }
 
     private def generateBuySell(stocks: List[Stock], stockQuotes: Map[Ticker, Quote], allFile: String, otherTicker: String, otherDate: String): String = {
-        val bd = "1px solid black"
+        val bd = "10px solid black"
         val content = {
             import scalatags.Text.all._
             import scalatags.Text.TypedTag
 
             def dispTd(oc: Option[Currency], stockQuote: Currency, bgColor: String, colorIfLessThan: (Currency, Currency) => Boolean): TypedTag[String] = {
-                // it seems I can do vals and other code within a function but not within a content tag
-                val bow = "background-color: White; color: Black"
                 val (content, styleText) = oc match {
                     case Some(c) => (
                         c.toString,
-                        if (colorIfLessThan(stockQuote, c)) f"background-color: $bgColor; color: White" else bow
+                        if (colorIfLessThan(stockQuote, c)) f"background-color: $bgColor; color: White" else ""
                     )
-                    case None => ("", bow)
+                    case None => ("", "")
                 }
-                td(border := bd, style := styleText)(content)
+                td(style := styleText)(content)
             }
 
             html (
                 head(
-                    h1( a(href := allFile)("All Tickers"), " ", "BuySell Tickers" )
+                    link(rel := "stylesheet", href := "https://www.w3.org/StyleSheets/Core/Midnight", `type` := "text/css")
                 ), "\n",
                 body (
-                    table(border := bd ) (
+                    //h1( ," ", "BuySell Tickers" ),
+                    table (
                         tr(
-                            td(border := bd)(a(href := otherTicker)("ticker")), "\n",
-                            td(border := bd)("quote"), "\n",
-                            td(border := bd)("buy"), td(border := bd)("buy"), td(border := bd)("sell"), td(border := bd)("sell"), "\n",
-                            td(border := bd)(a(href := otherDate)("last note")), "\n"
+                            td(colspan := "3")(h1(a(href := allFile)("All Tickers"))),
+                            td(""),
+                            td(colspan := "3")(h1("BuySell Tickers"))
+                        ),
+                        tr(
+                            td(border := bd)(h3(a(href := otherTicker)("Ticker"))), "\n",
+                            td(border := bd)(h3("quote")), "\n",
+                            td(border := bd)(h3("buy")), td(border := bd)(h3("buy")), td(border := bd)(h3("sell")), td(border := bd)(h3("sell")), "\n",
+                            td(border := bd)(h3(a(href := otherDate)("Last Note"))), "\n"
                         ), "\n",
                         for (
                             s <- stocks;
                             // no way to put vals after this so put it here even though it's not a generator
                             price = stockQuotes.get(s.ticker).get.price
                         ) yield tr(
-                            td(border := bd)(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.ticker)), "\n",
-                            td(border := bd, backgroundColor := "LightCyan")(price.toString), "\n",
+                            td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.ticker)), "\n",
+                            td(price.toString), "\n",
                             dispTd(s.buyWatch.low,   price, "DarkGreen", _ < _), "\n",
                             dispTd(s.buyWatch.high,  price, "DarkGreen", _ < _), "\n",
                             dispTd(s.sellWatch.low,  price, "DarkRed",   _ > _), "\n",
                             dispTd(s.sellWatch.high, price, "DarkRed",   _ > _), "\n",
-                            td(border := bd)(a(href := f"log/${s.ticker.ticker.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
+                            td(a(href := f"log/${s.ticker.ticker.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
                         ), "\n"
                     )
                 )
