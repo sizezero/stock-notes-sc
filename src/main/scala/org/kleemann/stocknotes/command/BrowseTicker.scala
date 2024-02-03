@@ -44,13 +44,13 @@ object BrowseTicker extends Command {
 
     val cmd = Shellable("open_as_chrome_tabs" :: urls)
     println(f"running command: ${cmd.toString}")
-    os.proc(cmd).call(check=false)
+    os.proc(cmd).spawn()
 
     if (edit) {
       val editor = os.root / "usr" / "bin" / "gedit"
-      val logFile = config.logDir / (ticker.ticker.toLowerCase()+".txt")
+      val logFile = config.logDir / f"${ticker.ticker.toLowerCase()}.txt"
       println(f"running command: ${editor.toString} ${logFile.toString}")
-      os.proc(editor, logFile.toString).call(check=false)
+      os.proc(editor, logFile.toString).spawn()
     }
 
     None

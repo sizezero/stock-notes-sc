@@ -182,4 +182,6 @@
   - ~~dividends on calc are messed up~~
     - ~~entered price 46.24 div 1.28 shows yield and payout ratio of zero~~
     - ~~issue with display~~
-
+- ~~browse-ticker should exit after spawning browser and gedit~~
+- review browse-ticker web pages
+  - definitely add seeking alpha
