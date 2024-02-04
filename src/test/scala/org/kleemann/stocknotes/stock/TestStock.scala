@@ -13,7 +13,7 @@ class TestStock extends munit.FunSuite {
             None,
             None,
             Set(),
-            List(Entry(ticker, Date.earliest, "")),
+            List(Entry(ticker, Date.earliest, Nil)),
             List[Trade](),
             BuyWatch.none,
             SellWatch.none
@@ -35,13 +35,13 @@ class TestStock extends munit.FunSuite {
         )
         val obtained = Stock.load(ticker, "filename", g)
         val entries = List(
-            Entry(ticker, Date.earliest, """
+            Entry(ticker, Date.earliest, List("""
                 |NAME: Microsoft Corp
                 |CID: 0000789019
                 |KEYWORDS: megacap2008 maybe_great
                 |
-                |""".stripMargin),
-            Entry(ticker, Date(1992,1,1).get, "foobar\n")
+                |""".stripMargin)),
+            Entry(ticker, Date(1992,1,1).get, List("foobar\n"))
         )
         val required = Stock(
             ticker,

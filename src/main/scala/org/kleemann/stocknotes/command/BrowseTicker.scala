@@ -17,22 +17,20 @@ import os.Shellable
 
 object BrowseTicker extends Command {
 
-  private def browseTicker(ticker: Ticker, edit: Boolean): Option[String] = {
+  private def browseTicker(ticker: Ticker, edit: Boolean): Unit = {
   
-    val yahooUrls: List[String] = 
-      List(("pr",""), ("is","\\&annual"), ("is",""), ("h",""), ("bc",""), ("ae",""))
-      .map{ case (type1, type2) =>
-        f"http://finance.yahoo.com/q/${type1}?s=${ticker.ticker}${type2}"
-      }
-
-    val morningstarUrls: List[String] =
-      List(f"http://www.morningstar.com/content/morningstarcom/en_us/stocks/xnas/${ticker.ticker}/quote.html")
+    val easyUrls: List[String] = List(
+      f"https://finance.yahoo.com/quote/${ticker.ticker}/profile",
+      f"https://finance.yahoo.com/quote/${ticker.ticker}/financials",
+      f"https://seekingalpha.com/symbol/${ticker.ticker}",
+      f"https://www.morningstar.com/stocks/xnas/${ticker.ticker.toLowerCase()}/quote"
+    )
 
     val config = Config.load()
     val stocks = Stock.load(config)
     val cik: Option[String] = stocks.find{ _.ticker == ticker}.flatMap{ _.cid }
     val secUrls: List[String] = cik match {
-      case Some(cik) => List(f"https://www.sec.gov/edgar/browse/?CIK=${cik}&owner=include")
+      case Some(cik) => List(f"https://www.sec.gov/edgar/browse/?CIK=${cik}")
       case None => List(
         f"http://sec.gov/edgar/searchedgar/companysearch.html",
         f"http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${ticker.ticker}&filenum=&State=&SIC=&owner=include&action=getcompany",
@@ -40,11 +38,11 @@ object BrowseTicker extends Command {
       )
     }
 
-    val urls = yahooUrls ++ morningstarUrls ++ secUrls
+    val urls = easyUrls ++ secUrls
 
     val cmd = Shellable("open_as_chrome_tabs" :: urls)
     println(f"running command: ${cmd.toString}")
-    os.proc(cmd).spawn()
+    os.proc(cmd).spawn() // unlike run(), spawn() allows this program to terminate
 
     if (edit) {
       val editor = os.root / "usr" / "bin" / "gedit"
@@ -52,8 +50,6 @@ object BrowseTicker extends Command {
       println(f"running command: ${editor.toString} ${logFile.toString}")
       os.proc(editor, logFile.toString).spawn()
     }
-
-    None
   }
 
   val help = Some(s"""
@@ -69,5 +65,6 @@ object BrowseTicker extends Command {
         if (opt != "-n") help
         else browseTicker(ticker, false)
     } else help
+    None
   }
 }

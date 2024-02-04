@@ -183,5 +183,29 @@
     - ~~entered price 46.24 div 1.28 shows yield and payout ratio of zero~~
     - ~~issue with display~~
 - ~~browse-ticker should exit after spawning browser and gedit~~
-- review browse-ticker web pages
-  - definitely add seeking alpha
+- ~~review browse-ticker web pages~~
+  - ~~definitely add seeking alpha~~
+  - ~~current urls~~
+    - ~~profile: https://finance.yahoo.com/quote/MSFT/profile?ltr=1 ~~
+    - ~~yahoo not hitting anything~~
+    - ~~annual income statement: https://finance.yahoo.com/quote/MSFT/financials?ltr=1 ~~
+    - ~~news: https://finance.yahoo.com/quote/MSFT/news?ltr=1 ~~
+    - ~~chart: https://finance.yahoo.com/chart/MSFT?ltr=1#eyJsYXlvdXQiOnsiaW50ZXJ2YWwiOiJ3ZWVrIiwicGVyaW9kaWNpdHkiOjEsInRpbWVVbml0IjpudWxsLCJjYW5kbGVXaWR0aCI6My41MTM0MDk5NjE2ODU4MjM2LCJmbGlwcGVkIjpmYWxzZSwidm9sdW1lVW5kZXJsYXkiOnRydWUsImFkaiI6dHJ1ZSwiY3Jvc3NoYWlyIjp0cnVlLCJjaGFydFR5cGUiOiJsaW5lIiwiZXh0ZW5kZWQiOmZhbHNlLCJtYXJrZXRTZXNzaW9ucyI6e30sImFnZ3JlZ2F0aW9uVHlwZSI6Im9obGMiLCJjaGFydFNjYWxlIjoibGluZWFyIiwicGFuZWxzIjp7ImNoYXJ0Ijp7InBlcmNlbnQiOjEsImRpc3BsYXkiOiJNU0ZUIiwiY2hhcnROYW1lIjoiY2hhcnQiLCJpbmRleCI6MCwieUF4aXMiOnsibmFtZSI6ImNoYXJ0IiwicG9zaXRpb24iOm51bGx9LCJ5YXhpc0xIUyI6W10sInlheGlzUkhTIjpbImNoYXJ0Iiwi4oCMdm9sIHVuZHLigIwiXX19LCJzZXRTcGFuIjp7Im11bHRpcGxpZXIiOjUsImJhc2UiOiJ5ZWFyIiwicGVyaW9kaWNpdHkiOnsicGVyaW9kIjoxLCJ0aW1lVW5pdCI6IndlZWsifSwiZm9yY2VMb2FkIjp0cnVlfSwib3V0bGllcnMiOmZhbHNlLCJhbmltYXRpb24iOnRydWUsImhlYWRzVXAiOnsic3RhdGljIjp0cnVlLCJkeW5hbWljIjpmYWxzZSwiZmxvYXRpbmciOmZhbHNlfSwibGluZVdpZHRoIjoyLCJmdWxsU2NyZWVuIjp0cnVlLCJzdHJpcGVkQmFja2dyb3VuZCI6dHJ1ZSwiY29sb3IiOiIjMDA4MWYyIiwiZXZlbnRzIjp0cnVlLCJzdHJpcGVkQmFja2dyb3VkIjp0cnVlLCJldmVudE1hcCI6eyJjb3Jwb3JhdGUiOnsiZGl2cyI6dHJ1ZSwic3BsaXRzIjp0cnVlfSwic2lnRGV2Ijp7fX0sInN5bWJvbHMiOlt7InN5bWJvbCI6Ik1TRlQiLCJzeW1ib2xPYmplY3QiOnsic3ltYm9sIjoiTVNGVCIsImV4Y2hhbmdlVGltZVpvbmUiOiJBbWVyaWNhL05ld19Zb3JrIiwicXVvdGVUeXBlIjoiRVFVSVRZIiwibWFya2V0IjoidXNfbWFya2V0In0sInBlcmlvZGljaXR5IjoxLCJpbnRlcnZhbCI6IndlZWsiLCJ0aW1lVW5pdCI6bnVsbCwic2V0U3BhbiI6eyJtdWx0aXBsaWVyIjo1LCJiYXNlIjoieWVhciIsInBlcmlvZGljaXR5Ijp7InBlcmlvZCI6MSwidGltZVVuaXQiOiJ3ZWVrIn0sImZvcmNlTG9hZCI6dHJ1ZX19XSwiY3VzdG9tUmFuZ2UiOm51bGwsInN0dWRpZXMiOnsi4oCMdm9sIHVuZHLigIwiOnsidHlwZSI6InZvbCB1bmRyIiwiaW5wdXRzIjp7IlNlcmllcyI6InNlcmllcyIsImlkIjoi4oCMdm9sIHVuZHLigIwiLCJkaXNwbGF5Ijoi4oCMdm9sIHVuZHLigIwifSwib3V0cHV0cyI6eyJVcCBWb2x1bWUiOiIjMGRiZDZlZWUiLCJEb3duIFZvbHVtZSI6IiNmZjU1NDdlZSJ9LCJwYW5lbCI6ImNoYXJ0IiwicGFyYW1ldGVycyI6eyJjaGFydE5hbWUiOiJjaGFydCIsImVkaXRNb2RlIjp0cnVlLCJwYW5lbE5hbWUiOiJjaGFydCJ9LCJkaXNhYmxlZCI6ZmFsc2V9fX0sImV2ZW50cyI6eyJkaXZzIjp0cnVlLCJzcGxpdHMiOnRydWUsInRyYWRpbmdIb3Jpem9uIjoibm9uZSIsInNpZ0RldkV2ZW50cyI6W119LCJwcmVmZXJlbmNlcyI6e319 ~~
+    - ~~analysis: https://finance.yahoo.com/quote/MSFT/analysis?ltr=1 ~~
+    - ~~no page found on morningstar: https://www.morningstar.com/content/morningstarcom/en_us/stocks/xnas/MSFT/quote.html ~~
+    - ~~edgar: https://www.sec.gov/edgar/browse/?CIK=0000789019&owner=include ~~
+  - ~~new urls~~
+    - ~~yahoo profile~~
+      - ~~ https://finance.yahoo.com/quote/MSFT/profile ~~
+    - ~~yahoo financials~~
+      - ~~ https://finance.yahoo.com/quote/MSFT/financials ~~
+    - ~~seeking alpha~~
+      - ~~ https://seekingalpha.com/symbol/MSFT ~~
+    - ~~morningstar~~
+      - ~~ https://www.morningstar.com/stocks/xnas/msft/quote ~~
+    - ~~edgar~~
+      - ~~good~~
+        - ~~ https://www.sec.gov/edgar/browse/?CIK=0000789019 ~~
+      - ~~bad~~
+        - ~~ https://www.sec.gov/edgar/searchedgar/companysearch ~~
+        - ~~same~~
