@@ -58,13 +58,18 @@ object BrowseTicker extends Command {
   """.stripMargin)
 
   override def command(args: IndexedSeq[String]): Option[String] = {
-    if (args.length == 1) browseTicker(Ticker(args(0)), true)
+    if (args.length == 1) {
+      browseTicker(Ticker(args(0)), true)
+      None
+    }
     else if (args.length == 2) {
         val opt = args(0)
         val ticker = Ticker(args(1))
         if (opt != "-n") help
-        else browseTicker(ticker, false)
+        else {
+          browseTicker(ticker, false)
+          None
+        }
     } else help
-    None
   }
 }

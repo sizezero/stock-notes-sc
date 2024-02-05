@@ -1,13 +1,14 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.report
 
-import org.kleemann.stocknotes.command.{Gain}
+import org.kleemann.stocknotes.{Quote, Ticker}
+import org.kleemann.stocknotes.command.{Gain => CommandGain}
 import org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 
 /**
   * This is where all the calculations are performed for the Gain report. All this code is pure functional.
   */
-object GainCalc {
+object Gain {
    /**
     * The top level report for the Gain Report is a list of StockReport objects.
     * This is just the relevant data from the date range or just the current data.
@@ -64,7 +65,7 @@ object GainCalc {
     * @param today today's date passed in to make this pure functional and testable
     * @return a list of Company objects for each company that had sales in the indicated period
     */
-  def calc(pa: Gain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
+  def calc(pa: CommandGain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
 
     val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
 

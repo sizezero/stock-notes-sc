@@ -1,10 +1,11 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.report
 
-import _root_.org.kleemann.stocknotes.command.{Gain}
+import _root_.org.kleemann.stocknotes.{Quote, Ticker}
+import _root_.org.kleemann.stocknotes.command.{Gain => CommandGain}
 import _root_.org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
 import _root_.org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 
-class TestGainCalc extends munit.FunSuite {
+class TestGain extends munit.FunSuite {
 
   test("calc") {
     // two companies, test both sell immediate and sell in years range
@@ -56,11 +57,11 @@ class TestGainCalc extends munit.FunSuite {
     val stock2: Stock = e2.right.get
 
     val today = Date(1997, 1, 1).get
-    val pa1 = Gain.ParseArgs(Date.earliest, Date.earliest, Currency(30, 0), Nil, None)
+    val pa1 = CommandGain.ParseArgs(Date.earliest, Date.earliest, Currency(30, 0), Nil, None)
     val stocks = List(stock1, stock2)
     val quotes = Map( t1 -> Quote(Currency(8,0), today), t2 ->  Quote(Currency(9,0), today))
 
-    val srs = GainCalc.calc(pa1, stocks, quotes, today)
+    val srs = Gain.calc(pa1, stocks, quotes, today)
 
     assertEquals(srs.length, 2)
   }
@@ -102,7 +103,7 @@ class TestGainCalc extends munit.FunSuite {
 
     // attempting to sell 252 shares at 102
     // sell all 154 shares of b1, proportion values are 100%
-    val mb1 = GainCalc.MatchedBuy(
+    val mb1 = Gain.MatchedBuy(
       b1, 
       Shares(154,m2),
       b1.price.priceMultipleAdjust(m1,m2),
@@ -113,7 +114,7 @@ class TestGainCalc extends munit.FunSuite {
       0.3513183447677446)
     // sell needs 98 more shares, less that b2 has
     // 98 of these are sold, 77 remain, cost and commission are proportional
-    val mb2 = GainCalc.MatchedBuy(
+    val mb2 = Gain.MatchedBuy(
       b2, 
       Shares(98,m2), 
       b2.price.priceMultipleAdjust(m1,m2),
@@ -124,10 +125,10 @@ class TestGainCalc extends munit.FunSuite {
       0.5363864184585441)
     val net1 = s1.gross - (mb1.proportionalCost + mb2.proportionalCost)
     val capGains1 = net1 - com - mb1.proportionalBuyCommission - mb2.proportionalBuyCommission
-    val ms1 = GainCalc.MatchedSell(s1, net1.truncate, capGains1.truncate, List(mb1,mb2))
+    val ms1 = Gain.MatchedSell(s1, net1.truncate, capGains1.truncate, List(mb1,mb2))
 
     // sell remaining 77 shares from b2
-    val mb3 = GainCalc.MatchedBuy(
+    val mb3 = Gain.MatchedBuy(
       b2, 
       Shares(77,m2), 
       b2.price.priceMultipleAdjust(m1,m2),
@@ -137,7 +138,7 @@ class TestGainCalc extends munit.FunSuite {
       true, 
       0.5647085818990794)
     // all 175 shares of b3 are sold
-    val mb4 = GainCalc.MatchedBuy(
+    val mb4 = Gain.MatchedBuy(
       b3, 
       Shares(175,m2), 
       b3.price.priceMultipleAdjust(m1,m2),
@@ -148,7 +149,7 @@ class TestGainCalc extends munit.FunSuite {
       0.6706370504190582)
     val net2 = s2.gross - (mb3.proportionalCost + mb4.proportionalCost)
     val capGains2 = net2 - com - mb3.proportionalBuyCommission - mb4.proportionalBuyCommission
-    val ms2 = GainCalc.MatchedSell(s2, net2.truncate, capGains2.truncate, List(mb3,mb4))
+    val ms2 = Gain.MatchedSell(s2, net2.truncate, capGains2.truncate, List(mb3,mb4))
 
     val value = s1.gross - s1.commission + s2.gross - s1.commission
     val capGainsTotal1 = s1.gross + s2.gross
@@ -164,7 +165,7 @@ class TestGainCalc extends munit.FunSuite {
       - mb3.proportionalCost - mb3.proportionalBuyCommission
       - mb4.proportionalCost - mb4.proportionalBuyCommission
     // this is taken from the code
-    val capGainsTotal3: Currency = List[GainCalc.MatchedSell](ms1,ms2).foldLeft(Currency.zero){ (acc: Currency, ms: GainCalc.MatchedSell) =>
+    val capGainsTotal3: Currency = List[Gain.MatchedSell](ms1,ms2).foldLeft(Currency.zero){ (acc: Currency, ms: Gain.MatchedSell) =>
         acc + ms.sell.gross - ms.sell.commission - ms.mbs.foldLeft(Currency.zero) { (acc2, mb) =>
           acc2 + mb.proportionalCost + mb.proportionalBuyCommission
         }
@@ -173,11 +174,11 @@ class TestGainCalc extends munit.FunSuite {
     assertEquals(capGainsTotal1, capGainsTotal2)
     assertEquals(capGainsTotal1, capGainsTotal3)
 
-    val stockReport = GainCalc.StockReport(stock, List(ms1, ms2), value, capGainsTotal1, 1.0)
+    val stockReport = Gain.StockReport(stock, List(ms1, ms2), value, capGainsTotal1, 1.0)
 
-    val o = GainCalc.parseCompanyDateRange(stock, Date(2010, 1, 1).get, Date(2015, 2, 1).get)
+    val o = Gain.parseCompanyDateRange(stock, Date(2010, 1, 1).get, Date(2015, 2, 1).get)
     o match {
-      case Some(sr: GainCalc.StockReport) => {
+      case Some(sr: Gain.StockReport) => {
         // company is a big object that doesn't display diffs well so we break it up into multiple assertions
         assertEquals(sr.stock, stockReport.stock)
         assert(sr.mss.length == 2)
@@ -217,9 +218,9 @@ class TestGainCalc extends munit.FunSuite {
     val stock: Stock = e.right.get
 
     val today = Date(1993, 12, 31).get
-    val o1 = GainCalc.parseCompanyCurrentValue(stock, Currency(8,0), Currency.zero, today)
+    val o1 = Gain.parseCompanyCurrentValue(stock, Currency(8,0), Currency.zero, today)
     o1 match {
-      case Some(c: GainCalc.StockReport) => {
+      case Some(c: Gain.StockReport) => {
         assertEquals(c.mss.length, 1) // one sell
         val cost = Currency(10*5, 0) + Currency(5*6, 0) + Currency(10*4, 0)
         val capGains = Currency(40*8, 0) - cost - Currency(29,97)
@@ -228,9 +229,9 @@ class TestGainCalc extends munit.FunSuite {
       case None => assert(false)
     }
     
-    val o2 = GainCalc.parseCompanyDateRange(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
+    val o2 = Gain.parseCompanyDateRange(stock, Date(1992, 1, 1).get, Date(1997, 2, 1).get)
     o2 match {
-      case Some(sr: GainCalc.StockReport) => assertEquals(sr.mss.length, 2) // two sells due to date range
+      case Some(sr: Gain.StockReport) => assertEquals(sr.mss.length, 2) // two sells due to date range
       case None => assert(false)
     }
   }
@@ -261,7 +262,7 @@ class TestGainCalc extends munit.FunSuite {
     val stock = e.right.get
     assert(stock.trades.length == 6)
 
-    val o = GainCalc.parseCompanyDateRange(stock, Date.earliest(2014).get, Date.latest(2014).get)
+    val o = Gain.parseCompanyDateRange(stock, Date.earliest(2014).get, Date.latest(2014).get)
     assert(o.isDefined)
     val sr = o.get
     // we're really testing that the above didn't blow up; not sure what else to look at
@@ -288,24 +289,24 @@ class TestGainCalc extends munit.FunSuite {
 
     val trades = List[Trade](b1, b2, sp1, b3, s1, b4)
 
-    val brss: Vector[GainCalc.BuyReadyToSell] = trades.flatMap{ t => t match {
-      case b: Buy => List(GainCalc.BuyReadyToSell(b))
+    val brss: Vector[Gain.BuyReadyToSell] = trades.flatMap{ t => t match {
+      case b: Buy => List(Gain.BuyReadyToSell(b))
       case _ => Nil
     }}.toVector
 
-    val (ms, brss2) = GainCalc.parseMatchedSell(s1, brss)
+    val (ms, brss2) = Gain.parseMatchedSell(s1, brss)
 
     // I didn't test the annual yield, just copied it from the output
-    val ms2 = List[GainCalc.MatchedBuy](
-      GainCalc.MatchedBuy(b1, Shares(4,m), b1.price.priceMultipleAdjust(Fraction.one,m), Currency(4, 0), com, com, true, 0.3160740129524924),
-      GainCalc.MatchedBuy(b2, Shares(4,m), b2.price.priceMultipleAdjust(Fraction.one,m), Currency(6, 0), com, com, true, 0.2599210498948732),
-      GainCalc.MatchedBuy(b3, Shares(2,m), b3.price.priceMultipleAdjust(m,m),            Currency(4, 0), com, com, false, 0.5575251156760133)
+    val ms2 = List[Gain.MatchedBuy](
+      Gain.MatchedBuy(b1, Shares(4,m), b1.price.priceMultipleAdjust(Fraction.one,m), Currency(4, 0), com, com, true, 0.3160740129524924),
+      Gain.MatchedBuy(b2, Shares(4,m), b2.price.priceMultipleAdjust(Fraction.one,m), Currency(6, 0), com, com, true, 0.2599210498948732),
+      Gain.MatchedBuy(b3, Shares(2,m), b3.price.priceMultipleAdjust(m,m),            Currency(4, 0), com, com, false, 0.5575251156760133)
     )
 
-    assertEquals(ms, GainCalc.MatchedSell(s1, Currency(16, 0), Currency(16, 0), ms2))
+    assertEquals(ms, Gain.MatchedSell(s1, Currency(16, 0), Currency(16, 0), ms2))
 
-    val brss3 = Vector[GainCalc.BuyReadyToSell](
-      GainCalc.BuyReadyToSell(b4, Shares(2,m).atMult(Fraction.one))  // none of the shares were sold from this, still at two
+    val brss3 = Vector[Gain.BuyReadyToSell](
+      Gain.BuyReadyToSell(b4, Shares(2,m).atMult(Fraction.one))  // none of the shares were sold from this, still at two
     )
 
     assertEquals(brss2, brss3)
@@ -313,11 +314,11 @@ class TestGainCalc extends munit.FunSuite {
 
   test("annualYield") {
     // one dollar to two dollars in a year, 100% annual
-    val d1 = GainCalc.annualYield(Currency(1, 0), Currency(2, 0), 1.0)
+    val d1 = Gain.annualYield(Currency(1, 0), Currency(2, 0), 1.0)
     assert(clue(d1) > 0.9999)
     assert(clue(d1) < 1.0001)
     // four times in two years should be 100% annual
-    val d2 = GainCalc.annualYield(Currency(1, 0), Currency(4, 0), 2.0)
+    val d2 = Gain.annualYield(Currency(1, 0), Currency(4, 0), 2.0)
     assert(clue(d2) > 0.9999)
     assert(clue(d2) < 1.0001)
   }

@@ -1,6 +1,7 @@
 package org.kleemann.stocknotes.command
 
-import org.kleemann.stocknotes.{Config, GainCalc, Quote, Ticker}
+import org.kleemann.stocknotes.report.{Gain => ReportGain}
+import org.kleemann.stocknotes.{Config, Quote, Ticker}
 import org.kleemann.stocknotes.stock.{CashAccount, Currency, Date, Stock}
 
 object Gain extends Command {
@@ -95,7 +96,7 @@ object Gain extends Command {
       }
     }
 
-    val srs: List[GainCalc.StockReport] = GainCalc.calc(pa, ss, quotes, Date.today)
+    val srs: List[ReportGain.StockReport] = ReportGain.calc(pa, ss, quotes, Date.today)
 
     // print the fuckers
     // TODO: this could be moved to a render function that returns a string with no IO
@@ -149,7 +150,7 @@ object Gain extends Command {
     val srs2 = if (pa.isCurrentValueMode && srs.length>1) {
       srs ++ cash.map{ c => {
         val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
-        GainCalc.StockReport(s, List(), c.balance, Currency.zero, 1.0)
+        ReportGain.StockReport(s, List(), c.balance, Currency.zero, 1.0)
       }}
     } else srs
 
