@@ -30,10 +30,10 @@ object Calc {
                 // find the first processor that can handle the args
                 Processor.all.find{ _.matches(attributeToken) } match {
                     case Some(proc) => proc.parse(rest, att) match {
-                        case Right(updatedA) => (updatedA, errors)
-                        case Left(e)         => (att,      e :: errors)
+                        case Right(updated) => (updated, errors)
+                        case Left(e)        => (att,     e :: errors)
                     }
-                    case None => (att, f"no processor found to parse line: $attributeToken" :: errors)
+                    case None =>               (att,     f"no processor found to parse line: $attributeToken" :: errors)
                 }
             }
 
@@ -45,7 +45,8 @@ object Calc {
             // TODO: this is not a foolproof check since it doesn't check transitive stuff
             // e.g. specifying shares, income would produce eps
             // and specifying price and pe would produce eps
-            // that those eps could be in conflict
+            // thus shares, income, price, and pe could be in conflict
+            // TODO: this almost seems like a property of processors, not something that should be in this function
             val conflicts: List[(String, List[Option[Any]])] = List(
                 ("shares, income, eps",        List(parsedAtt.shares,   parsedAtt.income,        parsedAtt.eps)),
                 ("price, eps, pe",             List(parsedAtt.price,    parsedAtt.eps,           parsedAtt.pe)),
@@ -66,7 +67,7 @@ object Calc {
                 @tailrec
                 def generate(prev: Attributes): Attributes = {
                     // run through all the generators
-                    val next = Processor.all.foldLeft(prev){ case (att, proc) => proc.generate(att) }
+                    val next = Processor.all.foldLeft(prev){ (att, proc) => proc.generate(att) }
                     // if anything changed then run through it again until there are no changes
                     if (next == prev) prev
                     else              generate(next)
@@ -86,7 +87,7 @@ object Calc {
       */
     private[calc] def attributesToString(att: Attributes): String =
         // display the values we can, there may be errors embedded in the result
-        Processor.all.foldLeft(mutable.StringBuilder()){ case (sb, proc) => sb ++= proc.display(att) }.result
+        Processor.all.foldLeft(mutable.StringBuilder()){ (sb, proc) => sb ++= proc.display(att) }.result
 
     /**
       * The main entrypoint of the program.
