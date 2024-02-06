@@ -158,14 +158,14 @@ object Gain extends Command {
     println("Summary")
     val itemFmt2 = "%10s%18s%7s%15s%15s"
     println(String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg"))
-    val totalValue = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.value }
+    val totalNet = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.net }
     val totalCapGains = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
     srs2.foreach{ sr =>
-      val percentageValue = sr.value.toDouble / totalValue.toDouble
-      println(String.format(itemFmt2, sr.stock.ticker, sr.value, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage)))
+      val percentageValue = sr.net.toDouble / totalNet.toDouble
+      println(String.format(itemFmt2, sr.stock.ticker, sr.net, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage)))
     }
     println("="*50)
-    println(String.format(itemFmt2,"", totalValue, "100%", totalCapGains, ""))
+    println(String.format(itemFmt2,"", totalNet, "100%", totalCapGains, ""))
     println()
   }
 

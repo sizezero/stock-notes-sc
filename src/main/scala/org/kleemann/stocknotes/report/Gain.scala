@@ -15,14 +15,14 @@ object Gain {
     *
     * @param stock The underlying stock data from the log directory.
     * @param mss The set of matched sells that have occurred. For current data, there is only one matched sell.
-    * @param value The total value of all sales minus the sell commission
+    * @param net The total value of all sales minus the sell commission
     * @param capGains The capital gains of this sale (gross-cost). This includes buy and sell commissions.
     * @param ltcgPercentage This is the percentage of shares sold that are ltcg.
     */
   case class StockReport(
     stock: Stock,
     mss: List[MatchedSell],
-    value: Currency,
+    net: Currency,
     capGains: Currency,
     ltcgPercentage: Double)
 
