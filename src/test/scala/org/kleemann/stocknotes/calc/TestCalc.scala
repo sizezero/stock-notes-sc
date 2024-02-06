@@ -1,6 +1,6 @@
-package org.kleemann.stocknotes
+package org.kleemann.stocknotes.calc
 
-import stock.Currency
+import org.kleemann.stocknotes.stock.Currency
 
 class TestCalc extends munit.FunSuite {
 

@@ -15,7 +15,7 @@ object Calc extends Command {
     if (args.length == 0) {
         // read stdin
         val it: Iterator[String] = Source.stdin.getLines()
-        val out = org.kleemann.stocknotes.Calc.calc(it)
+        val out = org.kleemann.stocknotes.calc.Calc.calc(it)
         // write stdout
         print(out) // no println because we don't want an extra newline
         None
