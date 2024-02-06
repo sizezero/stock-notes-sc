@@ -4,6 +4,7 @@ import org.kleemann.stocknotes.{Quote, Ticker}
 import org.kleemann.stocknotes.command.{Gain => CommandGain}
 import org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
+import scala.annotation.tailrec
 
 /**
   * This is where all the calculations are performed for the Gain report. All this code is pure functional.
@@ -11,7 +12,6 @@ import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 object Gain {
    /**
     * The top level report for the Gain Report is a list of StockReport objects.
-    * This is just the relevant data from the date range or just the current data.
     *
     * @param stock The underlying stock data from the log directory.
     * @param mss The set of matched sells that have occurred. For current data, there is only one matched sell.
@@ -19,18 +19,27 @@ object Gain {
     * @param capGains The capital gains of this sale (gross-cost). This includes buy and sell commissions.
     * @param ltcgPercentage This is the percentage of shares sold that are ltcg.
     */
-  case class StockReport(stock: Stock, mss: List[MatchedSell], value: Currency, capGains: Currency, ltcgPercentage: Double)
+  case class StockReport(
+    stock: Stock,
+    mss: List[MatchedSell],
+    value: Currency,
+    capGains: Currency,
+    ltcgPercentage: Double)
 
   /**
     * This represents a sale of a block of stock.
     * It is matched up with perhaps multiple buy blocks of stock.
-    *
-    * @param sell The Trade Sell that is associated with this sale. All shares of this Sell are sold.
-    * @param net gross - cost, no buy or sell commisions
+    * 
+    * @param sell The Trade Sell that is associated with this sale. All the shares of this Sell trade are sold thus they are all matched with buys.
+    * @param net gross - sell commission, the cash you get when you sell
     * @param capitalGain net - sell commissions - buy commissions proportional to the shares sold from the buy batch
     * @param mbs A list of Matched buys that add up to this sale from oldest to newest.
     */
-  case class MatchedSell(sell: Sell, net: Currency, capitalGain: Currency, mbs: List[MatchedBuy])
+  case class MatchedSell(
+    sell: Sell,
+    net: Currency,
+    capitalGain: Currency,
+    mbs: List[MatchedBuy])
 
   /**
     * This represents a block of bought shares that are now the result of a possibly larger sale.
@@ -46,26 +55,26 @@ object Gain {
     * @param annualYield The annual yield from cost+proportionalBuyCommission to the gross-proportionalSellCommission
     */
   case class MatchedBuy(
-    buy: Buy, 
-    sold: Shares, 
+    buy: Buy,
+    sold: Shares,
     price: Currency,
-    proportionalCost: Currency, 
-    proportionalBuyCommission: Currency, 
-    proportionalSellCommission: Currency, 
-    ltcg: Boolean, 
+    proportionalCost: Currency,
+    proportionalBuyCommission: Currency,
+    proportionalSellCommission: Currency,
+    ltcg: Boolean,
     annualYield: Double)
 
   /**
-    * This is the main entry point for this object. calc() returns a list of Company objects
+    * This is the main entry point for this object. create() returns a list of Company objects
     * which, with its contained MatchedSells and MatchedBuys, is the result of the Gain report.
     *
-    * @param pa user specified command line inpute
+    * @param pa user specified command line input
     * @param stocks the parsed stock files from the log/ directory
     * @param quotes the parsed quotes from the downloaded quote file
     * @param today today's date passed in to make this pure functional and testable
     * @return a list of Company objects for each company that had sales in the indicated period
     */
-  def calc(pa: CommandGain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
+  def create(pa: CommandGain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
 
     val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
 
@@ -76,53 +85,55 @@ object Gain {
 
     // parsing out the omit keyword seems better suited to parseargs but we need the
     // ticker list in order to do that and it doesn't make sense to move that out
-    val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ s =>
+    val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ stock =>
       // ignore stocks that have no trades
       // this is efficiency but it is not really necessary
       // the code below will ignore companies without sells
-      !s.trades.isEmpty &&
+      !stock.trades.isEmpty &&
       // ignore the stock if it contains the specified keyword
-      (if (pa.omitKeyword.isDefined) !(s.keywords contains pa.omitKeyword.get) else true)
+      (if (pa.omitKeyword.isDefined) !(stock.keywords contains pa.omitKeyword.get) else true)
     }
         
     // there are two versions of this... 
     if (pa.isCurrentValueMode) {
       // ...one where we get a commision and fake a sale...
 
-      stocks2.flatMap{ s => parseCompanyCurrentValue(
-        s, 
-        if (quotes contains s.ticker) quotes.get(s.ticker).get.price else Currency.zero,
-        pa.commission,
-        today)
-      }
+      stocks2.flatMap{ stock => {
+        val price =
+          if (quotes contains stock.ticker)
+            quotes.get(stock.ticker).get.price
+          else
+            Currency.zero
+        parseCompanyCurrentValue(stock, price, pa.commission, today)
+      }}
 
     } else {
       // ...and one where we get a year range
 
       // ignore stocks that don't have at least one sell in the date range
-      val stocks3 = stocks2.filter{ s =>
-        s.trades.exists{ t => t match {
+      val stocks3 = stocks2.filter{ stock =>
+        stock.trades.exists{ t => t match {
           case Sell(date, _, _, _) => pa.start <= date && pa.end >= date
           case _ => false
         }}
       }
-      stocks3.flatMap{ s => parseCompanyDateRange(s, pa.start, pa.end)}
+      stocks3.flatMap{ parseCompanyDateRange(_, pa.start, pa.end) }
 
     }
   }
 
   private[stocknotes] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
     // this is really just a problem for testing, we only want trades that are less than today
-    var ts = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
+    var trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
-    // need to find all outstanding shares of the company
+    // need to find all currently owned shares of the company
     val (_, currentOwnedShares: Shares) =
-      ts.foldLeft( (Fraction.one, Shares.zero) ) { case ((accMultiple, accShares), t) => t match {
+      trades.foldLeft( (Fraction.one, Shares.zero) ) { case ((accMultiple, accShares), t) => t match {
         case Buy(_, shares, _, _)  => (accMultiple, accShares.add(shares, accMultiple))
         case Sell(_, shares, _, _) => (accMultiple, accShares.sub(shares, accMultiple))
         case Split(_, multiple)    => {
           val newMultiple = accMultiple * multiple
-          // shares need to be adjusted since the fake sell has a price at the new multiple
+          // shares need to be adjusted since the final, pretend sell has a price at the new multiple
           val sharesAtNewMultiple = accShares.add(Shares.zero, newMultiple)
           (newMultiple, sharesAtNewMultiple)
         }
@@ -130,9 +141,11 @@ object Gain {
 
     if (currentOwnedShares == Shares.zero) None // nothing to sell so no report
     else {
-      val sell = Sell(today, currentOwnedShares, price, commission)
-      val s = stock.copy(trades = ts :+ sell)
-      parseCompanyDateRange(s, today, today)
+      // This pretends we sell all of our remaining shares so the report
+      // can show us what the current value of the shares are.
+      val pretendSell = Sell(today, currentOwnedShares, price, commission)
+      val pretendStock = stock.copy(trades = trades :+ pretendSell)
+      parseCompanyDateRange(pretendStock, today, today)
     }
   }
 
@@ -155,15 +168,15 @@ object Gain {
     // When a sell is encountered, the accumulated buy list is passed to the sell parser which may consume some of the buys
     // and a matched sell is returned that we accumulate.
     // We can ignore splits since the share values in the buys and sells already have multiples associated with them.
-    val (brss:Vector[BuyReadyToSell], mssReversed: List[MatchedSell]) = 
-      stock.trades.foldLeft( (Vector[BuyReadyToSell](), List[MatchedSell]() ) ){ case ((brss, mss), t) =>
-        t match {
-          case b: Buy  => (brss :+ BuyReadyToSell(b), mss)
-          case s: Sell => {
+    val (_, mssReversed: List[MatchedSell]) = 
+      stock.trades.foldLeft( (Vector[BuyReadyToSell](), List[MatchedSell]() ) ){ case ((brss, mss), trade) =>
+        trade match {
+          case buy: Buy  => (brss :+ BuyReadyToSell(buy), mss)
+          case sell: Sell => {
             // even if we the sell isn't in our date range, we have to process it so it will consume earlier buys
-            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = parseMatchedSell(s, brss)
-            if (s.date>=start && s.date<=end) (unconsumed, ms :: mss)
-            else                              (unconsumed,       mss)
+            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = parseMatchedSell(sell, brss)
+            if (sell.date>=start && sell.date<=end) (unconsumed, ms :: mss)
+            else                                    (unconsumed,       mss)
           }
           case _: Split => (brss, mss)
         }
@@ -176,7 +189,7 @@ object Gain {
 
       // the sum of each Matched sell, only count sell commission, not buy commission or buys cost
       // this is the cash you get when you sell
-      val value: Currency = mss.foldLeft(Currency.zero){ (acc, ms) => acc + ms.sell.gross - ms.sell.commission }
+      val net: Currency = mss.foldLeft(Currency.zero){ (acc, ms) => acc + ms.sell.gross - ms.sell.commission }
 
       // gross of each sell - sell commission - cost - buy commisions proportional to sold shares
       val capGains: Currency = mss.foldLeft(Currency.zero){ (acc: Currency, ms: MatchedSell) =>
@@ -195,15 +208,15 @@ object Gain {
       val denominator: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m) }
       val ltcgPercentage = numerator / denominator
         
-      Some(StockReport(stock, mss, value.truncate, capGains.truncate, ltcgPercentage))
+      Some(StockReport(stock, mss, net.truncate, capGains.truncate, ltcgPercentage))
     }
   }
 
   /**
-    * Associates the given sell with some of the given BuyReadyToSells.
+    * Associates all the shares of the given sell with some of the given BuyReadyToSells.
     * 
     * @param buys
-    * @return The MatchedSell and BuyReadyToSells that still have shares.
+    * @return The MatchedSell and BuyReadyToSells that have yet to be matched with sells.
     */
   private[stocknotes] def parseMatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
 
@@ -213,7 +226,6 @@ object Gain {
 
     // this is some tiny share value at multiple one that we are comfortable that share counts will never get below
     // we use this to see if share counts are equal or at zero since we can't use equality on a Double
-    //val quantum: Double = 0.0000000001
     val quantum: Double = 0.0001
 
     // all double calculations and all conversion to Shares are done with the sell multiple
@@ -222,40 +234,34 @@ object Gain {
     // a tempory structure to build our eventual matched buys
     case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
 
-    // loop through the BuyReadyToSell list until we have satisfied all shares in the sell
-    // A mutable loop is bad but I think this is simpler than shoving all this state through 
-    // and trying to conditionally stop a foldLeft.
-    var toBuys = buys
-    var toSell: Double = sell.shares.atMult(Fraction.one)
-    var imbs: List[IncompleteMatchedBuy] = Nil // new ones placed on front
-
-    while (toSell > quantum) { // toSell > zero
-      val b: BuyReadyToSell = toBuys.head
-
-      if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
-        // the current buy perfectly completes the sell
-        val s = Shares((toSell * m.toDouble).round.toInt, m)
-        imbs = IncompleteMatchedBuy(b.buy, s) :: imbs
-        toBuys = toBuys.tail
-        toSell = 0.0
-      } else if (b.unsold < toSell) {
-        // we have used up the current buy, but the sell is not done
-        val s = Shares((b.unsold * m.toDouble).round.toInt, m)
-        imbs = IncompleteMatchedBuy(b.buy, s) :: imbs
-        toBuys = toBuys.tail
-        toSell = toSell - b.unsold
-      } else { // b.unsold > toSell
-        // only some of the buy shares are needed to satisfy the sell
-        val s = Shares((toSell * m.toDouble).round.toInt, m)
-        imbs = IncompleteMatchedBuy(b.buy, s) :: imbs
-        // sell is completed and the next buy is only partially completed
-        val reducedShares: Double = b.unsold - toSell
-        toBuys = toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares))
-        toSell = 0.0
+    // recursively walk through the BuyReadyToSell list and accumulate our incomplete matched buy list
+    // until we have satisfied all shares in the sell
+    @tailrec
+    def assignBuy(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
+      if (toSell <= quantum) (toBuys, imbs)
+      else {
+        val b: BuyReadyToSell = toBuys.head
+        if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
+          // the current buy perfectly completes the sell
+          val s = Shares((toSell * m.toDouble).round.toInt, m)
+          (toBuys.tail, IncompleteMatchedBuy(b.buy, s) :: imbs)
+        } else if (b.unsold < toSell) {
+          // we have used up the current buy, but the sell is not done
+          val s = Shares((b.unsold * m.toDouble).round.toInt, m)
+          assignBuy(toBuys.tail, toSell-b.unsold, IncompleteMatchedBuy(b.buy, s) :: imbs)
+        } else { // b.unsold > toSell
+          // only some of the buy shares are needed to satisfy the sell
+          val s = Shares((toSell * m.toDouble).round.toInt, m)
+          val reducedShares: Double = b.unsold - toSell
+          // sell is completed and the next buy is only partially completed
+          (toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares)), IncompleteMatchedBuy(b.buy, s) :: imbs)
+        }
       }
     }
+    val (toBuys: Vector[BuyReadyToSell], imbsReversed: List[IncompleteMatchedBuy]) =
+      assignBuy(buys, sell.shares.atMult(Fraction.one), Nil)
 
-    val mbs = imbs.map{ imb => completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
+    val mbs = imbsReversed.map{ imb => completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
     val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalBuyCommission }
     (MatchedSell(sell, net.truncate, capitalGain.truncate, mbs), toBuys)

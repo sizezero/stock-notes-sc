@@ -96,7 +96,7 @@ object Gain extends Command {
       }
     }
 
-    val srs: List[ReportGain.StockReport] = ReportGain.calc(pa, ss, quotes, Date.today)
+    val srs: List[ReportGain.StockReport] = ReportGain.create(pa, ss, quotes, Date.today)
 
     // print the fuckers
     // TODO: this could be moved to a render function that returns a string with no IO
