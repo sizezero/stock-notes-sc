@@ -213,7 +213,8 @@ object Gain {
   }
 
   /**
-    * Associates all the shares of the given sell with some of the given BuyReadyToSells.
+    * Associates all the shares of the given sell with some of the given buys.
+    * We consume from the head of the buys since those are the oldest.
     * 
     * @param buys
     * @return The MatchedSell and BuyReadyToSells that have yet to be matched with sells.
@@ -234,10 +235,10 @@ object Gain {
     // a tempory structure to build our eventual matched buys
     case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
 
-    // recursively walk through the BuyReadyToSell list and accumulate our incomplete matched buy list
+    // recursively walk through the BuyReadyToSell list conuming buys, and accumulate our incomplete matched buy list
     // until we have satisfied all shares in the sell
     @tailrec
-    def assignBuy(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
+    def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
       if (toSell <= quantum) (toBuys, imbs)
       else {
         val b: BuyReadyToSell = toBuys.head
@@ -248,7 +249,7 @@ object Gain {
         } else if (b.unsold < toSell) {
           // we have used up the current buy, but the sell is not done
           val s = Shares((b.unsold * m.toDouble).round.toInt, m)
-          assignBuy(toBuys.tail, toSell-b.unsold, IncompleteMatchedBuy(b.buy, s) :: imbs)
+          assignBuys(toBuys.tail, toSell-b.unsold, IncompleteMatchedBuy(b.buy, s) :: imbs)
         } else { // b.unsold > toSell
           // only some of the buy shares are needed to satisfy the sell
           val s = Shares((toSell * m.toDouble).round.toInt, m)
@@ -259,7 +260,7 @@ object Gain {
       }
     }
     val (toBuys: Vector[BuyReadyToSell], imbsReversed: List[IncompleteMatchedBuy]) =
-      assignBuy(buys, sell.shares.atMult(Fraction.one), Nil)
+      assignBuys(buys, sell.shares.atMult(Fraction.one), Nil)
 
     val mbs = imbsReversed.map{ imb => completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
