@@ -184,7 +184,7 @@ class TestGain extends munit.FunSuite {
         assert(sr.mss.length == 2)
         assertEquals(sr.mss.head, ms1)
         assertEquals(sr.mss.tail.head, ms2)
-        assertEquals(sr.value, stockReport.value)
+        assertEquals(sr.net, stockReport.net)
         assertEquals(sr.capGains, stockReport.capGains)
         assertEquals(sr.ltcgPercentage, stockReport.ltcgPercentage)
       }
