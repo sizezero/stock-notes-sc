@@ -10,7 +10,7 @@ import org.kleemann.stocknotes.Ticker
   *
   * @param ticker
   * @param date
-  * @param text
+  * @param content
   */
 final case class Entry(ticker: Ticker, date: Date, content: List[String | Trade | Watch]) extends Ordered[Entry] {
 

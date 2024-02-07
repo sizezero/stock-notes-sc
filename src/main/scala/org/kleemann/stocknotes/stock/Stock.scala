@@ -82,11 +82,15 @@ object Stock {
       * The signature was designed for testing.
       *
       * @param ticker this usually comes from the filename
-      * @param filename
-      * @param g
-      * @return
+      * @param filename the filename of the input file needed for error reporting
+      * @param g the contents of the input file
+      * @return either an error string or a valid Stock object
       */
-    def load(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
+    def load(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] =
+        loadImperative(ticker, filename, g)
+
+
+    def loadImperative(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
 
         var lineNo = 0
         var stockName = Option.empty[String]
@@ -209,6 +213,56 @@ object Stock {
             // build our return object
             Right(Stock(ticker, stockName, stockCid, keywords, entries.reverse, trades.reverse, buyWatch, sellWatch))
         }
+    }
+
+    def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
+        
+        case class StockBuilder(
+            ticker: Ticker, 
+            name: Option[String] = None, 
+            cid: Option[String] = None, 
+            keywords: Set[String] = Set(), 
+            entries: List[Entry] = Nil, // reverse order
+            trades: List[Trade] = Nil,  // reverse order
+            buyWatch: BuyWatch = BuyWatch.none, 
+            sellWatch: SellWatch= SellWatch.none,
+            currentEntry: Entry = Entry(ticker, Date.earliest, Nil) ) { // reverse order
+
+            // a date separator has been found in the content
+            def addDate(date: Date): StockBuilder = {
+                // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
+                // and a new blank currentEntry needs to be created
+                val newEntry = currentEntry.copy(content = currentEntry.content.reverse)
+                this.copy(entries = newEntry :: entries, currentEntry = Entry(ticker, date, Nil))
+            }
+
+            def addContent(v: String | Trade | Watch): StockBuilder = {
+                // if the new content is a string and the top of the entries is a string,
+                // then concatenate them together
+                // otherwise just place the new content on the front
+                val newContent: List[String | Trade | Watch] = currentEntry.content match {
+                    case (oldS: String) :: tail => v match {
+                        case newS: String => (oldS + newS) :: currentEntry.content.tail
+                        case _ => v :: currentEntry.content
+                    }
+                    case _ => v :: currentEntry.content
+                }
+                this.copy(currentEntry = currentEntry.copy(content = newContent))
+            }
+
+            def toStock: Stock = {
+                // do we need to wrap up the current entry?
+                if (currentEntry.content.isEmpty)
+                    Stock(ticker, name, cid, keywords, entries.reverse, trades.reverse, buyWatch, sellWatch)
+                else {
+                    val sb = addDate(Date.latest)
+                    // the only thing changed is "entries" but it's probably safest to use everything from the new StockBuilder
+                    Stock(sb.ticker, sb.name, sb.cid, sb.keywords, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
+                }
+            }
+        }
+
+        Left("Not yet implemented")
     }
 
 }
