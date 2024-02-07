@@ -230,17 +230,18 @@ object Stock {
 
             // attributes needed while iterating
             // TODO: not sure if multiple and shares should be part of this object since the object doesn't use them
-            currentEntry: Entry = Entry(ticker, Date.earliest, Nil), // reverse order
+            date: Date = Date.earliest,
+            content: List[String | Trade | Watch] = Nil, // reverse order
             multiple: Fraction = Fraction.one,
             shares: Shares = Shares.zero
             ) {
 
             // a date separator has been found in the content
-            def addDate(date: Date): StockBuilder = {
+            def addDate(newDate: Date): StockBuilder = {
                 // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
                 // and a new blank currentEntry needs to be created
-                val newEntry = currentEntry.copy(content = currentEntry.content.reverse)
-                this.copy(entries = newEntry :: entries, currentEntry = Entry(ticker, date, Nil))
+                val newEntry = Entry(ticker, date, content.reverse)
+                this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
 
             def addContent(v: String | Trade | Watch): StockBuilder = {
@@ -254,14 +255,41 @@ object Stock {
                 // if the new content is a string and the top of the entries is a string,
                 // then concatenate them together
                 // otherwise just place the new content on the front
-                val newContent: List[String | Trade | Watch] = currentEntry.content match {
-                    case (oldS: String) :: tail => v match {
-                        case newS: String => (oldS + newS) :: currentEntry.content.tail
-                        case _ => v :: currentEntry.content
+
+
+                                    // val (newShares, newMultiple) = trade match {
+                                    //     case Buy (d, shares, price, commission) => (sb.shares.add(shares, sb.multiple), sb.multiple)
+                                    //     case Sell(d, shares, price, commission) => (sb.shares.sub(shares, sb.multiple), sb.multiple)
+                                    //     case Split(_, splitMultiple) => {
+                                    //         val newMult = sb.multiple * splitMultiple
+                                    //         // bring the current shares up to the current multiple
+                                    //         (sb.shares.add(Shares.zero, newMult), newMult)
+                                    //     }
+                                    // }
+
+
+                v match {
+                    case newS: String => content match {
+                        case (oldS: String) :: tail => this.copy(content = (oldS + newS) :: content.tail)
+                        case _                      => this.copy(content = v :: content)
                     }
-                    case _ => v :: currentEntry.content
+                    case buy: Buy => {
+                        val newShares = shares.add(buy.shares, multiple)
+                        this.copy(content = v :: content, trades = buy :: trades, shares = newShares)
+                    }
+                    case sell: Sell => {
+                        val newShares = shares.sub(sell.shares, multiple)
+                        this.copy(content = v :: content, trades = sell  :: trades, shares = newShares)
+                    }
+                    case split: Split => {
+                        val newMult = multiple * split.multiple
+                        // bring the current shares up to the current multiple
+                        val newShares = shares.add(Shares.zero, newMult)
+                        this.copy(content = v :: content, trades = split :: trades, shares = newShares, multiple = newMult)
+                    }
+                    case bw: BuyWatch  => this.copy(content = v :: content, buyWatch = bw)
+                    case sw: SellWatch => this.copy(content = v :: content, sellWatch = sw)
                 }
-                this.copy(currentEntry = currentEntry.copy(content = newContent))
             }
 
             def toStock: Stock = {
@@ -280,14 +308,9 @@ object Stock {
                     else
                         keywords2
 
-                // tests are failing when we don't wrap up the current entry, let's always wrap it up
-                //if (currentEntry.content.isEmpty)
-                //    Stock(ticker, name, cid, keywords3, entries.reverse, trades.reverse, buyWatch, sellWatch)
-                //else {
                 val sb = addDate(Date.latest)
                 // the only thing changed is "entries" but it's probably safest to use everything from the new StockBuilder
                 Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
-                //}
             }
         }
 
@@ -301,8 +324,8 @@ object Stock {
                 val lineNo = prevLineNo + 1
                 Date.parse(line) match {
                     case Some(d: Date) => {
-                        if (d <= sb.currentEntry.date)
-                            mkError(lineNo, s"date $d is not greater than previous date ${sb.currentEntry.date}")
+                        if (d <= sb.date)
+                            mkError(lineNo, s"date $d is not greater than previous date ${sb.date}")
                         else
                             processLine(in.tail, lineNo, sb.addDate(d))
                     }
@@ -318,28 +341,19 @@ object Stock {
                                     case None => processLine(in.tail, lineNo, sb.copy(keywords = kws.toSet))
                                 }
                             }
-                            case tradePattern(_) => Trade.parse(line, sb.currentEntry.date, sb.multiple) match {
+                            case tradePattern(_) => Trade.parse(line, sb.date, sb.multiple) match {
                                 case Right((trade, balance)) => {
-                                    // TODO: part of me thinks this would better belong within addContent
-                                    val (newShares, newMultiple) = trade match {
-                                        case Buy (d, shares, price, commission) => (sb.shares.add(shares, sb.multiple), sb.multiple)
-                                        case Sell(d, shares, price, commission) => (sb.shares.sub(shares, sb.multiple), sb.multiple)
-                                        case Split(_, splitMultiple) => {
-                                            val newMult = sb.multiple * splitMultiple
-                                            // bring the current shares up to the current multiple
-                                            (sb.shares.add(Shares.zero, newMult), newMult)
-                                        }
-                                    }
-                                    assert(balance.multiple == newMultiple)
-                                    if (newShares.shares < 0) mkError(lineNo, s"share count cannot be negative: $newShares")
-                                    else if (newShares != balance) mkError(lineNo, s"listed balance: $balance does not equal calculated: $newShares")
-                                    else processLine(in.tail, lineNo, sb.addContent(trade).copy(trades = trade :: sb.trades, shares = newShares, multiple = newMultiple))
+                                    val newSb = sb.addContent(trade)
+                                    assert(balance.multiple == newSb.multiple)
+                                    if (newSb.shares.shares < 0) mkError(lineNo, s"share count cannot be negative: ${newSb.shares}")
+                                    else if (newSb.shares != balance) mkError(lineNo, s"listed balance: $balance does not equal calculated: ${newSb.shares}")
+                                    else processLine(in.tail, lineNo, sb.addContent(trade))
                                 }
                                 case Left(e) => mkError(lineNo, e)
                             }
                             case buySellWatchPattern(_) => Watch.parse(line, sb.multiple) match {
-                                case Right(b: BuyWatch)  => processLine(in.tail, lineNo, sb.addContent(b).copy(buyWatch = b))
-                                case Right(s: SellWatch) => processLine(in.tail, lineNo, sb.addContent(s).copy(sellWatch = s))
+                                case Right(b: BuyWatch)  => processLine(in.tail, lineNo, sb.addContent(b))
+                                case Right(s: SellWatch) => processLine(in.tail, lineNo, sb.addContent(s))
                                 case Left(e) => mkError(lineNo, e)
                             }
                             case _ => processLine(in.tail, lineNo, sb.addContent(line + "\n"))
