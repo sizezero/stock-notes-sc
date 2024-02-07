@@ -218,7 +218,7 @@ object Stock {
 
     def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
         
-        // This is almost functional except for the mutable StringBuilder.
+        // StockBuilder is almost functional except for the mutable StringBuilder.
         // This means when a new StockBuilder is made, you should not use the older one.
         // This works with our limited use case.
         case class StockBuilder(
@@ -336,7 +336,7 @@ object Stock {
                                     assert(balance.multiple == newSb.multiple)
                                     if (newSb.shares.shares < 0) mkError(lineNo, s"share count cannot be negative: ${newSb.shares}")
                                     else if (newSb.shares != balance) mkError(lineNo, s"listed balance: $balance does not equal calculated: ${newSb.shares}")
-                                    else processLine(in.tail, lineNo, sb.addContent(trade))
+                                    else processLine(in.tail, lineNo, newSb)
                                 }
                                 case Left(e) => mkError(lineNo, e)
                             }
