@@ -4,6 +4,7 @@ import scala.util.control.Breaks.{break, breakable}
 
 import org.kleemann.stocknotes.{Config, Ticker}
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 /**
   * The stock class is an extraction of the log/<ticker>.txt file.
@@ -217,6 +218,9 @@ object Stock {
 
     def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
         
+        // This is almost functional except for the mutable StringBuilder.
+        // This means when a new StockBuilder is made, you should not use the older one.
+        // This works with our limited use case.
         case class StockBuilder(
             // attributes from Stock
             ticker: Ticker, 
@@ -231,7 +235,7 @@ object Stock {
             // attributes needed while iterating
             // TODO: not sure if multiple and shares should be part of this object since the object doesn't use them
             date: Date = Date.earliest,
-            content: List[String | Trade | Watch] = Nil, // reverse order
+            content: List[mutable.StringBuilder | Trade | Watch] = Nil, // reverse order
             multiple: Fraction = Fraction.one,
             shares: Shares = Shares.zero
             ) {
@@ -240,55 +244,40 @@ object Stock {
             def addDate(newDate: Date): StockBuilder = {
                 // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
                 // and a new blank currentEntry needs to be created
-                val newEntry = Entry(ticker, date, content.reverse)
+                val newContent: List[String | Trade | Watch] = content.reverse.map{ _ match {
+                    case sb: mutable.StringBuilder => sb.result()
+                    case other: (Trade | Watch) => other
+                }}
+                val newEntry = Entry(ticker, date, newContent)
                 this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
 
             def addContent(v: String | Trade | Watch): StockBuilder = {
 
-                // TODO: it would probably make sense to optimize the case where a string is added 
-                // to another string. I think this would add a side effect to this function and make it
-                // impure. I.e.: both the previous and next stringbuilder object would have references
-                // to the Same mutable StringBuilder that was changed. This does not affect the current 
-                // use case.
-
-                // if the new content is a string and the top of the entries is a string,
-                // then concatenate them together
-                // otherwise just place the new content on the front
-
-
-                                    // val (newShares, newMultiple) = trade match {
-                                    //     case Buy (d, shares, price, commission) => (sb.shares.add(shares, sb.multiple), sb.multiple)
-                                    //     case Sell(d, shares, price, commission) => (sb.shares.sub(shares, sb.multiple), sb.multiple)
-                                    //     case Split(_, splitMultiple) => {
-                                    //         val newMult = sb.multiple * splitMultiple
-                                    //         // bring the current shares up to the current multiple
-                                    //         (sb.shares.add(Shares.zero, newMult), newMult)
-                                    //     }
-                                    // }
-
-
                 v match {
-                    case newS: String => content match {
-                        case (oldS: String) :: tail => this.copy(content = (oldS + newS) :: content.tail)
-                        case _                      => this.copy(content = v :: content)
+                    case newString: String => content match {
+                        // if this content is a String and so was the last, then combine them
+                        case (oldStringBuilder: mutable.StringBuilder) :: tail =>
+                            this.copy(content = oldStringBuilder.append(newString) :: content.tail)
+                        case _ =>
+                            this.copy(content = StringBuilder(newString) :: content)
                     }
                     case buy: Buy => {
                         val newShares = shares.add(buy.shares, multiple)
-                        this.copy(content = v :: content, trades = buy :: trades, shares = newShares)
+                        this.copy(content = buy :: content, trades = buy :: trades, shares = newShares)
                     }
                     case sell: Sell => {
                         val newShares = shares.sub(sell.shares, multiple)
-                        this.copy(content = v :: content, trades = sell  :: trades, shares = newShares)
+                        this.copy(content = sell :: content, trades = sell  :: trades, shares = newShares)
                     }
                     case split: Split => {
                         val newMult = multiple * split.multiple
                         // bring the current shares up to the current multiple
                         val newShares = shares.add(Shares.zero, newMult)
-                        this.copy(content = v :: content, trades = split :: trades, shares = newShares, multiple = newMult)
+                        this.copy(content = split :: content, trades = split :: trades, shares = newShares, multiple = newMult)
                     }
-                    case bw: BuyWatch  => this.copy(content = v :: content, buyWatch = bw)
-                    case sw: SellWatch => this.copy(content = v :: content, sellWatch = sw)
+                    case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch = bw)
+                    case sw: SellWatch => this.copy(content = sw :: content, sellWatch = sw)
                 }
             }
 
