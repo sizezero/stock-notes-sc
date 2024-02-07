@@ -3,6 +3,7 @@ package org.kleemann.stocknotes.stock
 import scala.util.control.Breaks.{break, breakable}
 
 import org.kleemann.stocknotes.{Config, Ticker}
+import scala.annotation.tailrec
 
 /**
   * The stock class is an extraction of the log/<ticker>.txt file.
@@ -87,8 +88,7 @@ object Stock {
       * @return either an error string or a valid Stock object
       */
     def load(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] =
-        loadImperative(ticker, filename, g)
-
+        loadFunctional(ticker, filename, g)
 
     def loadImperative(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
 
@@ -218,6 +218,7 @@ object Stock {
     def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
         
         case class StockBuilder(
+            // attributes from Stock
             ticker: Ticker, 
             name: Option[String] = None, 
             cid: Option[String] = None, 
@@ -226,7 +227,13 @@ object Stock {
             trades: List[Trade] = Nil,  // reverse order
             buyWatch: BuyWatch = BuyWatch.none, 
             sellWatch: SellWatch= SellWatch.none,
-            currentEntry: Entry = Entry(ticker, Date.earliest, Nil) ) { // reverse order
+
+            // attributes needed while iterating
+            // TODO: not sure if multiple and shares should be part of this object since the object doesn't use them
+            currentEntry: Entry = Entry(ticker, Date.earliest, Nil), // reverse order
+            multiple: Fraction = Fraction.one,
+            shares: Shares = Shares.zero
+            ) {
 
             // a date separator has been found in the content
             def addDate(date: Date): StockBuilder = {
@@ -237,6 +244,13 @@ object Stock {
             }
 
             def addContent(v: String | Trade | Watch): StockBuilder = {
+
+                // TODO: it would probably make sense to optimize the case where a string is added 
+                // to another string. I think this would add a side effect to this function and make it
+                // impure. I.e.: both the previous and next stringbuilder object would have references
+                // to the Same mutable StringBuilder that was changed. This does not affect the current 
+                // use case.
+
                 // if the new content is a string and the top of the entries is a string,
                 // then concatenate them together
                 // otherwise just place the new content on the front
@@ -251,18 +265,91 @@ object Stock {
             }
 
             def toStock: Stock = {
-                // do we need to wrap up the current entry?
-                if (currentEntry.content.isEmpty)
-                    Stock(ticker, name, cid, keywords, entries.reverse, trades.reverse, buyWatch, sellWatch)
-                else {
-                    val sb = addDate(Date.latest)
-                    // the only thing changed is "entries" but it's probably safest to use everything from the new StockBuilder
-                    Stock(sb.ticker, sb.name, sb.cid, sb.keywords, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
-                }
+                // add special keywords
+                val keywords2 = if (shares.shares != 0)
+                    keywords + "owned"
+                else if (trades.length > 0)
+                    // no shares but some trades means we once owned this and now have sold it
+                    keywords + "sold"
+                else
+                    keywords
+
+                val keywords3 = 
+                    if (buyWatch != BuyWatch.none || sellWatch != SellWatch.none)
+                        keywords2 + "watching"
+                    else
+                        keywords2
+
+                // tests are failing when we don't wrap up the current entry, let's always wrap it up
+                //if (currentEntry.content.isEmpty)
+                //    Stock(ticker, name, cid, keywords3, entries.reverse, trades.reverse, buyWatch, sellWatch)
+                //else {
+                val sb = addDate(Date.latest)
+                // the only thing changed is "entries" but it's probably safest to use everything from the new StockBuilder
+                Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
+                //}
             }
         }
 
-        Left("Not yet implemented")
+        def mkError(lineNo: Int, s: String): Either[String, StockBuilder] = Left(s"$filename($lineNo): $s")
+
+        @tailrec
+        def processLine(in: Seq[String], prevLineNo: Int, sb: StockBuilder): Either[String, StockBuilder] = {
+            if (in.isEmpty) Right(sb)
+            else {
+                val line = in.head
+                val lineNo = prevLineNo + 1
+                Date.parse(line) match {
+                    case Some(d: Date) => {
+                        if (d <= sb.currentEntry.date)
+                            mkError(lineNo, s"date $d is not greater than previous date ${sb.currentEntry.date}")
+                        else
+                            processLine(in.tail, lineNo, sb.addDate(d))
+                    }
+                    case _ => {
+                        // continue parsing
+                        line match {
+                            case namePattern(name) => processLine(in.tail, lineNo, sb.copy(name = Some(name.trim())))
+                            case cidPattern(cid)   => processLine(in.tail, lineNo, sb.copy(cid  = Some( cid.trim())))
+                            case keywordsPattern(ks) => {
+                                val kws: Array[String] = ks.split("\\s+")
+                                kws.find{ !keywordPattern.matches(_) } match {
+                                    case Some(badKeyword) => mkError(lineNo, s"keywords must be alphanumeric with underscores: $badKeyword")
+                                    case None => processLine(in.tail, lineNo, sb.copy(keywords = kws.toSet))
+                                }
+                            }
+                            case tradePattern(_) => Trade.parse(line, sb.currentEntry.date, sb.multiple) match {
+                                case Right((trade, balance)) => {
+                                    // TODO: part of me thinks this would better belong within addContent
+                                    val (newShares, newMultiple) = trade match {
+                                        case Buy (d, shares, price, commission) => (sb.shares.add(shares, sb.multiple), sb.multiple)
+                                        case Sell(d, shares, price, commission) => (sb.shares.sub(shares, sb.multiple), sb.multiple)
+                                        case Split(_, splitMultiple) => {
+                                            val newMult = sb.multiple * splitMultiple
+                                            // bring the current shares up to the current multiple
+                                            (sb.shares.add(Shares.zero, newMult), newMult)
+                                        }
+                                    }
+                                    assert(balance.multiple == newMultiple)
+                                    if (newShares.shares < 0) mkError(lineNo, s"share count cannot be negative: $newShares")
+                                    else if (newShares != balance) mkError(lineNo, s"listed balance: $balance does not equal calculated: $newShares")
+                                    else processLine(in.tail, lineNo, sb.addContent(trade).copy(trades = trade :: sb.trades, shares = newShares, multiple = newMultiple))
+                                }
+                                case Left(e) => mkError(lineNo, e)
+                            }
+                            case buySellWatchPattern(_) => Watch.parse(line, sb.multiple) match {
+                                case Right(b: BuyWatch)  => processLine(in.tail, lineNo, sb.addContent(b).copy(buyWatch = b))
+                                case Right(s: SellWatch) => processLine(in.tail, lineNo, sb.addContent(s).copy(sellWatch = s))
+                                case Left(e) => mkError(lineNo, e)
+                            }
+                            case _ => processLine(in.tail, lineNo, sb.addContent(line + "\n"))
+                        }
+                    }
+                }
+            }
+        }
+        // if there are no errors then turn the StockBuilder to a Stock
+        processLine(g.toSeq, 0, new StockBuilder(ticker)).map{ _.toStock }
     }
 
 }
