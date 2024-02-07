@@ -221,6 +221,8 @@ object Stock {
         // StockBuilder is almost functional except for the mutable StringBuilder.
         // This means when a new StockBuilder is made, you should not use the older one.
         // This works with our limited use case.
+        // TODO: now that I've done this I'm not sure it's a good idea.
+        // I'm not really sure how much efficiency I've gained and I feel like I have a hidden bug waiting to bite me.
         case class StockBuilder(
             // attributes from Stock
             ticker: Ticker, 
@@ -303,11 +305,11 @@ object Stock {
             }
         }
 
-        def mkError(lineNo: Int, s: String): Either[String, StockBuilder] = Left(s"$filename($lineNo): $s")
+        def mkError(lineNo: Int, s: String): Either[String, Stock] = Left(s"$filename($lineNo): $s")
 
         @tailrec
-        def processLine(in: Seq[String], prevLineNo: Int, sb: StockBuilder): Either[String, StockBuilder] = {
-            if (in.isEmpty) Right(sb)
+        def processLine(in: Seq[String], prevLineNo: Int, sb: StockBuilder): Either[String, Stock] = {
+            if (in.isEmpty) Right(sb.toStock)
             else {
                 val line = in.head
                 val lineNo = prevLineNo + 1
@@ -351,8 +353,7 @@ object Stock {
                 }
             }
         }
-        // if there are no errors then turn the StockBuilder to a Stock
-        processLine(g.toSeq, 0, new StockBuilder(ticker)).map{ _.toStock }
+        processLine(g.toSeq, 0, new StockBuilder(ticker))
     }
 
 }
