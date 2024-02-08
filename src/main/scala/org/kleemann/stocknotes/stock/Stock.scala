@@ -265,27 +265,24 @@ object Stock {
                 this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
 
-            def addContent(v: String | Trade | Watch): StockBuilder = {
-
-                v match {
-                    case newString: String => this.copy(content = newString :: content)
-                    case buy: Buy => {
-                        val newShares = shares.add(buy.shares, multiple)
-                        this.copy(content = buy :: content, trades = buy :: trades, shares = newShares)
-                    }
-                    case sell: Sell => {
-                        val newShares = shares.sub(sell.shares, multiple)
-                        this.copy(content = sell :: content, trades = sell  :: trades, shares = newShares)
-                    }
-                    case split: Split => {
-                        val newMult = multiple * split.multiple
-                        // bring the current shares up to the current multiple
-                        val newShares = shares.add(Shares.zero, newMult)
-                        this.copy(content = split :: content, trades = split :: trades, shares = newShares, multiple = newMult)
-                    }
-                    case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch = bw)
-                    case sw: SellWatch => this.copy(content = sw :: content, sellWatch = sw)
+            def addContent(v: String | Trade | Watch): StockBuilder = v match {
+                case newString: String => this.copy(content = newString :: content)
+                case buy: Buy => {
+                    val newShares = shares.add(buy.shares, multiple)
+                    this.copy(content = buy :: content, trades = buy :: trades, shares = newShares)
                 }
+                case sell: Sell => {
+                    val newShares = shares.sub(sell.shares, multiple)
+                    this.copy(content = sell :: content, trades = sell  :: trades, shares = newShares)
+                }
+                case split: Split => {
+                    val newMult = multiple * split.multiple
+                    // bring the current shares up to the current multiple
+                    val newShares = shares.add(Shares.zero, newMult)
+                    this.copy(content = split :: content, trades = split :: trades, shares = newShares, multiple = newMult)
+                }
+                case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch = bw)
+                case sw: SellWatch => this.copy(content = sw :: content, sellWatch = sw)
             }
 
             def toStock: Stock = {
