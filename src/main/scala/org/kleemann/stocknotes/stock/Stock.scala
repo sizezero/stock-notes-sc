@@ -8,7 +8,7 @@ import scala.collection.mutable
 
 /**
   * The stock class is an extraction of the log/<ticker>.txt file.
-  * It contains a list of date separated text entries,
+  * It contains a list of date separated content entries,
   * a list of trades, various attributes such as name and cid.
   * BUY and SELL watch values are replaced each time they are entred
   * so only the last one counts.
@@ -32,12 +32,12 @@ final case class Stock(
     buyWatch: BuyWatch, 
     sellWatch: SellWatch) {
 
-        /**
-          * Return the date of the most recent Entries value.
-          * Useful for sorting.
-          */
-        lazy val latestDate: Date = if (entries.isEmpty) Date.earliest else entries.last.date
-    }
+    /**
+     * Return the date of the most recent Entries value.
+     * Useful for sorting.
+     */
+    lazy val latestDate: Date = if (entries.isEmpty) Date.earliest else entries.last.date
+}
 
 object Stock {
 
@@ -48,10 +48,10 @@ object Stock {
       * @return
       */
     def load(config: Config): List[Stock] = 
-      os.list(config.logDir).flatMap{ f =>
-        if (f.ext == "txt") List(load(f))
-        else                Nil
-      }.toList
+        os.list(config.logDir).flatMap{ f =>
+                if (f.ext == "txt") List(load(f))
+                else                Nil
+        }.toList
 
     /**
       * Loads the specified stock file. Errors in parsing will result in a sys.exit(1)
