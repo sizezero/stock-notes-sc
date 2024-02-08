@@ -218,11 +218,6 @@ object Stock {
 
     def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
         
-        // StockBuilder is almost functional except for the mutable StringBuilder.
-        // This means when a new StockBuilder is made, you should not use the older one.
-        // This works with our limited use case.
-        // TODO: now that I've done this I'm not sure it's a good idea.
-        // I'm not really sure how much efficiency I've gained and I feel like I have a hidden bug waiting to bite me.
         case class StockBuilder(
             // attributes from Stock
             ticker: Ticker, 
@@ -237,7 +232,7 @@ object Stock {
             // attributes needed while iterating
             // TODO: not sure if multiple and shares should be part of this object since the object doesn't use them
             date: Date = Date.earliest,
-            content: List[mutable.StringBuilder | Trade | Watch] = Nil, // reverse order
+            content: List[String | Trade | Watch] = Nil, // reverse order, strings can be doubled up
             multiple: Fraction = Fraction.one,
             shares: Shares = Shares.zero
             ) {
@@ -246,24 +241,34 @@ object Stock {
             def addDate(newDate: Date): StockBuilder = {
                 // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
                 // and a new blank currentEntry needs to be created
-                val newContent: List[String | Trade | Watch] = content.reverse.map{ _ match {
-                    case sb: mutable.StringBuilder => sb.result()
-                    case other: (Trade | Watch) => other
+
+                // coalesce adjacent Strings in content into single Strings
+                // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
+                val sb = mutable.StringBuilder()
+                val newContent1: List[String | Trade | Watch] = content.reverse.flatMap{ c => c match {
+                    case s: String => {
+                        sb.append(s)
+                        List()
+                    }
+                    case other: (Trade | Watch) => {
+                        if (sb.isEmpty) List(other)
+                        else {
+                            val combinedString = sb.result()
+                            sb.clear()
+                            List(combinedString, other)
+                        }
+                    }
                 }}
-                val newEntry = Entry(ticker, date, newContent)
+                val newContent2: List[String | Trade | Watch] = if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
+
+                val newEntry = Entry(ticker, date, newContent2)
                 this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
 
             def addContent(v: String | Trade | Watch): StockBuilder = {
 
                 v match {
-                    case newString: String => content match {
-                        // if this content is a String and so was the last, then combine them
-                        case (oldStringBuilder: mutable.StringBuilder) :: tail =>
-                            this.copy(content = oldStringBuilder.append(newString) :: content.tail)
-                        case _ =>
-                            this.copy(content = StringBuilder(newString) :: content)
-                    }
+                    case newString: String => this.copy(content = newString :: content)
                     case buy: Buy => {
                         val newShares = shares.add(buy.shares, multiple)
                         this.copy(content = buy :: content, trades = buy :: trades, shares = newShares)
