@@ -80,7 +80,7 @@ object Gain extends Command {
     * @param srs The list of stock reports
     * @return a multiline output string of the report, meant to be displayed in fixed width
     */
-  private def renderStockReport(srs: List[StockReport], pa: ParseArgs, cash: List[CashAccount]): String = {
+  private def renderStockReport(srs: List[StockReport]): String = {
     if (srs.isEmpty)
       "No stocks found"
     else {
@@ -93,8 +93,11 @@ object Gain extends Command {
       val colWidth = "13"
       val itemFmt = "%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s"
       srs.foreach{ sr =>
-        sb ++= sr.stock.ticker.toString()
-        sb ++= "\n"
+        // cash accounts don't have any sells
+        if (!sr.mss.isEmpty) {
+          sb ++= sr.stock.ticker.toString()
+          sb ++= "\n"
+        }
         sr.mss.foreach{ ms =>
           val s = ms.sell
           val m = s.shares.multiple
@@ -131,24 +134,15 @@ object Gain extends Command {
         }
       }
 
-      // add cash accounts as pseudo StockReports
-      // TODO: this whole cash thing seems like it should be something in the report
-      val srs2 = if (pa.isCurrentValueMode && srs.length>1) {
-        srs ++ cash.map{ c => {
-          val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
-          StockReport(s, List(), c.balance, Currency.zero, 1.0)
-        }}
-      } else srs
-
       // summary
       sb ++= "Summary"
       sb ++= "\n"
       val itemFmt2 = "%10s%18s%7s%15s%15s"
       sb ++= String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg")
       sb ++= "\n"
-      val totalNet = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.net }
-      val totalCapGains = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
-      srs2.foreach{ sr =>
+      val totalNet = srs.foldLeft(Currency.zero){ (acc, sr) => acc + sr.net }
+      val totalCapGains = srs.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
+      srs.foreach{ sr =>
         val percentageValue = sr.net.toDouble / totalNet.toDouble
         sb ++= String.format(itemFmt2, sr.stock.ticker, sr.net, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage))
         sb ++= "\n"
@@ -186,9 +180,8 @@ object Gain extends Command {
       }
     }
 
-    val srs: List[ReportGain.StockReport] = ReportGain.create(pa, ss, quotes, Date.today)
-    val out = renderStockReport(srs, pa, cash)
-    print(out)
+    val srs: List[ReportGain.StockReport] = ReportGain.create(pa, ss, cash, quotes, Date.today)
+    print(renderStockReport(srs))
   }
 
   override def command(args: IndexedSeq[String]): Option[String] = {

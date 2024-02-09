@@ -61,7 +61,7 @@ class TestGain extends munit.FunSuite {
     val stocks = List(stock1, stock2)
     val quotes = Map( t1 -> Quote(Currency(8,0), today), t2 ->  Quote(Currency(9,0), today))
 
-    val srs = Gain.create(pa1, stocks, quotes, today)
+    val srs = Gain.create(pa1, stocks, List(), quotes, today)
 
     assertEquals(srs.length, 2)
   }

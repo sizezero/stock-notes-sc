@@ -2,7 +2,7 @@ package org.kleemann.stocknotes.report
 
 import org.kleemann.stocknotes.{Quote, Ticker}
 import org.kleemann.stocknotes.command.{Gain => CommandGain}
-import org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
+import org.kleemann.stocknotes.stock.{CashAccount, Currency, Date, Fraction, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 import scala.annotation.tailrec
 
@@ -70,11 +70,12 @@ object Gain {
     *
     * @param pa user specified command line input
     * @param stocks the parsed stock files from the log/ directory
+    * @param cash cash accounts that produces pseudo StockReport summaries
     * @param quotes the parsed quotes from the downloaded quote file
     * @param today today's date passed in to make this pure functional and testable
     * @return a list of Company objects for each company that had sales in the indicated period
     */
-  def create(pa: CommandGain.ParseArgs, stocks: List[Stock], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
+  def create(pa: CommandGain.ParseArgs, stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
 
     val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
 
@@ -98,7 +99,7 @@ object Gain {
     if (pa.isCurrentValueMode) {
       // ...one where we get a commision and fake a sale...
 
-      stocks2.flatMap{ stock => {
+      val srs: List[StockReport] = stocks2.flatMap{ stock => {
         val price =
           if (quotes contains stock.ticker)
             quotes.get(stock.ticker).get.price
@@ -107,19 +108,26 @@ object Gain {
         parseCompanyCurrentValue(stock, price, pa.commission, today)
       }}
 
+      // add cash accounts as pseudo StockReports
+      // we want them at the end of the report
+      srs ++ cash.map{ c => {
+        val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
+        StockReport(s, List(), c.balance, Currency.zero, 1.0)
+      }}
+
     } else {
       // ...and one where we get a year range
 
       // ignore stocks that don't have at least one sell in the date range
-      val stocks3 = stocks2.filter{ stock =>
+      stocks2.filter{ stock =>
         stock.trades.exists{ t => t match {
           case Sell(date, _, _, _) => pa.start <= date && pa.end >= date
           case _ => false
         }}
-      }
-      stocks3.flatMap{ parseCompanyDateRange(_, pa.start, pa.end) }
+      }.flatMap{ parseCompanyDateRange(_, pa.start, pa.end) }
 
     }
+
   }
 
   private[stocknotes] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
