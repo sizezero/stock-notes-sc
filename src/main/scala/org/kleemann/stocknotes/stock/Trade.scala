@@ -57,7 +57,8 @@ final case class Buy(date: Date, shares: Shares, price: Currency, commission: Cu
 
 final case class Sell(date: Date, shares: Shares, price: Currency, commission: Currency) extends Trade(date) {
     /**
-      * Net is fixed and doesn't depend on the multiple. This does not include commission.
+      * Gross set at the date of the sale and is thus not dependent on the multiple.
+      * This does not include commission.
       * TODO: no tests for this
       */
     def gross: Currency = Currency.fromDouble(price.toDouble * shares.shares)
@@ -73,5 +74,4 @@ final case class Sell(date: Date, shares: Shares, price: Currency, commission: C
   * @param multiple multiply the pre split shares by this to get the new count of shares.
   */
 final case class Split(date: Date, multiple: Fraction) extends Trade(date) {
-    // TODO: python has multAdjust that just multiplies a value by multiple and returns it
 }

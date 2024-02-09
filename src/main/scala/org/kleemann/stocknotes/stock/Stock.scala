@@ -230,7 +230,6 @@ object Stock {
             sellWatch: SellWatch= SellWatch.none,
 
             // attributes needed while iterating
-            // TODO: not sure if multiple and shares should be part of this object since the object doesn't use them
             date: Date = Date.earliest,
             content: List[String | Trade | Watch] = Nil, // reverse order, strings can be doubled up
             multiple: Fraction = Fraction.one,
@@ -238,6 +237,7 @@ object Stock {
             ) {
 
             // a date separator has been found in the content
+            // this results in a new Stock Entry
             def addDate(newDate: Date): StockBuilder = {
                 // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
                 // and a new blank currentEntry needs to be created
@@ -302,7 +302,7 @@ object Stock {
                         keywords2
 
                 val sb = addDate(Date.latest)
-                // the only thing changed is "entries" but it's probably safest to use everything from the new StockBuilder
+                // the only thing changed by addDate() is "entries" but it's probably safest to use everything from the new StockBuilder
                 Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
             }
         }
@@ -338,16 +338,18 @@ object Stock {
                                 case Right((trade, balance)) => {
                                     val newSb = sb.addContent(trade)
                                     assert(balance.multiple == newSb.multiple)
-                                    if (newSb.shares.shares < 0) mkError(lineNo, s"share count cannot be negative: ${newSb.shares}")
-                                    else if (newSb.shares != balance) mkError(lineNo, s"listed balance: $balance does not equal calculated: ${newSb.shares}")
-                                    else processLine(in.tail, lineNo, newSb)
+                                    if (newSb.shares.shares < 0)
+                                        mkError(lineNo, s"share count cannot be negative: ${newSb.shares}")
+                                    else if (newSb.shares != balance)
+                                        mkError(lineNo, s"listed balance: $balance does not equal calculated: ${newSb.shares}")
+                                    else
+                                        processLine(in.tail, lineNo, newSb)
                                 }
                                 case Left(e) => mkError(lineNo, e)
                             }
                             case buySellWatchPattern(_) => Watch.parse(line, sb.multiple) match {
-                                case Right(b: BuyWatch)  => processLine(in.tail, lineNo, sb.addContent(b))
-                                case Right(s: SellWatch) => processLine(in.tail, lineNo, sb.addContent(s))
-                                case Left(e) => mkError(lineNo, e)
+                                case Right(w: Watch)  => processLine(in.tail, lineNo, sb.addContent(w))
+                                case Left(e)          => mkError(lineNo, e)
                             }
                             case _ => processLine(in.tail, lineNo, sb.addContent(line + "\n"))
                         }
