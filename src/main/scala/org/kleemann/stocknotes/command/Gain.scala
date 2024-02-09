@@ -3,6 +3,7 @@ package org.kleemann.stocknotes.command
 import org.kleemann.stocknotes.report.{Gain => ReportGain}
 import org.kleemann.stocknotes.{Config, Quote, Ticker}
 import org.kleemann.stocknotes.stock.{CashAccount, Currency, Date, Stock}
+import org.kleemann.stocknotes.report.Gain.StockReport
 
 object Gain extends Command {
 
@@ -73,6 +74,95 @@ object Gain extends Command {
     Right(ParseArgs(start, end, commission, tickers, omitKeyword))
   }
 
+  /**
+    * A pure function that renders a stock report to text.
+    *
+    * @param srs The list of stock reports
+    * @return a multiline output string of the report, meant to be displayed in fixed width
+    */
+  private def renderStockReport(srs: List[StockReport], pa: ParseArgs, cash: List[CashAccount]): String = {
+    if (srs.isEmpty)
+      "No stocks found"
+    else {
+
+      val sb = collection.mutable.StringBuilder()
+
+      def percentString(d: Double): String = f"${d*100}%.1f%%"
+
+      // line items
+      val colWidth = "13"
+      val itemFmt = "%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s"
+      srs.foreach{ sr =>
+        sb ++= sr.stock.ticker.toString()
+        sb ++= "\n"
+        sr.mss.foreach{ ms =>
+          val s = ms.sell
+          val m = s.shares.multiple
+          sb ++= s"${s.date} sell ${s.shares.toString(m)}@${s.price} ${s.gross} commission ${s.commission}"
+          sb ++= "\n"
+          sb ++= String.format(itemFmt, "purchase date", "", "share@price", "cost", "buy fee", "sell feel", "annual yield")
+          sb ++= "\n"
+          ms.mbs.foreach{ mb =>
+            sb ++= String.format(itemFmt, 
+              mb.buy.date.toStringEnglishFixedWidth(), 
+              if (mb.ltcg) "(ltcg)" else "", 
+              s"${mb.sold.toString(m)}@${mb.price}", 
+              mb.proportionalCost, 
+              mb.proportionalBuyCommission, 
+              mb.proportionalSellCommission, 
+              percentString(mb.annualYield))
+            sb ++= "\n"
+          }
+          // TODO: move this into matched buy so we can test it
+          val totalCost: Double = ms.mbs.foldLeft(0.0){ (c, mb) => c + mb.proportionalCost.toDouble }
+          val weightedPrice = Currency.fromDouble(totalCost / s.shares.atMult(m))
+          sb ++= String.format(itemFmt, 
+            "", 
+            "=", 
+            s"${s.shares.toString(s.shares.multiple)}@${weightedPrice}", 
+            ms.mbs.foldLeft(Currency.zero){_ + _.proportionalCost}, 
+            ms.mbs.foldLeft(Currency.zero){_ + _.proportionalBuyCommission},
+            ms.mbs.foldLeft(Currency.zero){_ + _.proportionalSellCommission},
+            "???")
+          sb ++= "\n"
+          sb ++= f"cap gain ${ms.capitalGain}"
+          sb ++= "\n"
+          sb ++= "\n"
+        }
+      }
+
+      // add cash accounts as pseudo StockReports
+      // TODO: this whole cash thing seems like it should be something in the report
+      val srs2 = if (pa.isCurrentValueMode && srs.length>1) {
+        srs ++ cash.map{ c => {
+          val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
+          StockReport(s, List(), c.balance, Currency.zero, 1.0)
+        }}
+      } else srs
+
+      // summary
+      sb ++= "Summary"
+      sb ++= "\n"
+      val itemFmt2 = "%10s%18s%7s%15s%15s"
+      sb ++= String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg")
+      sb ++= "\n"
+      val totalNet = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.net }
+      val totalCapGains = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
+      srs2.foreach{ sr =>
+        val percentageValue = sr.net.toDouble / totalNet.toDouble
+        sb ++= String.format(itemFmt2, sr.stock.ticker, sr.net, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage))
+        sb ++= "\n"
+      }
+      sb ++= ("="*50)
+      sb ++= "\n"
+      sb ++= String.format(itemFmt2,"", totalNet, "100%", totalCapGains, "")
+      sb ++= "\n"
+      sb ++= "\n"
+
+      sb.result()
+    }
+  }
+
   /** 
     * For now we are just using the same strange arguments as the original python code.
     * I should be able to make this better in the future.
@@ -97,76 +187,8 @@ object Gain extends Command {
     }
 
     val srs: List[ReportGain.StockReport] = ReportGain.create(pa, ss, quotes, Date.today)
-
-    // print the fuckers
-    // TODO: this could be moved to a render function that returns a string with no IO
-    // this would make for some easy end to end testing
-
-    if (srs.isEmpty) {
-      println("No stocks found")
-      sys.exit(0)
-    }
-
-    def percentString(d: Double): String = f"${d*100}%.1f%%"
-
-    // line items
-    val colWidth = "13"
-    val itemFmt = "%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s%"+colWidth+"s"
-    srs.foreach{ sr =>
-      println(sr.stock.ticker)
-      println()
-      sr.mss.foreach{ ms =>
-        val s = ms.sell
-        val m = s.shares.multiple
-        println(s"${s.date} sell ${s.shares.toString(m)}@${s.price} ${s.gross} commission ${s.commission}")
-        println(String.format(itemFmt, "purchase date", "", "share@price", "cost", "buy fee", "sell feel", "annual yield"))
-        ms.mbs.foreach{ mb =>
-          println(String.format(itemFmt, 
-            mb.buy.date.toStringEnglishFixedWidth(), 
-            if (mb.ltcg) "(ltcg)" else "", 
-            s"${mb.sold.toString(m)}@${mb.price}", 
-            mb.proportionalCost, 
-            mb.proportionalBuyCommission, 
-            mb.proportionalSellCommission, 
-            percentString(mb.annualYield)))
-        }
-        // TODO: move this into matched buy so we can test it
-        val totalCost: Double = ms.mbs.foldLeft(0.0){ (c, mb) => c + mb.proportionalCost.toDouble }
-        val weightedPrice = Currency.fromDouble(totalCost / s.shares.atMult(m))
-        println(String.format(itemFmt, 
-          "", 
-          "=", 
-          s"${s.shares.toString(s.shares.multiple)}@${weightedPrice}", 
-          ms.mbs.foldLeft(Currency.zero){_ + _.proportionalCost}, 
-          ms.mbs.foldLeft(Currency.zero){_ + _.proportionalBuyCommission},
-          ms.mbs.foldLeft(Currency.zero){_ + _.proportionalSellCommission},
-          "???"))
-        println(f"cap gain ${ms.capitalGain}")
-        println()
-      }
-    }
-
-    // add cash accounts as pseudo StockReports
-    val srs2 = if (pa.isCurrentValueMode && srs.length>1) {
-      srs ++ cash.map{ c => {
-        val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
-        ReportGain.StockReport(s, List(), c.balance, Currency.zero, 1.0)
-      }}
-    } else srs
-
-    // summary
-    println("Summary")
-    val itemFmt2 = "%10s%18s%7s%15s%15s"
-    println(String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg"))
-    val totalNet = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.net }
-    val totalCapGains = srs2.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
-    srs2.foreach{ sr =>
-      val percentageValue = sr.net.toDouble / totalNet.toDouble
-      println(String.format(itemFmt2, sr.stock.ticker, sr.net, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage)))
-    }
-    println("="*50)
-    println(String.format(itemFmt2,"", totalNet, "100%", totalCapGains, ""))
-    println()
+    val out = renderStockReport(srs, pa, cash)
+    print(out)
   }
 
   override def command(args: IndexedSeq[String]): Option[String] = {
