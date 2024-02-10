@@ -216,105 +216,125 @@ object Stock {
         }
     }
 
-    def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
-        
-        case class StockBuilder(
-            // attributes from Stock
-            ticker: Ticker, 
-            name: Option[String] = None, 
-            cid: Option[String] = None, 
-            keywords: Set[String] = Set(), 
-            entries: List[Entry] = Nil, // reverse order
-            trades: List[Trade] = Nil,  // reverse order
-            buyWatch: BuyWatch = BuyWatch.none, 
-            sellWatch: SellWatch= SellWatch.none,
+    /**
+      * StockBuilder is used internally by the load() command.
+      * 
+      * The caller is responsible for parsing the stock log file line by line,
+      * translating the lines of text into actual objects, handling possible 
+      * input errors, and feeding them to this builder via add().
+      * Once the log file has been read, the toStock() function should be called 
+      * to generate the resulting Stock object.
+      * 
+      * The constructor should just be called with the ticker argument.
+      * 
+      * This class came about when I was trying to figure out how to write a pure
+      * functional version of the Stock load() function. The result is that this object
+      * is re-constructed via copy() after every input line is parsed. This sounds very 
+      * inefficient but since it is immutable most of the work is just copying a few 
+      * references and the final run still seems really fast. Profiling shows the time
+      * of each implementation to be within 5% of each other.
+      */
+    private case class StockBuilder(
+        // attributes from Stock
+        ticker: Ticker, 
+        name: Option[String] = None, 
+        cid: Option[String] = None, 
+        keywords: Set[String] = Set(), 
+        entries: List[Entry] = Nil, // reverse order
+        trades: List[Trade] = Nil,  // reverse order
+        buyWatch: BuyWatch = BuyWatch.none, 
+        sellWatch: SellWatch= SellWatch.none,
 
-            // attributes needed while iterating
-            date: Date = Date.earliest,
-            content: List[String | Trade | Watch] = Nil, // reverse order, strings can be doubled up
-            multiple: Fraction = Fraction.one,
-            shares: Shares = Shares.zero
-            ) {
+        // attributes needed while iterating
+        date: Date = Date.earliest,
+        content: List[String | Trade | Watch] = Nil, // reverse order, strings can be doubled up
+        multiple: Fraction = Fraction.one,
+        shares: Shares = Shares.zero
+        ) {
 
-            // a date separator has been found in the content
-            // this results in a new Stock Entry
-            def addDate(newDate: Date): StockBuilder = {
-                // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
-                // and a new blank currentEntry needs to be created
-
+        def add(v: String | Trade | Watch | Date): StockBuilder = v match {
+            case newString: String => this.copy(content = newString :: content)
+            case buy: Buy => {
+                val newShares = shares.add(buy.shares, multiple)
+                this.copy(content = buy :: content, trades = buy :: trades, shares = newShares)
+            }
+            case sell: Sell => {
+                val newShares = shares.sub(sell.shares, multiple)
+                this.copy(content = sell :: content, trades = sell  :: trades, shares = newShares)
+            }
+            case split: Split => {
+                val newMult = multiple * split.multiple
+                // bring the current shares up to the current multiple
+                val newShares = shares.add(Shares.zero, newMult)
+                this.copy(content = split :: content, trades = split :: trades, shares = newShares, multiple = newMult)
+            }
+            case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch  = bw)
+            case sw: SellWatch => this.copy(content = sw :: content, sellWatch = sw)
+            case newDate: Date => {
+                // a date signifies that the current entry has "finished"
+                // a new Entry needs to be created,
+                // and the accumulating content needs to be reset.
                 val newContent = StockBuilder.coalesce(content.reverse)
                 val newEntry = Entry(ticker, date, newContent)
                 this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
+        }
 
-            def addContent(v: String | Trade | Watch): StockBuilder = v match {
-                case newString: String => this.copy(content = newString :: content)
-                case buy: Buy => {
-                    val newShares = shares.add(buy.shares, multiple)
-                    this.copy(content = buy :: content, trades = buy :: trades, shares = newShares)
-                }
-                case sell: Sell => {
-                    val newShares = shares.sub(sell.shares, multiple)
-                    this.copy(content = sell :: content, trades = sell  :: trades, shares = newShares)
-                }
-                case split: Split => {
-                    val newMult = multiple * split.multiple
-                    // bring the current shares up to the current multiple
-                    val newShares = shares.add(Shares.zero, newMult)
-                    this.copy(content = split :: content, trades = split :: trades, shares = newShares, multiple = newMult)
-                }
-                case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch  = bw)
-                case sw: SellWatch => this.copy(content = sw :: content, sellWatch = sw)
-            }
+        def toStock: Stock = {
+            // add special keywords
+            val keywords2 = if (shares.shares != 0)
+                keywords + "owned"
+            else if (trades.length > 0)
+                // no shares but some trades means we once owned this and now have sold it
+                keywords + "sold"
+            else
+                keywords
 
-            def toStock: Stock = {
-                // add special keywords
-                val keywords2 = if (shares.shares != 0)
-                    keywords + "owned"
-                else if (trades.length > 0)
-                    // no shares but some trades means we once owned this and now have sold it
-                    keywords + "sold"
+            val keywords3 = 
+                if (buyWatch != BuyWatch.none || sellWatch != SellWatch.none)
+                    keywords2 + "watching"
                 else
-                    keywords
+                    keywords2
 
-                val keywords3 = 
-                    if (buyWatch != BuyWatch.none || sellWatch != SellWatch.none)
-                        keywords2 + "watching"
-                    else
-                        keywords2
-
-                val sb = addDate(Date.latest)
-                // the only thing changed by addDate() is "entries" but it's probably safest to use everything from the new StockBuilder
-                Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
-            }
+            val sb = add(Date.latest)
+            // the only thing changed by addDate() is "entries" but it's probably safest to use everything from the new StockBuilder
+            Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
         }
+    }
 
-        object StockBuilder {
-            // multiple, adjacent strings are combined into single strings
-            private def coalesce(content: List[String | Trade | Watch]): List[String | Trade | Watch] = {
-                // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
-                val sb = mutable.StringBuilder()
-                // This implementation relies on List.flatMap() traversing each element of the list in order.
-                // I'm not sure if the specification guarantees this even though the current implementation
-                // does traverse the list in order.
-                val newContent1: List[String | Trade | Watch] = content.flatMap{ c => c match {
-                    case s: String => {
-                        sb.append(s)
-                        List()
+    object StockBuilder {
+        /**
+          * Combine adjacent strings into a single element.
+          * 
+          * @param content a list of content that may have repeated Strings
+          * @return Each String in the list will have a non-String immediately before and after it.
+          */
+        private def coalesce(content: List[String | Trade | Watch]): List[String | Trade | Watch] = {
+            // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
+            val sb = mutable.StringBuilder()
+            // This implementation relies on List.flatMap() traversing each element of the list in order.
+            // I'm not sure if the specification guarantees this even though the current implementation
+            // does traverse the list in order.
+            val newContent1: List[String | Trade | Watch] = content.flatMap{ c => c match {
+                case s: String => {
+                    sb.append(s)
+                    List()
+                }
+                case other: (Trade | Watch) => {
+                    if (sb.isEmpty) List(other)
+                    else {
+                        val combinedString = sb.result()
+                        sb.clear()
+                        List(combinedString, other)
                     }
-                    case other: (Trade | Watch) => {
-                        if (sb.isEmpty) List(other)
-                        else {
-                            val combinedString = sb.result()
-                            sb.clear()
-                            List(combinedString, other)
-                        }
-                    }
-                }}
-                if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
-            }
+                }
+            }}
+            if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
         }
+    }
 
+    def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
+        
         def mkError(lineNo: Int, s: String): Either[String, Stock] = Left(s"$filename($lineNo): $s")
 
         @tailrec
@@ -328,7 +348,7 @@ object Stock {
                         if (d <= sb.date)
                             mkError(lineNo, s"date $d is not greater than previous date ${sb.date}")
                         else
-                            processLine(in.tail, lineNo, sb.addDate(d))
+                            processLine(in.tail, lineNo, sb.add(d))
                     }
                     case _ => {
                         // continue parsing
@@ -344,7 +364,7 @@ object Stock {
                             }
                             case tradePattern(_) => Trade.parse(line, sb.date, sb.multiple) match {
                                 case Right((trade, balance)) => {
-                                    val newSb = sb.addContent(trade)
+                                    val newSb = sb.add(trade)
                                     assert(balance.multiple == newSb.multiple)
                                     if (newSb.shares.shares < 0)
                                         mkError(lineNo, s"share count cannot be negative: ${newSb.shares}")
@@ -356,10 +376,10 @@ object Stock {
                                 case Left(e) => mkError(lineNo, e)
                             }
                             case buySellWatchPattern(_) => Watch.parse(line, sb.multiple) match {
-                                case Right(w: Watch)  => processLine(in.tail, lineNo, sb.addContent(w))
+                                case Right(w: Watch)  => processLine(in.tail, lineNo, sb.add(w))
                                 case Left(e)          => mkError(lineNo, e)
                             }
-                            case _ => processLine(in.tail, lineNo, sb.addContent(line + "\n"))
+                            case _ => processLine(in.tail, lineNo, sb.add(line + "\n"))
                         }
                     }
                 }
