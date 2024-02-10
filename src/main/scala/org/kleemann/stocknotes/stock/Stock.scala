@@ -242,26 +242,8 @@ object Stock {
                 // a date signifies that the currentEntry has "finished", needs to be added to the entries list,
                 // and a new blank currentEntry needs to be created
 
-                // coalesce adjacent Strings in content into single Strings
-                // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
-                val sb = mutable.StringBuilder()
-                val newContent1: List[String | Trade | Watch] = content.reverse.flatMap{ c => c match {
-                    case s: String => {
-                        sb.append(s)
-                        List()
-                    }
-                    case other: (Trade | Watch) => {
-                        if (sb.isEmpty) List(other)
-                        else {
-                            val combinedString = sb.result()
-                            sb.clear()
-                            List(combinedString, other)
-                        }
-                    }
-                }}
-                val newContent2: List[String | Trade | Watch] = if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
-
-                val newEntry = Entry(ticker, date, newContent2)
+                val newContent = StockBuilder.coalesce(content.reverse)
+                val newEntry = Entry(ticker, date, newContent)
                 this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
 
@@ -281,7 +263,7 @@ object Stock {
                     val newShares = shares.add(Shares.zero, newMult)
                     this.copy(content = split :: content, trades = split :: trades, shares = newShares, multiple = newMult)
                 }
-                case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch = bw)
+                case bw: BuyWatch  => this.copy(content = bw :: content, buyWatch  = bw)
                 case sw: SellWatch => this.copy(content = sw :: content, sellWatch = sw)
             }
 
@@ -304,6 +286,32 @@ object Stock {
                 val sb = addDate(Date.latest)
                 // the only thing changed by addDate() is "entries" but it's probably safest to use everything from the new StockBuilder
                 Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
+            }
+        }
+
+        object StockBuilder {
+            // multiple, adjacent strings are combined into single strings
+            private def coalesce(content: List[String | Trade | Watch]): List[String | Trade | Watch] = {
+                // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
+                val sb = mutable.StringBuilder()
+                // This implementation relies on List.flatMap() traversing each element of the list in order.
+                // I'm not sure if the specification guarantees this even though the current implementation
+                // does traverse the list in order.
+                val newContent1: List[String | Trade | Watch] = content.flatMap{ c => c match {
+                    case s: String => {
+                        sb.append(s)
+                        List()
+                    }
+                    case other: (Trade | Watch) => {
+                        if (sb.isEmpty) List(other)
+                        else {
+                            val combinedString = sb.result()
+                            sb.clear()
+                            List(combinedString, other)
+                        }
+                    }
+                }}
+                if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
             }
         }
 
