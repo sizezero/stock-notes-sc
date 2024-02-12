@@ -6,6 +6,9 @@ package org.kleemann.stocknotes.stock
   * We use an integer representation to prevent binary floating point inconsistencies.
   * An Int would have given us a max currency value of around 21 and a half million dollars so I went with a Long.
   * This precisions is used because some stock trades use up to five digits to the right of the decimal e.g.: $9.12345
+  * 
+  * We only implement the arithmetic methods that can be done with no loss in precisions. This includes addition
+  * and subtration. Lossy operations need to be done buy unwrapping with toDouble() and re-wrapping with fromDoube().
   *
   * @param milliPennies The number of pennies divided by 1000
   */
@@ -155,7 +158,7 @@ object Currency {
       } else (s, 1)
 
       trimmed match {
-        case numberPattern(n) => Some(new Currency(sign * n.toLong * 100000L))
+        case numberPattern(n) => Some(new Currency(sign * n.toLong * 100_000L))
         case numberPatternWithDecimal(n1, n2) => Some(decimal(sign, n1.toLong, n2))
         case _ => None
       }
