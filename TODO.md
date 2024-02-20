@@ -209,3 +209,26 @@
       - ~~bad~~
         - ~~ https://www.sec.gov/edgar/searchedgar/companysearch ~~
         - ~~same~~
+- can Gain.parseargs be made more intelligent?
+  - reverse engineering the command line
+    - -omit doesn't work; it's supposed to show keywords but would I ever use this? I think it's worth getting rid of
+      - I only use keywords on the full stock list
+    - current
+      - current report simulates the sale of all stocks at today's date
+      - previously sold stocks are not shown
+      - commission must be provided, default 30
+      - "gain" current report, commision 30
+      - "gain 30" current report, commission 30
+    - historical
+      - show past sales of a given year
+      - commission is not provided, actual commission are used
+    - "gain 2012"
+      - historical report of sales that occurred in 2012
+    - "gain 2012:2014"
+      - historical report over year range
+  - new design
+    - stock-notes current [ <single ticker> ]
+      - I don't think there is a use case for multiple tickers
+      - I also don't think there is a case for different commissions
+    - stock-notes historical <year1>[:<year2>]
+  - refactor create() to createCurrent() createHitorical() with correct params

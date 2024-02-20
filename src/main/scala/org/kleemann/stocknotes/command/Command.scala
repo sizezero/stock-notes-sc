@@ -17,6 +17,7 @@ protected trait Command {
 object Command {
 
   val all: Map[String, Command] = Map(
+    "current"         -> Current,
     "browse-ticker"   -> BrowseTicker,
     "download-quotes" -> DownloadQuotes,
     "calc"            -> Calc,
