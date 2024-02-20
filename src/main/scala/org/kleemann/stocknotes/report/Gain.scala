@@ -66,7 +66,7 @@ object Gain {
   /**
     * Creates a report by selling all currently owned stocks.
     *
-    * @param onlyShow if defined then only show this one ticker
+    * @param onlyShow if defined then only show this one ticker, if specified, ticker must appear in stocks
     * @param stocks the loaded stock logs
     * @param cash the loaded cash accounts
     * @param quotes the loaded quotes
@@ -76,11 +76,9 @@ object Gain {
     */
   def createCurrent(onlyShow: Option[Ticker], stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Quote], commission: Currency, today: Date): List[StockReport] = {
 
-    val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
-
     // if tickers is empty then replace it with the tickers of all companies
     val stocks2: List[Stock] = onlyShow match {
-      case Some(t) => List(sm(t))
+      case Some(t) => List(stocks.find{s => s.ticker == t}.get)
       case None => stocks.filter{ !_.trades.isEmpty } // don't really need the filter optimization
     }
 
