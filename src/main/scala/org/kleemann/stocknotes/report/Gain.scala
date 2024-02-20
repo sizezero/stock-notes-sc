@@ -1,7 +1,6 @@
 package org.kleemann.stocknotes.report
 
 import org.kleemann.stocknotes.{Quote, Ticker}
-import org.kleemann.stocknotes.command.{Gain => CommandGain}
 import org.kleemann.stocknotes.stock.{CashAccount, Currency, Date, Fraction, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 import scala.annotation.tailrec
@@ -63,72 +62,6 @@ object Gain {
     proportionalSellCommission: Currency,
     ltcg: Boolean,
     annualYield: Double)
-
-  /**
-    * This is the main entry point for this object. create() returns a list of Company objects
-    * which, with its contained MatchedSells and MatchedBuys, is the result of the Gain report.
-    *
-    * @param pa user specified command line input
-    * @param stocks the parsed stock files from the log/ directory
-    * @param cash cash accounts that produces pseudo StockReport summaries
-    * @param quotes the parsed quotes from the downloaded quote file
-    * @param today today's date passed in to make this pure functional and testable
-    * @return a list of Company objects for each company that had sales in the indicated period
-    */
-  def create(pa: CommandGain.ParseArgs, stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Quote], today: Date): List[StockReport] = {
-
-    val sm: Map[Ticker, Stock] = stocks.map{ s => s.ticker -> s }.toMap
-
-    // if tickers is empty then replace it with the tickers of all companies
-    val tickers: List[Ticker] =
-      if (pa.tickers.isEmpty) sm.keys.toList.sorted
-      else pa.tickers
-
-    // parsing out the omit keyword seems better suited to parseargs but we need the
-    // ticker list in order to do that and it doesn't make sense to move that out
-    val stocks2: List[Stock] = tickers.map{ sm(_) }.filter{ stock =>
-      // ignore stocks that have no trades
-      // this is efficiency but it is not really necessary
-      // the code below will ignore companies without sells
-      !stock.trades.isEmpty &&
-      // ignore the stock if it contains the specified keyword
-      (if (pa.omitKeyword.isDefined) !(stock.keywords contains pa.omitKeyword.get) else true)
-    }
-        
-    // there are two versions of this... 
-    if (pa.isCurrentValueMode) {
-      // ...one where we get a commision and fake a sale...
-
-      val srs: List[StockReport] = stocks2.flatMap{ stock => {
-        val price =
-          if (quotes contains stock.ticker)
-            quotes.get(stock.ticker).get.price
-          else
-            Currency.zero
-        parseCompanyCurrentValue(stock, price, pa.commission, today)
-      }}
-
-      // add cash accounts as pseudo StockReports
-      // we want them at the end of the report
-      srs ++ cash.map{ c => {
-        val s = Stock(Ticker("$"+c.accountName), None, None, Set(), List(), List(), null, null)
-        StockReport(s, List(), c.balance, Currency.zero, 1.0)
-      }}
-
-    } else {
-      // ...and one where we get a year range
-
-      // ignore stocks that don't have at least one sell in the date range
-      stocks2.filter{ stock =>
-        stock.trades.exists{ t => t match {
-          case Sell(date, _, _, _) => pa.start <= date && pa.end >= date
-          case _ => false
-        }}
-      }.flatMap{ parseCompanyDateRange(_, pa.start, pa.end) }
-
-    }
-
-  }
 
   /**
     * Creates a report by selling all currently owned stocks.

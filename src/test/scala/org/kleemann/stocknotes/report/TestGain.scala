@@ -1,7 +1,6 @@
 package org.kleemann.stocknotes.report
 
 import _root_.org.kleemann.stocknotes.{Quote, Ticker}
-import _root_.org.kleemann.stocknotes.command.{Gain => CommandGain}
 import _root_.org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
 import _root_.org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 
@@ -57,11 +56,11 @@ class TestGain extends munit.FunSuite {
     val stock2: Stock = e2.right.get
 
     val today = Date(1997, 1, 1).get
-    val pa1 = CommandGain.ParseArgs(Date.earliest, Date.earliest, Currency(30, 0), Nil, None)
+    val commission = Currency(30, 0)
     val stocks = List(stock1, stock2)
     val quotes = Map( t1 -> Quote(Currency(8,0), today), t2 ->  Quote(Currency(9,0), today))
 
-    val srs = Gain.create(pa1, stocks, List(), quotes, today)
+    val srs = Gain.createCurrent(None, stocks, List(), quotes, commission, today)
 
     assertEquals(srs.length, 2)
   }
