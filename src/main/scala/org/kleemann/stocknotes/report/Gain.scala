@@ -315,11 +315,11 @@ object Gain {
     // a tempory structure to build our eventual matched buys
     case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
 
-    // recursively walk through the BuyReadyToSell list conuming buys, and accumulate our incomplete matched buy list
+    // recursively walk through the BuyReadyToSell list consuming buys, and accumulate our incomplete matched buy list
     // until we have satisfied all shares in the sell
     @tailrec
     def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
-      if (toSell <= quantum) (toBuys, imbs)
+      if (toSell <= quantum) (toBuys, imbs) // shares to sell are zero, we are done
       else {
         val b: BuyReadyToSell = toBuys.head
         if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
