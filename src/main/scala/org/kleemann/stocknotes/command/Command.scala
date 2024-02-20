@@ -18,6 +18,7 @@ object Command {
 
   val all: Map[String, Command] = Map(
     "current"         -> Current,
+    "historical"      -> Historical,
     "browse-ticker"   -> BrowseTicker,
     "download-quotes" -> DownloadQuotes,
     "calc"            -> Calc,
