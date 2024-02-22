@@ -109,7 +109,7 @@ object Gain {
     * @param stocks the loaded stock logs
     * @return a list of Company objects which, with its contained MatchedSells and MatchedBuys
     */
-  def createHistorical(start: Date, end: Date, stocks: List[Stock]): List[StockReport] = {
+  def createHistorical(start: Date, end: Date, stocks: List[Stock]): List[StockReport] =
     // ignore stocks that don't have at least one sell in the date range
     stocks.filter{ stock =>
       stock.trades.exists{ t => t match {
@@ -117,7 +117,6 @@ object Gain {
         case _ => false
       }}
     }.flatMap{ parseCompanyDateRange(_, start, end) }
-  }
 
   /**
     * A pure function that renders a list of stock reports to text.
@@ -206,7 +205,9 @@ object Gain {
     // this is really just a problem for testing, we only want trades that are less than today
     var trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
-    // need to find all currently owned shares of the company
+    // We need to find all currently owned shares of the company.
+    // Walk through each trade, accumulating the share count and multiple.
+    // We only keep the share count.
     val (_, currentOwnedShares: Shares) =
       trades.foldLeft( (Fraction.one, Shares.zero) ) { case ((accMultiple, accShares), t) => t match {
         case Buy(_, shares, _, _)  => (accMultiple, accShares.add(shares, accMultiple))
@@ -315,8 +316,9 @@ object Gain {
     // a tempory structure to build our eventual matched buys
     case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
 
-    // recursively walk through the BuyReadyToSell list consuming buys, and accumulate our incomplete matched buy list
-    // until we have satisfied all shares in the sell
+    // Recursively walk through the BuyReadyToSell list consuming buys, and accumulate our incomplete matched buy list
+    // until we have satisfied all shares in the sell.
+    // Note: both buy and sell shares are converted to Double at multiple Fraction.one.
     @tailrec
     def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
       if (toSell <= quantum) (toBuys, imbs) // shares to sell are zero, we are done
@@ -393,124 +395,3 @@ object Gain {
     if (end==start || decimalYearsDifference<0.001 || start==Currency.zero) return 0.0
     else Math.pow(end.toDouble / start.toDouble, 1.0 / decimalYearsDifference) - 1.0
 }
-
-// here is the original analysis of the python code
-
-      // let's start by reverse engineering what the old python code does
-
-      // old getArgs
-        // if there were no arguments then there was a default commision of 30 (implemented here)
-        // if tickers are not specified then get the tickers for all the companies (there must be some filtering later)  (need to implement this)
-        // if a list of tickers is specifid then we need to verify that the companies exist in our db (need to implement this)
-
-      // accumulate a list of companies that have our desired trades
-      // loop through all specified stocks (companies) {
-        // ignore stocks that have no trades
-        // ignore the stock if it contains the specified keyword
-        // ignore stocks that don't have at least one sell (in the date range)
-        // a temporary object for the company is made:
-          // headerPrinted
-          // value
-          // capitalGains
-          // gross
-          // ltcg
-        // push Fraction.one through all splits to get the current multiple
-        // accumulate share balance, hasSellLineItem, 
-        // trades are looped {
-          // buys are given
-            // set the unsold sharecount which is just a copy of the trades share count
-          // sells are given
-            // buy/sell matched in a function
-            // if commision < 0 (???) and trade date is within the date range, The sell is printed
-            // company is given some other attributes: value+=sell value, capital gains+=sell cap gain, gross+=sell gross, ltcg+=sell ltcg
-            // since there is a sell, hasSellLine item = true
-        // } end trade
-        // after looping through all trades, if commision > 0 and balance is positive
-          // a mock trade sell is made to sell the remaining shares.
-          // I guess the positive commision tells us that we are looking at the "current time" and pretending we're selling everything
-          // guard against no quote for the ticker
-          // quote is needed to create a sell trade
-          // matchBuysToSells(sell, trades, mult) is called
-            // attributes added to sell
-              // s.gross: shares sold at current multiple * price
-              // s.cost: TODO
-                // Not sure why we need multiples of either of these. If we had a multiple for the share count at the time of purchase, price would be enough.
-              // s.totalCommissions: TODO
-              // s.ltcg: TODO
-            // remaining is set to shares sold
-            // loop through all buy trades {
-              // break if remaining is zero
-              // skip buys that have no unsold shares
-              // make a new transaction t
-              // t.buy = buy
-              // subtract the buys shares from the sells shares
-                // take into account that either buy or sell may have more shares than the other
-                // this should take into account some multiple conversion but doesn't since sell and buy could be at different mults
-              // t gets a bunch of attributes: buyCommission, sellCommission, commission (total), cost, net, annualYield, ltcg
-                // all of the shares*price calcs are using the same mult which is probably wrong
-                // annualyield and ltcg is calculated with decimal years
-            // } end trade loop
-            // sell.cost is the sum of the buy costs
-            // sell.totalCommission is the sum of the buy commissions
-              // this is really total buy commission
-            // sell.value = sell.gross - sell.commission
-            // sell.capitalGain = sell.gross-sell.cost =sell.totalCommission
-              // this may miss the sell commission
-          // sell is printed
-            // prints two row header:
-              // e.g.
-              // January 18, 2024 sell 2095@30.47 $63834.65 commission $30.00
-              // purchase date               share@price         cost      buy fee     sell fee annual yield
-            // loops through buys associated with sell
-              // prints date, optional "(ltcg)", shares, cost, buycom, sellcom, annual yield
-            // prints sell summary
-              // special case for tiny sell cost
-              // average purchase price, sell cost, buysCommission, sellCommission
-                // I think total commission mistakenly removes sell coast
-              // sell.capitalGain on next line
-
-        // if at this point, we have no sell line items, we skip to the next company
-        // otherwise we add to the list of companies that have desired trades
-      // } end companies loop
-      // add fake companies for all cash accounts
-        // ticker is the file basename with a dollar prefix
-        // capitalGains=0, value=gross=file balance, ltcg=1.0 ?
-      // print summary
-        // print("Summary")
-        // fmt="%10s%15s%5s%15s%15s"
-        // print(fmt % ("ticker","value","%","cap gains","ltcg"))
-        // loop through companies
-          // ltcg is c.ltcp/c.gross; gross can't be close to zero
-          // print(fmt % (c.ticker, dollar2str(c.value), pcnt2str(c.value/cumValue), dollar2str(c.capitalGains),pcn
-        // cumValue and cumCapitalGains is just the sum of the values for all companies
-        // print(fmt % ("",dollar2str(cumValue),"100%",dollar2str(cumCapitalGains),""))
-
-      //analysis of the above
-
-      // inputs: tickers (default all), sell commission, start, end, keywords
-      // generate companies list
-
-      // only care about companies that:
-        // have a sell within the range (companies that have no trades are obviously rejected)
-        // don't have one of the given keywords
-  
-      // I think a good starting point would be to separate the calculation from the display
-
-      // there is a scope of looking at a company, creating tempory objects for that company and returning some permanent state
-
-      // within the company calculation
-        // there will be a selection of which sells matter, then an iteration of those sells, to find the matching buys
-        // we will need new objects to hold shares counts for these
-        // I think it would help to have the multiple at the time of each buy and sell
-          // this may be easier to make than having a dateToMultiple function with a data structure backing it
-        
-      // A function that creates the sell object
-      // given a list of buys with multiple and unsold shares
-      // returns sell with extra attributes, also returns object with remaining buys with positive values
-
-      // we need a functional gain object that returns these structures
-      // a non functional gain object calls the function gain and pretty prints
-
-      // I'm torn with how much to cache for these object. I think I'm going to cache everything that needs to be displayed
-      // this will help with testing.
-

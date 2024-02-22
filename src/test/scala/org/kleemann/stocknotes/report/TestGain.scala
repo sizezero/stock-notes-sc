@@ -68,7 +68,7 @@ class TestGain extends munit.FunSuite {
   test("gain aapl") {
     // I'm running into problems testing the appl numbers, might as well make a test case out of it
     val g: os.Generator[String] = os.Generator.from(
-        """``
+        """
         |Jan 28, 2013
         |TRADE buy 22@445.00 balance 22 commission 9.99
         |Apr 18, 2013
