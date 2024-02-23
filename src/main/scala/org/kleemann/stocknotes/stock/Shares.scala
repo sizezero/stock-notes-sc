@@ -44,7 +44,7 @@ final case class Shares(shares: Int, multiple: Fraction) {
       * @param targetMutiple the multiple of the returned share count
       * @return
       */
-    def add(that: Shares, targetMultiple: Fraction): Shares = {
+    def add(that: Shares, targetMultiple: Fraction): Shares =
       // we go through the different clauses in order to do integer addition when possible
       if (this.multiple==targetMultiple && that.multiple==targetMultiple)
         Shares(this.shares + that.shares, targetMultiple) // do integer addition when possible
@@ -60,11 +60,9 @@ final case class Shares(shares: Int, multiple: Fraction) {
         val thatNormalizer = (targetMultiple * that.multiple.reciprocal).toDouble
         Shares(Math.round(this.shares*thisNormalizer + that.shares*thatNormalizer).toInt, targetMultiple)
       }
-    }
 
-    def sub(that: Shares, targetMultiple: Fraction): Shares = {
+    def sub(that: Shares, targetMultiple: Fraction): Shares =
       add(Shares(-that.shares, that.multiple), targetMultiple)
-    }
 }
 
 object Shares {

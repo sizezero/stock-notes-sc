@@ -10,11 +10,11 @@ sealed trait Watch(low: Option[Currency], high: Option[Currency], multiple: Frac
     * @return a double that represents the number of shares at the current  multiple
     */
     def lowAtMult(currentMultiple: Fraction): Option[Currency] = low.map{ c =>
-        Currency.fromDouble(c.toDouble * (multiple/currentMultiple).toDouble)
+        c.priceMultipleAdjust(multiple, currentMultiple)
     }
 
     def highAtMult(currentMultiple: Fraction): Option[Currency] = high.map{ c =>
-        Currency.fromDouble(c.toDouble * (multiple/currentMultiple).toDouble)
+        c.priceMultipleAdjust(multiple, currentMultiple)
     }
 }
 
@@ -42,14 +42,18 @@ object Watch {
         }
         line match {
             case buySellWatch1Pattern("BUY", "None" | "none") => Right(BuyWatch(None, None, multiple))
-            case buySellWatch2Pattern("BUY", low) => parse(low).map{ c => BuyWatch(Some(c), None, multiple) }
+            case buySellWatch2Pattern("BUY", low) => 
+                for (c <- parse(low))
+                yield (BuyWatch(Some(c), None, multiple))
             case buySellWatch3Pattern("BUY", low, high) =>
                 for (
                     lowCurrency <- parse(low);
                     highCurrency <- parse(high))
                 yield (BuyWatch(Some(lowCurrency), Some(highCurrency), multiple))
             case buySellWatch1Pattern("SELL", "None" | "none") => Right(SellWatch(None, None, multiple))
-            case buySellWatch2Pattern("SELL", low) => parse(low).map{ c => SellWatch(None, Some(c), multiple) }
+            case buySellWatch2Pattern("SELL", high) =>
+                for (c <- parse(high))
+                yield (SellWatch(None, Some(c), multiple))
             case buySellWatch3Pattern("SELL", low, high) =>
                 for (
                     lowCurrency <- parse(low);

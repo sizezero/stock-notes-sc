@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes
 
+import scala.collection.mutable
+
 import org.kleemann.stocknotes.stock.{Currency, Date}
 
 /**
@@ -11,6 +13,38 @@ import org.kleemann.stocknotes.stock.{Currency, Date}
 final case class Quote(price: Currency, date: Date)
 
 object Quote {
+
+    /**
+      * Download the specified tickers and write the quotes file.
+      * 
+      * This implementation keeps the format of the quote file internal to this class
+      * but leaves the service call external.
+      *
+      * @param tickers the list of tickers we want quotes for
+      * @param config the config file
+      * @param downloadSingleQuote downloads a ticker from a service and either return the price or an error
+      * @return The multi-line text that is the content of a CSV file
+      */
+    def save(tickers: List[Ticker], config: Config, downloadSingleQuote: Ticker => Either[String, String]): Unit = {
+
+        // Our python quotes file format uses this legacy date format.
+        // When that's retired we can change it.
+        val today: String = Date.today match {
+            case Date(year, month, day) => f"$month%02d/$day%02d/$year%04d"
+        }
+
+        val content: String = tickers.map{ t =>
+            // call the webservice to get a single quote
+            downloadSingleQuote(t) match {
+                // format the result to a CSV line
+                case Left(e)  => f"${t.ticker},0.0,${today},${e}\n"
+                case Right(q) => f"${t.ticker},${q},${today},\n" 
+            }
+        }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
+
+        // TODO: I can't find good docs on os-lib so I'm just going to collect the quotes in memory and write the file all at once.
+        os.write.over(config.quotesFile, content)
+    }
 
     def load(config: Config): Map[Ticker, Quote] =
         if (os.exists(config.quotesFile)) load(config.quotesFile)
@@ -74,16 +108,6 @@ object Quote {
             }
         } else None // length != 4
     }
-
-    /**
-      * A non functional method that connects to the website and downloads the quotes
-      *
-      * Right now we have two sets of tickers, one for notify (gain) and one for buysell (the web page).
-      * It should make sense to combine these into a single list. I don't yet have the info of the list of tickers.
-      * 
-      * @param config
-      */
-    def download(config: Config): Unit = ???
 
     /**
       * Merges two maps. For duplicate values, a function chooses which value to take.

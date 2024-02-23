@@ -10,11 +10,10 @@ package org.kleemann.stocknotes.stock
   * @param day depends on the month, Feb 29 not allowed
   */
 final case class Date private (year: Int, month: Int, day: Int) extends Ordered[Date] {
-  override def compare(that: Date): Int = {
+  override def compare(that: Date): Int =
     if      (this.year  != that.year)  this.year  - that.year
     else if (this.month != that.month) this.month - that.month
     else                               this.day   - that.day
-  }
 
   def          toStringEnglish():           String = f"${Date.number2month(month)} ${day}%d, ${year}%04d"
   def          toStringEnglishFixedWidth(): String = f"${Date.number2month(month).take(3)} ${day}%2d, ${year}%04d"

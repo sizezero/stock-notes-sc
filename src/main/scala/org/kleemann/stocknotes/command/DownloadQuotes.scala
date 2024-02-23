@@ -1,13 +1,13 @@
 package org.kleemann.stocknotes.command
 
+import scala.collection.mutable
 import sttp.client4.quick.*
 import sttp.model.StatusCode
 import sttp.model.Uri
 
-import org.kleemann.stocknotes.{Config, Ticker}
+import org.kleemann.stocknotes.{Config, Ticker, Quote}
 import org.kleemann.stocknotes.stock.{Date, Stock}
 import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch}
-import scala.collection.mutable
 
 /**
   * Downloads needed quotes from an online quote service into the file config.quotesFile
@@ -30,27 +30,9 @@ object DownloadQuotes extends Command {
     val delay: Double = (delayInSeconds/60.0) * tickers.length
     println(f"The download is estimated to take ${delay}%2.2f minutes.")
 
-    // TODO: I can't find good docs on os-lib so I'm just going to collect the quotes in memory and write the file all at once.
-    os.write.over(config.quotesFile, quotesFileContent(tickers, config.finnhubAccessKey))
+    Quote.save(tickers, config, downloadSingleQuote(config.finnhubAccessKey))
 
     println("Download Complete")
-  }
-
-  private def quotesFileContent(tickers: List[Ticker], finnhubAccessKey: String): String = {
-  
-    // our quotes file format uses this legacy date format
-    val today: String = Date.today match {
-      case Date(year, month, day) => f"$month%02d/$day%02d/$year%04d"
-    }
-
-    tickers.map{ t =>
-      // call the webservice to get a single quote
-      downloadSingleQuote(t, finnhubAccessKey) match {
-        // format the result to a CSV line
-        case Left(e)  => f"${t.ticker},0.0,${today},${e}\n"
-        case Right(q) => f"${t.ticker},${q},${today},\n" 
-      }
-    }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
   }
 
   /**
@@ -179,13 +161,13 @@ public static String executePost(String targetURL, String urlParameters) {
     * @param ticker
     * @return
     */
-  private def downloadSingleQuote(ticker: Ticker, finnhubAccessKey: String): Either[String, String] = {
+  private def downloadSingleQuote(finnhubAccessKey: String)(ticker: Ticker): Either[String, String] = {
 
     // finnhub doesn't allows us to spam their service so we need to slow it down a bit
     Thread.sleep(delayInSeconds * 1_000L)
 
     val baseUrl = "https://finnhub.io/api/v1/quote?"
-    val queryParams = Map("symbol" -> ticker.ticker,  "token" -> finnhubAccessKey)
+    val queryParams = Map("symbol" -> ticker.ticker, "token" -> finnhubAccessKey)
     getJsonViaJava8(baseUrl, queryParams) match {
       case Some(body) => {
         val json = ujson.read(body)

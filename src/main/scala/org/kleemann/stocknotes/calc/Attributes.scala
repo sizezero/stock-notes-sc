@@ -17,7 +17,7 @@ import org.kleemann.stocknotes.stock.Currency
  * @param dividend annual dividend per share
  * @param dividendYield annual dividend yield
  * @param payoutRatio dividend / income
- * @param help not really an attribute, just outputs the help for all the above attributes
+ * @param help not really an attribute, if defined, indicates that help should be displayed
  */
 private final case class Attributes(
         income:        Option[Currency] = None,

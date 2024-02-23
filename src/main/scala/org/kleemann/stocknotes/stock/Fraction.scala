@@ -24,7 +24,7 @@ final case class Fraction private(numerator: Int, denominator: Int) extends Orde
 
     /**
       * Reduces the current fraction to it's smallest possible numerators and denominators and makes sure the sign is only in the numerator.
-      * Mutable actions within this class will always call this ensuring that we have the smallest possible values.
+      * Mutable actions within this class will always call this method ensuring that we have the smallest possible values.
       *
       * @return
       */
@@ -106,7 +106,6 @@ object Fraction {
             pair = (pair._2 , pair._1 % pair._2)
         }
         throw new RuntimeException("unreachable")
- 
     }
 
 }
