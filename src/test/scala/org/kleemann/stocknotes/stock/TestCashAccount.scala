@@ -57,7 +57,7 @@ class TestCashAccount extends munit.FunSuite {
         |Some more text
         |last line""".stripMargin.split("\\n").toSeq)
     val obtained = CashAccount.load(accountName, cashFile, in)
-    assertEquals(obtained, Left("foo: no date entered"))
+    assertEquals(obtained, Left("foo(5): no date entered"))
   }
 
   test("no balance") {
@@ -70,7 +70,7 @@ class TestCashAccount extends munit.FunSuite {
         |Some more text
         |last line""".stripMargin.split("\\n").toSeq)
     val obtained = CashAccount.load(accountName, cashFile, in)
-    assertEquals(obtained, Left("foo: no balance entered"))
+    assertEquals(obtained, Left("foo(5): no balance entered"))
   }
 
 }
