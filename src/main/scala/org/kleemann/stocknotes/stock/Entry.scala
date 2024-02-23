@@ -37,24 +37,23 @@ object Entry {
   private def coalesce(content: List[String | Trade | Watch]): List[String | Trade | Watch] = {
     // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
     val sb = mutable.StringBuilder()
-    // This implementation relies on List.flatMap() traversing each element of the list in order.
-    // I'm not sure if the specification guarantees this even though the current implementation
-    // does traverse the list in order.
-    val newContent1: List[String | Trade | Watch] = content.flatMap{ c => c match {
+    // Traverse each element of the content.
+    // Accumulate the reverse result string
+    val contentReversed = content.foldLeft(List[String | Trade | Watch]()){ case (result, trade) => trade match {
       case s: String => {
         sb.append(s)
-        List()
+        result
       }
       case other: (Trade | Watch) => {
-        if (sb.isEmpty) List(other)
+        if (sb.isEmpty) other :: result
         else {
           val combinedString = sb.result()
           sb.clear()
-          List(combinedString, other)
+          other :: combinedString :: result
         }
       }
     }}
-    if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
+    if (sb.isEmpty) contentReversed                   .reverse
+    else            (sb.toString() :: contentReversed).reverse
   }
-
 }

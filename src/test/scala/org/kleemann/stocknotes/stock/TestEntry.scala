@@ -15,4 +15,30 @@ class TestEntry extends munit.FunSuite {
         assertEquals(ls.sorted, List(e4, e5, e2, e1, e3))
     }
 
+    test("coalesce") {
+        val content: List[String | Trade | Watch] = List(
+            "one ", "two ", "three",
+            BuyWatch.none,
+            "four",
+            BuyWatch.none,
+            "five ", "six",
+            BuyWatch.none,
+            "seven ", "eight ", "nine"
+        )
+        Entry(Ticker("foo"), Date.earliest, content) match {
+            case Entry(_, _, obtained) => {
+                val expected: List[String | Trade | Watch] = List(
+                    "one two three",
+                    BuyWatch.none,
+                    "four",
+                    BuyWatch.none,
+                    "five six",
+                    BuyWatch.none,
+                    "seven eight nine"
+                )
+                assertEquals(obtained, expected)
+            }
+            case null => assert(false)
+        }
+    }
 }
