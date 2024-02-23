@@ -1,10 +1,10 @@
 package org.kleemann.stocknotes.stock
 
+import scala.collection.mutable
 import scala.util.control.Breaks.{break, breakable}
 
 import org.kleemann.stocknotes.{Config, Ticker}
 import scala.annotation.tailrec
-import scala.collection.mutable
 
 /**
   * The stock class is an extraction of the log/<ticker>.txt file.
@@ -274,8 +274,7 @@ object Stock {
                 // a date signifies that the current entry has "finished"
                 // a new Entry needs to be created,
                 // and the accumulating content needs to be reset.
-                val newContent = StockBuilder.coalesce(content.reverse)
-                val newEntry = Entry(ticker, date, newContent)
+                val newEntry = Entry(ticker, date, content.reverse)
                 this.copy(entries = newEntry :: entries, date = newDate, content = Nil)
             }
         }
@@ -299,37 +298,6 @@ object Stock {
             val sb = add(Date.latest)
             // the only thing changed by addDate() is "entries" but it's probably safest to use everything from the new StockBuilder
             Stock(sb.ticker, sb.name, sb.cid, keywords3, sb.entries.reverse, sb.trades.reverse, sb.buyWatch, sb.sellWatch)
-        }
-    }
-
-    object StockBuilder {
-        /**
-          * Combine adjacent strings into a single element.
-          * 
-          * @param content a list of content that may have repeated Strings
-          * @return Each String in the list will have a non-String immediately before and after it.
-          */
-        private def coalesce(content: List[String | Trade | Watch]): List[String | Trade | Watch] = {
-            // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
-            val sb = mutable.StringBuilder()
-            // This implementation relies on List.flatMap() traversing each element of the list in order.
-            // I'm not sure if the specification guarantees this even though the current implementation
-            // does traverse the list in order.
-            val newContent1: List[String | Trade | Watch] = content.flatMap{ c => c match {
-                case s: String => {
-                    sb.append(s)
-                    List()
-                }
-                case other: (Trade | Watch) => {
-                    if (sb.isEmpty) List(other)
-                    else {
-                        val combinedString = sb.result()
-                        sb.clear()
-                        List(combinedString, other)
-                    }
-                }
-            }}
-            if (sb.isEmpty) newContent1 else newContent1 :+ sb.toString()
         }
     }
 
