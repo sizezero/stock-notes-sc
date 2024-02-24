@@ -59,6 +59,15 @@ final case class Currency private(milliPennies: Long) extends Ordered[Currency] 
     }
 
     /**
+      * A simple version of the currency. Decimal digits with a single period.
+      * E.g. 12345.00
+      *
+      * @return 
+      */
+    def toStringBare: String =
+      f"${milliPennies / 100_000}%d.${(milliPennies % 100_000) / 1_000}%02d"
+
+    /**
       * Shares have multiples not currencies but sometimes we want to see a price viewed at a different multiple.
       * An example of this is an old purchase price that you want to see what it would be to current shares.
       *

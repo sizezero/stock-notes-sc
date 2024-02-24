@@ -5,7 +5,7 @@ import sttp.client4.quick.*
 import sttp.model.StatusCode
 import sttp.model.Uri
 
-import org.kleemann.stocknotes.{Config, Date, Ticker, Quote}
+import org.kleemann.stocknotes.{Config, Currency, Date, Ticker, Quote}
 import org.kleemann.stocknotes.stock.{Stock}
 import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch}
 
@@ -161,7 +161,7 @@ public static String executePost(String targetURL, String urlParameters) {
     * @param ticker
     * @return
     */
-  private def downloadSingleQuote(finnhubAccessKey: String)(ticker: Ticker): Either[String, String] = {
+  private def downloadSingleQuote(finnhubAccessKey: String)(ticker: Ticker): Either[String, Currency] = {
 
     // finnhub doesn't allows us to spam their service so we need to slow it down a bit
     Thread.sleep(delayInSeconds * 1_000L)
@@ -175,8 +175,13 @@ public static String executePost(String targetURL, String urlParameters) {
         // {"c":4.93,"d":-0.08,"dp":-1.5968,"h":5.08,"l":4.91,"o":4.93,"pc":5.01,"t":1706302801}
         val m: Map[String,String] = upickle.default.read[Map[String,String]](json)
         m.get("c") match {
-          case Some(price) => Right(price)
-          case None        => Left(f"key 'c' not found in json")
+          case Some(price) => {
+            Currency.parse(price) match {
+              case Some(curr) => Right(curr)
+              case None => Left(f"can't parse as Currency: ${price}")
+            }
+          }
+          case None => Left(f"key 'c' not found in json")
         }
       }
       case None => Left(f"Ticker service failed with non 200 response code")

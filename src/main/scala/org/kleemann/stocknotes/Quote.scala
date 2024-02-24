@@ -23,7 +23,7 @@ object Quote {
       * @param downloadSingleQuote downloads a ticker from a service and either return the price or an error
       * @return The multi-line text that is the content of a CSV file
       */
-    def save(tickers: List[Ticker], config: Config, downloadSingleQuote: Ticker => Either[String, String]): Unit = {
+    def save(tickers: List[Ticker], config: Config, downloadSingleQuote: Ticker => Either[String, Currency]): Unit = {
 
         // Our python quotes file format uses this legacy date format.
         // When that's retired we can change it.
@@ -36,7 +36,7 @@ object Quote {
             downloadSingleQuote(t) match {
                 // format the result to a CSV line
                 case Left(e)  => f"${t.ticker},0.0,${today},${e}\n"
-                case Right(q) => f"${t.ticker},${q},${today},\n" 
+                case Right(curr) => f"${t.ticker},${curr.toStringBare},${today},\n" 
             }
         }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
 
