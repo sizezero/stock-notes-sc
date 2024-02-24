@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.report
 
-import org.kleemann.stocknotes.{Quote, Ticker}
-import org.kleemann.stocknotes.stock.{CashAccount, Currency, Date, Fraction, Shares, Stock}
+import org.kleemann.stocknotes.{Currency, Date, Fraction, Quote, Ticker}
+import org.kleemann.stocknotes.stock.{CashAccount, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 import scala.annotation.tailrec
 

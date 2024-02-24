@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.command
 
-import org.kleemann.stocknotes.{Config}
-import org.kleemann.stocknotes.stock.{Date, Stock}
+import org.kleemann.stocknotes.{Config, Date}
+import org.kleemann.stocknotes.stock.{Stock}
 
 object Oldest extends Command {
 

@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.stock
+package org.kleemann.stocknotes
 
 class TestFraction extends munit.FunSuite {
 

@@ -1,6 +1,6 @@
 package org.kleemann.stocknotes.calc
 
-import org.kleemann.stocknotes.stock.Currency
+import org.kleemann.stocknotes.Currency
 
 /**
  * This is the list of all possible attributes both parsed and generated.

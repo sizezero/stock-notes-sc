@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.stock
 
+import org.kleemann.stocknotes.{Currency, Date, Fraction}
+
 class TestTrade extends munit.FunSuite {
 
     test("buy") {

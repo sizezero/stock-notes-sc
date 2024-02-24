@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.stock
 
+import org.kleemann.stocknotes.{Currency, Fraction}
+
 sealed trait Watch(low: Option[Currency], high: Option[Currency], multiple: Fraction) {
 
   /**

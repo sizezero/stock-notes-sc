@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.stock
 
+import org.kleemann.stocknotes.{Currency, Fraction}
+
 class TestWatch extends munit.FunSuite {
 
     test("none buy/sell") {

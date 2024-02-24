@@ -3,7 +3,7 @@ package org.kleemann.stocknotes.stock
 import scala.annotation.tailrec
 import scala.util.control.Breaks.{break, breakable}
 
-import org.kleemann.stocknotes.{Config}
+import org.kleemann.stocknotes.{Config, Currency, Date}
 
 /**
   * Represents cash and cash equivalents in an investment account

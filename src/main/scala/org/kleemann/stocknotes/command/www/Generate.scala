@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.command.www
 
-import org.kleemann.stocknotes.{Config, Quote, Ticker}
-import org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
+import org.kleemann.stocknotes.{Config, Currency, Date, Fraction, Quote, Ticker}
+import org.kleemann.stocknotes.stock.{Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch, Watch}
 

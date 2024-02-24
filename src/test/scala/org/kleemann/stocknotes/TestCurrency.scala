@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.stock
+package org.kleemann.stocknotes
 
 class TestCurrency extends munit.FunSuite {
 

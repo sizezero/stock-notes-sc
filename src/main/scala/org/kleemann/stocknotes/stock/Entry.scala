@@ -2,7 +2,7 @@ package org.kleemann.stocknotes.stock
 
 import scala.collection.mutable
 
-import org.kleemann.stocknotes.Ticker
+import org.kleemann.stocknotes.{Date, Ticker}
 
 /**
   * Stocks are written about in a single file with a date separating different sections.

@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.stock
 
+import org.kleemann.stocknotes.Fraction
+
 /**
   * This represents a number of shares that were transacted at a particular multiple.
   * This allows the share count to be represented by an integer even though stock splits and

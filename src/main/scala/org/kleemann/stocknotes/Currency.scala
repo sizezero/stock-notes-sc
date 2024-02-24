@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.stock
+package org.kleemann.stocknotes
 
 /**
   * An amount of US dollars. Backed by a Long
@@ -103,7 +103,7 @@ object Currency {
       * @param rightOfDecimal The digits to the right of the decimal point
       * @return
       */
-    private[stock] def decimal(leftOfDecimal: Long, rightOfDecimal: String): Currency =
+    private[stocknotes] def decimal(leftOfDecimal: Long, rightOfDecimal: String): Currency =
       if (leftOfDecimal<0)
         decimal(-1, -leftOfDecimal, rightOfDecimal)
       else
@@ -112,7 +112,7 @@ object Currency {
     private val requiredRightDigits = """^\d{1,5}$""".r
 
     // this variant is needed to produce negative fractions E.g.: Currency(-1, 0, 25)
-    private[stock] def decimal(sign: Int, leftOfDecimal: Long, rightOfDecimal: String): Currency = {
+    private[stocknotes] def decimal(sign: Int, leftOfDecimal: Long, rightOfDecimal: String): Currency = {
       if (sign != 1 && sign != -1)
         throw new java.lang.ArithmeticException(s"sign must be 1 or -1: $sign")
       else if (!requiredRightDigits.matches(rightOfDecimal))

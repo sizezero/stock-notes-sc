@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.report
 
-import _root_.org.kleemann.stocknotes.{Quote, Ticker}
-import _root_.org.kleemann.stocknotes.stock.{Currency, Date, Fraction, Shares, Stock}
+import _root_.org.kleemann.stocknotes.{Currency, Date, Fraction, Quote, Ticker}
+import _root_.org.kleemann.stocknotes.stock.{Shares, Stock}
 import _root_.org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 
 class TestGain extends munit.FunSuite {

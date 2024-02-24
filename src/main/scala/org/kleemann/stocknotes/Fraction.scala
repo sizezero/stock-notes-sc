@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.stock
+package org.kleemann.stocknotes
 
 import scala.annotation.tailrec
 
@@ -82,7 +82,7 @@ object Fraction {
      * @param b another integer
      * @return the largest integer that divides into both a and b
      */
-    private[stock] def gcd(a: Int, b: Int): Int = gcdIterative(a.abs,b.abs)
+    private[stocknotes] def gcd(a: Int, b: Int): Int = gcdIterative(a.abs,b.abs)
 
     /**
       * @param a must be positive
@@ -90,7 +90,7 @@ object Fraction {
       * @return the largest integer that divides into both a and b
       */
     @tailrec
-    private[stock] def gcdRecursive(a: Int, b: Int): Int =
+    private[stocknotes] def gcdRecursive(a: Int, b: Int): Int =
         if (b == 0) a
         else gcdRecursive(b,a%b)
 
@@ -99,7 +99,7 @@ object Fraction {
       * @param b must be positive
       * @return the largest integer that divides into both a and b
       */
-    private[stock] def gcdIterative(a: Int, b: Int): Int = {
+    private[stocknotes] def gcdIterative(a: Int, b: Int): Int = {
         var pair = (a, b)
         while (true) {
             if (pair._2 == 0) return pair._1

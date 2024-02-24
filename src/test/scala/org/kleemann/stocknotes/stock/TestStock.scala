@@ -1,6 +1,6 @@
 package org.kleemann.stocknotes.stock
 
-import org.kleemann.stocknotes.Ticker
+import org.kleemann.stocknotes.{Currency, Date, Fraction, Ticker}
 
 class TestStock extends munit.FunSuite {
 

@@ -1,7 +1,5 @@
 package org.kleemann.stocknotes
 
-import _root_.org.kleemann.stocknotes.stock.{Currency, Date}
-
 class TestQuote extends munit.FunSuite {
 
     test("read a file of quotes") {

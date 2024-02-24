@@ -2,8 +2,6 @@ package org.kleemann.stocknotes
 
 import scala.collection.mutable
 
-import org.kleemann.stocknotes.stock.{Currency, Date}
-
 /**
   * Represets a quote downloaded from some authoritative source on the internet.
   *

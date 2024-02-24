@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.stock
 
+import org.kleemann.stocknotes.{Currency, Date, Fraction}
+
 sealed trait Trade(date: Date) {
     def getDate(): Date = date
 }

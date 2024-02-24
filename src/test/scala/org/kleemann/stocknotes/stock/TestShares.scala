@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.stock
 
+import org.kleemann.stocknotes.Fraction
+
 class TestShares extends munit.FunSuite {
 
     test("multiple") {

@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.stock
+package org.kleemann.stocknotes
 
 /**
   * A simple date class that we use for our purposes.

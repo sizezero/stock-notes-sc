@@ -5,8 +5,8 @@ import sttp.client4.quick.*
 import sttp.model.StatusCode
 import sttp.model.Uri
 
-import org.kleemann.stocknotes.{Config, Ticker, Quote}
-import org.kleemann.stocknotes.stock.{Date, Stock}
+import org.kleemann.stocknotes.{Config, Date, Ticker, Quote}
+import org.kleemann.stocknotes.stock.{Stock}
 import org.kleemann.stocknotes.stock.{BuyWatch, SellWatch}
 
 /**

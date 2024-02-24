@@ -2,7 +2,7 @@ package org.kleemann.stocknotes.calc
 
 import scala.util.matching.Regex
 
-import org.kleemann.stocknotes.stock.Currency
+import org.kleemann.stocknotes.Currency
 
 
 /**

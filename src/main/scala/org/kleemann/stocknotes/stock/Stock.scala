@@ -3,7 +3,7 @@ package org.kleemann.stocknotes.stock
 import scala.collection.mutable
 import scala.util.control.Breaks.{break, breakable}
 
-import org.kleemann.stocknotes.{Config, Ticker}
+import org.kleemann.stocknotes.{Config, Date, Fraction, Ticker}
 import scala.annotation.tailrec
 
 /**

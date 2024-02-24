@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.stock
+package org.kleemann.stocknotes
 
 class TestDate extends munit.FunSuite {
   test("create good dates") {
