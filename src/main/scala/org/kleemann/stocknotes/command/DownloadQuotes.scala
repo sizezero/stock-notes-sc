@@ -24,7 +24,7 @@ object DownloadQuotes extends Command {
 
     // we need quotes for stocks we either own or that have active watches
     val tickers = Stock.load(config).filter{ s =>
-      (s.keywords contains "owned") || s.buyWatch != BuyWatch.none || s.sellWatch != SellWatch.none
+      (s.keywords contains "owned") || (s.keywords contains "watching")
     }.map{ _.ticker }
 
     val delay: Double = (delayInSeconds/60.0) * tickers.length

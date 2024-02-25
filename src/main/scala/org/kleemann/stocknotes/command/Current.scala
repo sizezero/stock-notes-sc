@@ -20,14 +20,13 @@ object Current extends Command {
    */
   private def current(oticker: Option[Ticker]): Unit = {
     val config = Config.load()
-    val ss: List[Stock] = Stock.load(config)
-    val stocks: Map[Ticker,Stock] = ss.map{ s => s.ticker -> s }.toMap
+    val stocks: List[Stock] = Stock.load(config)
     val quotes: Map[Ticker, Quote] = Quote.load(config)
     val cash: List[CashAccount] = CashAccount.load(config)
 
     oticker match {
       case Some(ticker) => {
-        if (!stocks.isDefinedAt(ticker)) {
+        if (!stocks.exists{ _.ticker==ticker }) {
           println(s"specified ticker does not have a log file: $ticker")
           sys.exit(1)
         }
@@ -36,7 +35,7 @@ object Current extends Command {
     }
 
     val commission = Currency(30,0)
-    val srs: List[ReportGain.StockReport] = ReportGain.createCurrent(oticker, ss, cash, quotes, commission, Date.today)
+    val srs: List[ReportGain.StockReport] = ReportGain.createCurrent(oticker, stocks, cash, quotes, commission, Date.today)
     print(ReportGain.render(srs))
   }
 

@@ -12,28 +12,28 @@ import upickle.default.*
   * @param projectDir The path of the checked out stock-notes-sc project (this project) in the user's home dir
   * @param finnhubAccessKey The key to access the finnhub.io site.
   */
-final case class Config (shared: String, projectDir: String, finnhubAccessKey: String) derives ReadWriter {
+final case class Config (sharedDir: String, projectDir: String, finnhubAccessKey: String) derives ReadWriter {
 
   /**
     * The directory that contains all edited stock notes of the form <ticker>.txt
     * TODO: there is probably a better name for this. notes/ stock/ tickers/
     */
-  def logDir: os.Path = os.home/ shared /"log"
+  def logDir: os.Path = os.home/ sharedDir /"log"
 
   /**
     * The directory where cash accounts are stored.
     */
-  def cashDir: os.Path = os.home/ shared /"cash"
+  def cashDir: os.Path = os.home/ sharedDir /"cash"
 
   /**
     * This is a legacy file used for gain. The scala system reads from it but doesn't write.
     */
-  def notifyQuotesFile: os.Path = os.home/ shared /"download"/"quotes_notify.csv"
+  def notifyQuotesFile: os.Path = os.home/ sharedDir /"download"/"quotes_notify.csv"
 
   /**
     * This is a legacy file used for the buysell html page. The scala system reads from it but doesn't write.
     */
-  def buySellQuotesFile: os.Path = os.home/ shared /"download"/"quotes_buysell.csv"
+  def buySellQuotesFile: os.Path = os.home/ sharedDir /"download"/"quotes_buysell.csv"
 
   /**
     * This is the quotes file that the scala system reads from and writes to.

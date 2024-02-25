@@ -67,16 +67,15 @@ object Fraction {
 
     val one  = Fraction(1,1)
 
-    def apply(numerator: Int, denominator: Int): Fraction = {
+    def apply(numerator: Int, denominator: Int): Fraction =
         // we could return an Option but this should be a rare case so there's no need to make the caller constantly unpack these
         if (denominator==0) throw new java.lang.ArithmeticException("/ by zero")
         new Fraction(numerator, denominator).normalize
-    }
 
     /** Greatest common denominator. Finds the largest number that can divide each of the two numbers. 
      * The number one divides into everything so a return value is guaranteed.
      * 
-     * The gcd function is needed by Fraction.reduce()
+     * The gcd function is needed by Fraction.normalize()
      * 
      * @param a one integer
      * @param b another integer

@@ -38,8 +38,6 @@ object Oldest extends Command {
   }
 
   private def display(pa: ParseArgs): Unit = {
-    // both config and stock loading blow us out with a sys.exit(1) not sure if that's what I want
-    // we're not really returning anything at this point, may as well be Unit
     val config = Config.load()
     val ss1: List[Stock] = Stock.load(config)
 
@@ -47,16 +45,16 @@ object Oldest extends Command {
 
     val ss3: List[Stock] = if (pa.reverse) ss2.reverse else ss2
 
-    val ss4: List[Stock] =
-      if (pa.keyword.isDefined) {
-        ss3.filter{ _.keywords contains pa.keyword.get }
-      } else ss3
+    val ss4: List[Stock] = pa.keyword match {
+      case Some(keyword) => ss3.filter{ _.keywords contains keyword }
+      case None => ss3
+    }
 
     if (pa.tickerOnly)
       ss4.foreach{ s =>
         println(s.ticker)
       }
-    else
+    else {
       // TODO: I'm not sure if it's possible for a Stock to have no entries but doing this anyway
       val noDate = "NODATE".padTo(Date.earliest.toStringEnglishFixedWidth().length() , " ")
       ss4.foreach{ s => {
@@ -64,7 +62,8 @@ object Oldest extends Command {
         val n = s.name.getOrElse("NONAME")
         println(s"$d ${s.ticker} $n")
       }}
-
+    }
+  
     None
   }
 

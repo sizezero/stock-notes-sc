@@ -6,14 +6,14 @@ import scala.collection.mutable
   * Represets a quote downloaded from some authoritative source on the internet.
   *
   * @param price The price of the stock around the time it was downloaded
-  * @param date  The the day the quote was from
+  * @param date  The day the quote was downloaded
   */
 final case class Quote(price: Currency, date: Date)
 
 object Quote {
 
     /**
-      * Download the specified tickers and write the quotes file.
+      * Download the specified tickers and overwrite the quotes file.
       * 
       * This implementation keeps the format of the quote file internal to this class
       * but leaves the service call external.
@@ -35,8 +35,8 @@ object Quote {
             // call the webservice to get a single quote
             downloadSingleQuote(t) match {
                 // format the result to a CSV line
-                case Left(e)  => f"${t.ticker},0.0,${today},${e}\n"
-                case Right(curr) => f"${t.ticker},${curr.toStringBare},${today},\n" 
+                case Left(error)  => f"${t.ticker},0.0,${today},${error}\n"
+                case Right(price) => f"${t.ticker},${price.toStringBare},${today},\n" 
             }
         }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
 

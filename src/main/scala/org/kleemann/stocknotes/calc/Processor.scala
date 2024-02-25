@@ -65,15 +65,13 @@ private[calc] object Processor {
         else           co.map{ c => Currency.fromDouble(c.toDouble * mult)}
     }
 
-    private def parseSingleArgumentCurrency(attribute: String, args: Vector[String]): Either[String, Currency] = {
+    private def parseSingleArgumentCurrency(attribute: String, args: Vector[String]): Either[String, Currency] =
         if (args.length != 1) Left(f"$attribute takes a single argument")
-        else {
+        else
             parseDollar(args(0), 1) match {
                 case Some(c) => Right(c)
                 case None    => Left(f"can't parse $attribute: ${args(0)}")
             }
-        }
-    }
 
     private def parseNumber(s: String, defaultMult: Int): Option[Int] = {
         val (s2, mult) = parsesMegaKilo(s.trim(), defaultMult)
@@ -88,7 +86,7 @@ private[calc] object Processor {
                 case None    => Left(f"can't parse $attribute: ${args(0)}")
             }
 
-    private def parseIncomeOrRevenue(args: Vector[String]): Either[String, Currency] = {
+    private def parseIncomeOrRevenue(args: Vector[String]): Either[String, Currency] =
         if (args.length > 4) Left("can't have more than four quarters of values")
         else {
             val parsed: Vector[Either[String,Currency]] = args.map{ s => parseDollar(s, 1_000) match {
@@ -104,7 +102,6 @@ private[calc] object Processor {
                 Right(annualized)
             }
         }
-    }
 
     // *************** Attribute Processors *************** 
 

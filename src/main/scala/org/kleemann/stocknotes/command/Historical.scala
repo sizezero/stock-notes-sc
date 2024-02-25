@@ -14,7 +14,6 @@ object Historical extends Command {
     val yearPattern = """^(\d{4})$""".r
     val twoYearPattern = """^(\d{4}):(\d{4})$""".r
 
-    // args3 is now guaranteed to have at least one element
     if (args.length != 1) Left(help)
     else {
       val arg: String = args(0)
@@ -44,7 +43,7 @@ object Historical extends Command {
         historical(start, end)
         None
       }
-      case Left(error) => Option(error)
+      case Left(error) => Some(error)
     }
   }
 }

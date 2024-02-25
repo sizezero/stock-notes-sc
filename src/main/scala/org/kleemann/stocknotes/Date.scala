@@ -110,15 +110,13 @@ object Date {
     * @param line
     * @return
     */
-  def parse(line: String): Option[Date] = {
-    line match {
-        case datePattern(month,day,year) => {
-          month2number.get(month.toLowerCase()).flatMap { m =>
-            // the strings coming out of the RE are guarateed to be integers
-            Date(year.toInt, m, day.toInt)
-          }
-        }
-        case _ => None
+  def parse(line: String): Option[Date] = line match {
+    case datePattern(month,day,year) => {
+      month2number.get(month.toLowerCase()).flatMap { m =>
+        // the strings coming out of the RE are guarateed to be integers
+        Date(year.toInt, m, day.toInt)
+      }
     }
+    case _ => None
   }
 }
