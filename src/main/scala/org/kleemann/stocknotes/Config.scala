@@ -26,16 +26,6 @@ final case class Config (sharedDir: String, projectDir: String, finnhubAccessKey
   def cashDir: os.Path = os.home/ sharedDir /"cash"
 
   /**
-    * This is a legacy file used for gain. The scala system reads from it but doesn't write.
-    */
-  def notifyQuotesFile: os.Path = os.home/ sharedDir /"download"/"quotes_notify.csv"
-
-  /**
-    * This is a legacy file used for the buysell html page. The scala system reads from it but doesn't write.
-    */
-  def buySellQuotesFile: os.Path = os.home/ sharedDir /"download"/"quotes_buysell.csv"
-
-  /**
     * This is the quotes file that the scala system reads from and writes to.
     *
     * On reading, if it doesn't exist, then the two legacy files are read and the newest dated quotes are kept.
