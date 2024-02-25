@@ -187,7 +187,7 @@ public static String executePost(String targetURL, String urlParameters) {
     Thread.sleep(delayInSeconds * 1_000L)
 
     val baseUrl = "https://finnhub.io/api/v1/quote"
-    val queryParams = Map("symbol" -> ticker.ticker, "token" -> finnhubAccessKey)
+    val queryParams = Map("symbol" -> ticker.name, "token" -> finnhubAccessKey)
     httpGet(baseUrl, queryParams) match {
       case None => Left(f"Ticker service failed with non 200 response code")
       case Some(body) => {

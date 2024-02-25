@@ -17,7 +17,7 @@ import org.kleemann.stocknotes.{Date, Ticker}
 final case class Entry private(ticker: Ticker, date: Date, content: List[String | Trade | Watch]) extends Ordered[Entry] {
 
       override def compare(that: Entry): Int = 
-        if (this.ticker != that.ticker) ticker.ticker.compare(that.ticker.ticker)
+        if (this.ticker != that.ticker) ticker.name.compare(that.ticker.name)
         else if (this.date != that.date) date.compare(that.date)
         else 0
 

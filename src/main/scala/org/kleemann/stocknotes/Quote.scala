@@ -35,8 +35,8 @@ object Quote {
             // call the webservice to get a single quote
             downloadSingleQuote(t) match {
                 // format the result to a CSV line
-                case Left(error)  => f"${t.ticker},0.0,${today},${error}\n"
-                case Right(price) => f"${t.ticker},${price.toStringBare},${today},\n" 
+                case Left(error)  => f"${t.name},0.0,${today},${error}\n"
+                case Right(price) => f"${t.name},${price.toStringBare},${today},\n" 
             }
         }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
 

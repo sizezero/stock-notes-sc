@@ -58,7 +58,7 @@ object Generate {
                     link(rel := "stylesheet", href := "https://www.w3.org/StyleSheets/Core/Midnight", `type` := "text/css")
                 ), "\n",
                 body(
-                    h1(stock.ticker.ticker),
+                    h1(stock.ticker.name),
                     if (stock.name.isDefined) div(stock.name.get, br(), "\n") else "",
                     if (stock.cid.isDefined) div("CIK: ",stock.cid.get, br(), "\n")  else "",
                     if (!stock.keywords.isEmpty) div(stock.keywords.toList.sorted.mkString(", "), br(), "\n") else "",
@@ -107,8 +107,8 @@ object Generate {
                         for (
                             s <- stocks
                         ) yield tr(
-                            td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.ticker)), "\n",
-                            td(a(href := f"log/${s.ticker.ticker.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
+                            td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.name)), "\n",
+                            td(a(href := f"log/${s.ticker.name.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
                         ), "\n"
                     )
                 )
@@ -156,13 +156,13 @@ object Generate {
                             // no way to put vals after this so put it here even though it's not a generator
                             price = stockQuotes.get(s.ticker).get.price
                         ) yield tr(
-                            td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.ticker)), "\n",
+                            td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.name)), "\n",
                             td(price.toString), "\n",
                             dispTd(s.buyWatch.low,   price, "DarkGreen", _ < _), "\n",
                             dispTd(s.buyWatch.high,  price, "DarkGreen", _ < _), "\n",
                             dispTd(s.sellWatch.low,  price, "DarkRed",   _ > _), "\n",
                             dispTd(s.sellWatch.high, price, "DarkRed",   _ > _), "\n",
-                            td(a(href := f"log/${s.ticker.ticker.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
+                            td(a(href := f"log/${s.ticker.name.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
                         ), "\n"
                     )
                 )
@@ -186,7 +186,7 @@ object Generate {
         val logDstDir = config.wwwDir/"log"
         os.makeDir(logDstDir)
         stocks.foreach{ s =>
-            val outFile = logDstDir / (s.ticker.ticker.toLowerCase() + ".txt.html")
+            val outFile = logDstDir / (s.ticker.name.toLowerCase() + ".txt.html")
             os.write(outFile, stockToHtml(s))
         }
 
@@ -203,11 +203,11 @@ object Generate {
         // generate files with all tickers
         os.write(config.wwwDir/ at,
             generateAll(
-                stocks.sortWith{ _.ticker.ticker < _.ticker.ticker },
+                stocks.sortWith{ _.ticker.name < _.ticker.name },
                 bt, atr, ad))
         os.write(config.wwwDir/atr,
             generateAll(
-                stocks.sortWith{ _.ticker.ticker >= _.ticker.ticker },
+                stocks.sortWith{ _.ticker.name >= _.ticker.name },
                 bt, at, ad))
         os.write(config.wwwDir/ ad,
             generateAll(
@@ -222,11 +222,11 @@ object Generate {
         val watched = stocks.filter{ s => s.buyWatch!=BuyWatch.none || s.sellWatch!=SellWatch.none }
         os.write(config.wwwDir/ bt,
             generateBuySell(
-                watched.sortWith{ _.ticker.ticker < _.ticker.ticker }, quotes,
+                watched.sortWith{ _.ticker.name < _.ticker.name }, quotes,
                 at, btr, bd))
         os.write(config.wwwDir/btr,
             generateBuySell(
-                watched.sortWith{ _.ticker.ticker >= _.ticker.ticker }, quotes,
+                watched.sortWith{ _.ticker.name >= _.ticker.name }, quotes,
                 at, bt, bd))
         os.write(config.wwwDir/ bd,
             generateBuySell(

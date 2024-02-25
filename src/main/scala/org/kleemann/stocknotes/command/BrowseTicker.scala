@@ -20,10 +20,10 @@ object BrowseTicker extends Command {
   private def browseTicker(ticker: Ticker, edit: Boolean): Unit = {
   
     val easyUrls: List[String] = List(
-      f"https://finance.yahoo.com/quote/${ticker.ticker}/profile",
-      f"https://finance.yahoo.com/quote/${ticker.ticker}/financials",
-      f"https://seekingalpha.com/symbol/${ticker.ticker}",
-      f"https://www.morningstar.com/stocks/xnas/${ticker.ticker.toLowerCase()}/quote"
+      f"https://finance.yahoo.com/quote/${ticker.name}/profile",
+      f"https://finance.yahoo.com/quote/${ticker.name}/financials",
+      f"https://seekingalpha.com/symbol/${ticker.name}",
+      f"https://www.morningstar.com/stocks/xnas/${ticker.name.toLowerCase()}/quote"
     )
 
     val config = Config.load()
@@ -33,7 +33,7 @@ object BrowseTicker extends Command {
       case Some(cik) => List(f"https://www.sec.gov/edgar/browse/?CIK=${cik}")
       case None => List(
         f"http://sec.gov/edgar/searchedgar/companysearch.html",
-        f"http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${ticker.ticker}&filenum=&State=&SIC=&owner=include&action=getcompany",
+        f"http://sec.gov/cgi-bin/browse-edgar?company=&CIK=${ticker.name}&filenum=&State=&SIC=&owner=include&action=getcompany",
         config.noCikUrl.toString
       )
     }
@@ -46,7 +46,7 @@ object BrowseTicker extends Command {
 
     if (edit) {
       val editor = os.root / "usr" / "bin" / "gedit"
-      val logFile = config.logDir / f"${ticker.ticker.toLowerCase()}.txt"
+      val logFile = config.logDir / f"${ticker.name.toLowerCase()}.txt"
       println(f"running command: ${editor.toString} ${logFile.toString}")
       os.proc(editor, logFile.toString).spawn()
     }

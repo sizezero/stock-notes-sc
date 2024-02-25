@@ -6,12 +6,12 @@ package org.kleemann.stocknotes
   * The official source of this is either what Yahoo calls them (for browse ticker)
   * or what finnhubb calls them to download quotes. I'm not sure what to do if there is a confict.
   *
-  * @param ticker
+  * @param name the upper case string that represents the stock ticker
   */
-final case class Ticker private(ticker: String) extends Ordered[Ticker] {
-    override def compare(that: Ticker): Int = ticker.compare(that.ticker)
+final case class Ticker private(name: String) extends Ordered[Ticker] {
+    override def compare(that: Ticker): Int = name.compare(that.name)
 
-    override def toString(): String = ticker
+    override def toString(): String = name
 }
 
 object Ticker {
