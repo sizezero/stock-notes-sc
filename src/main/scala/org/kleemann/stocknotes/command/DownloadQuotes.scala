@@ -30,19 +30,26 @@ object DownloadQuotes extends Command {
     val delay: Double = (delayInSeconds/60.0) * tickers.length
     println(f"The download is estimated to take ${delay}%2.2f minutes.")
 
-    Quote.save(tickers, config, downloadSingleQuote(config.finnhubAccessKey))
+    // we use the crusty Java 8 httpGet because we want this program to run
+    // on dreamhost which only supports Java 8
+    Quote.save(tickers, config, downloadSingleQuote(config.finnhubAccessKey, httpGetViaJava8))
 
     println("Download Complete")
   }
 
   /**
-    * This implementation of http get uses the sttp library.
-    * It depends on libraries from Java 11 and cannot run under java 8.
+    * GET the given url and return the body.
+    * 
+    * This implementation uses the modern sttp library from Scalas toolkit. It requires Java 11.
+    *
+    * @param baseUrl The full URL of the call. Does not include trailing slash or ?
+    * @param options query parameters
+    * @return The response body if status code was 200 or None if there was an error.
     */
-  private def getJsonViaSttp(baseUrl: String, options: Map[String, String]): Option[String] = {
+  private def httpGetViaSttp(baseUrl: String, options: Map[String, String]): Option[String] = {
     // uri"http:foo.com/dir?$options" is prettier but the below is required when the root url is in a variable.
     // couldn't get sttp to not encode the baseUrl so using java Uri instead
-    val jUri: java.net.URI = java.net.URI(baseUrl)
+    val jUri: java.net.URI = java.net.URI(baseUrl + "?")
     val uBase: Uri = Uri(jUri)
     val u: Uri = uBase.addParams(options)
     val request = quickRequest.get(u)
@@ -102,19 +109,21 @@ public static String executePost(String targetURL, String urlParameters) {
  */
 
   /**
-    * I just got this working. I'm not sure if all the the api calls are necessary to get this to work.
+    * GET the given url and return the body.
+    * 
+    * This implementation uses ancient java 8 libraries.
+    * It's not very clean. I just hacked it until it worked so some of the settings/code
+    * may not be necessary.
     *
-    * @param baseUrl
-    * @param queryParams
-    * @return
+    * @param baseUrl The full URL of the call. Does not include trailing slash or ?
+    * @param options query parameters
+    * @return The response body if status code was 200 or None if there was an error.
     */
-  private def getJsonViaJava8(baseUrl: String, queryParams: Map[String, String]): Option[String] = {
+  private def httpGetViaJava8(baseUrl: String, queryParams: Map[String, String]): Option[String] = {
     var connection: java.net.HttpURLConnection  = null
     //Create connection
     try {
-      val urlParameters: String = queryParams.map{ (key, value) => f"$key=$value"}.mkString("&")
-      val urlString = baseUrl + urlParameters
-      //println(urlString)
+      val urlString = baseUrl + "?" + queryParams.map{ (key, value) => f"$key=$value" }.mkString("&")
       val url: java.net.URL = new java.net.URL(urlString);
       connection = url.openConnection().asInstanceOf[java.net.HttpURLConnection]; // cast to (HttpURLConnection)
       connection.setRequestProperty("Content-Type", 
@@ -155,36 +164,47 @@ public static String executePost(String targetURL, String urlParameters) {
 
   /**
     * We either return an error or a decimal stock price.
-    * We could return it as something besides a string but since we're just going 
-    * to write it to a file there's no advantage in making a complicated type
+    * 
+    * Currying is used so that we can pass this function to Query.save() not pollute the 
+    * signature with the access key and httpGet implementation which is not 
+    * in Query's domain.
     *
-    * @param ticker
-    * @return
+    * @param finnhubAccessKey The access key that allows us to auth agains finnhub web services.
+    * @param httpGet An implementation that lets us connect to a webservice. Takes a base url and query paramaters and returns the body on success.
+    * @param ticker The ticker/stock we wish to get a quote of.
+    * @return The stock price on success or an error message on failure.
     */
-  private def downloadSingleQuote(finnhubAccessKey: String)(ticker: Ticker): Either[String, Currency] = {
+  private def downloadSingleQuote
+    (
+      finnhubAccessKey: String, 
+      httpGet: (String, Map[String, String]) => Option[String]
+    )
+    (
+      ticker: Ticker
+    ): Either[String, Currency] = {
 
     // finnhub doesn't allows us to spam their service so we need to slow it down a bit
     Thread.sleep(delayInSeconds * 1_000L)
 
-    val baseUrl = "https://finnhub.io/api/v1/quote?"
+    val baseUrl = "https://finnhub.io/api/v1/quote"
     val queryParams = Map("symbol" -> ticker.ticker, "token" -> finnhubAccessKey)
-    getJsonViaJava8(baseUrl, queryParams) match {
+    httpGet(baseUrl, queryParams) match {
+      case None => Left(f"Ticker service failed with non 200 response code")
       case Some(body) => {
         val json = ujson.read(body)
-        // ex
+        // example:
         // {"c":4.93,"d":-0.08,"dp":-1.5968,"h":5.08,"l":4.91,"o":4.93,"pc":5.01,"t":1706302801}
         val m: Map[String,String] = upickle.default.read[Map[String,String]](json)
         m.get("c") match {
+          case None => Left(f"key 'c' not found in downloaded json: $body")
           case Some(price) => {
             Currency.parse(price) match {
-              case Some(curr) => Right(curr)
               case None => Left(f"can't parse as Currency: ${price}")
+              case Some(currency) => Right(currency)
             }
           }
-          case None => Left(f"key 'c' not found in json")
         }
       }
-      case None => Left(f"Ticker service failed with non 200 response code")
     }
   }
 
