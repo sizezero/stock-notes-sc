@@ -86,9 +86,11 @@ object Quote {
       */
     private[stocknotes] def parseCsvLine(line: String): Option[(Ticker, Quote)] = {
         val a = line.split(",", 4)
-        if (a.length == 4) {
+        if (a.length != 4) None
+        else {
             val ticker = Ticker(a(0))
             Currency.parse(a(1)) match {
+                case None => None // price string can't be parsed
                 case Some(price) => {
                     val dateText = a(2)
                     val errorText = a(3)
@@ -102,9 +104,8 @@ object Quote {
                         case _ => None // date string does not parse
                     }
                 }
-                case None => None // price string can't be parsed
             }
-        } else None // length != 4
+        }
     }
 
     /**
