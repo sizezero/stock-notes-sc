@@ -58,7 +58,7 @@ class TestGain extends munit.FunSuite {
     val today = Date(1997, 1, 1).get
     val commission = Currency(30, 0)
     val stocks = List(stock1, stock2)
-    val quotes = Map( t1 -> Quote(Currency(8,0), today), t2 ->  Quote(Currency(9,0), today))
+    val quotes = Map( t1 -> Quote(Currency(8,0)), t2 ->  Quote(Currency(9,0)))
 
     val srs = Gain.createCurrent(None, stocks, List(), quotes, commission, today)
 

@@ -6,9 +6,8 @@ import scala.collection.mutable
   * Represets a quote downloaded from some authoritative source on the internet.
   *
   * @param price The price of the stock around the time it was downloaded
-  * @param date  The day the quote was downloaded
   */
-final case class Quote(price: Currency, date: Date)
+final case class Quote(price: Currency)
 
 object Quote {
 
@@ -25,18 +24,12 @@ object Quote {
       */
     def save(tickers: List[Ticker], config: Config, downloadSingleQuote: Ticker => Either[String, Currency]): Unit = {
 
-        // Our python quotes file format uses this legacy date format.
-        // When that's retired we can change it.
-        val today: String = Date.today match {
-            case Date(year, month, day) => f"$month%02d/$day%02d/$year%04d"
-        }
-
         val content: String = tickers.map{ t =>
             // call the webservice to get a single quote
             downloadSingleQuote(t) match {
                 // format the result to a CSV line
-                case Left(error)  => f"${t.name},0.0,${today},${error}\n"
-                case Right(price) => f"${t.name},${price.toStringBare},${today},\n" 
+                case Left(error)  => f"${t.name},0.0,${error}\n"
+                case Right(price) => f"${t.name},${price.toStringBare},\n" 
             }
         }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
 
@@ -73,31 +66,19 @@ object Quote {
       * Parses a line of our dowloaded quote CSV file.
       * 
       * The format of the lines are:
-      * AAPL,185.92,01/12/2024,optional error
+      * AAPL,185.92,optional error
       *
       * @param line
       * @return
       */
     private[stocknotes] def parseCsvLine(line: String): Option[(Ticker, Quote)] = {
-        val a = line.split(",", 4)
-        if (a.length != 4) None
+        val a = line.split(",", 3)
+        if (a.length != 3) None
         else {
             val ticker = Ticker(a(0))
             Currency.parse(a(1)) match {
                 case None => None // price string can't be parsed
-                case Some(price) => {
-                    val dateText = a(2)
-                    val errorText = a(3)
-                    dateText match {
-                        case datePattern(month,day,year) => {
-                            Date(year.toInt, month.toInt, day.toInt) match {
-                                case Some(d) => Some((ticker, Quote(price, d)))
-                                case None => None // date integer is out of range
-                            }
-                        }
-                        case _ => None // date string does not parse
-                    }
-                }
+                case Some(price) => Some((ticker, Quote(price)))
             }
         }
     }
