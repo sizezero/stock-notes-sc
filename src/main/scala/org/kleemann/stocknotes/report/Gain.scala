@@ -89,7 +89,7 @@ object Gain {
         else
           Currency.zero
       parseCompanyCurrentValue(stock, price, commission, today)
-    }}
+    }}.sortBy{ _.net }
 
     if (onlyShow.isDefined) srs
     else
