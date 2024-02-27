@@ -202,7 +202,7 @@ object Gain {
   }
 
   private[stocknotes] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
-    // this is really just a problem for testing, we only want trades that are less than today
+    // we only want trades that are less than today; this is really just a problem for testing
     var trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
     // We need to find all currently owned shares of the company.
