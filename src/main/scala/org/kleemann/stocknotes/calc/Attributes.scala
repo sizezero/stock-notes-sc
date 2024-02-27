@@ -38,8 +38,8 @@ private final case class Attributes(
     ) {
 
     /**
-         * Attempts to generate None values from other Some values via Processor.generate()
-         */
+     * Attempts to generate None values from other Some values via Processor.generate()
+     */
     def generate: Attributes = {
         @tailrec
         def recurse(prev: Attributes): Attributes = {
@@ -54,12 +54,12 @@ private final case class Attributes(
 
 
     /**
-         * Displays all the non-None values via Processor.display().
-         * There may be some errors embedded in the result.
-         * This is the value we want inserted into the user's Stock document.
-         *
-         * @return A multi-line String.
-         */
+     * Displays all the non-None values via Processor.display().
+     * There may be some errors embedded in the result.
+     * This is the value we want inserted into the user's Stock document.
+     *
+     * @return A multi-line String.
+     */
     override def toString(): String =
         Processor.all.foldLeft(mutable.StringBuilder()){ (sb, proc) => sb ++= proc.display(this) }.result
 
