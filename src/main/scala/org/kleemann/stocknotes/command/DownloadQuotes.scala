@@ -23,9 +23,10 @@ object DownloadQuotes extends Command {
     val config = Config.load()
 
     // we need quotes for stocks we either own or that have active watches
-    val tickers = Stock.load(config).filter{ s =>
-      (s.keywords contains "owned") || (s.keywords contains "watching")
-    }.map{ _.ticker }
+    val tickers: List[Ticker] =
+      for (stock <- Stock.load(config)
+        if (stock.keywords contains "owned") || (stock.keywords contains "watching"))
+      yield stock.ticker
 
     val delay: Double = (delayInSeconds/60.0) * tickers.length
     println(f"The download is estimated to take ${delay}%2.2f minutes.")
