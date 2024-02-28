@@ -9,6 +9,12 @@ object Generate {
 
     // If we want to test this, we need to separate the parsing and html rendering
 
+    /**
+      * Converts a Stock log to viewable html.
+      *
+      * @param stock
+      * @return the complete html file as a String
+      */
     private def stockToHtml(stock: Stock): String = {
         val content = {
             import scalatags.Text.all._
@@ -85,6 +91,16 @@ object Generate {
         content.toString
     }
 
+    /**
+      * Displays the list of all Stock log files. Four versions of these files are generated, each sorted by:
+      * name, reverse name, last entry date, reverse last entry date.
+      *
+      * @param stocks all log files as Stock objects; sorted in displayable order
+      * @param buySellFile a link to the buy/sell listing
+      * @param otherTicker a link to the opposite name sorting
+      * @param otherDate a link to the opposite entry date sorting
+      * @return the complete html file as a String
+      */
     private def generateAll(stocks: List[Stock], buySellFile: String, otherTicker: String, otherDate: String): String = {
         val content = {
             import scalatags.Text.all._
@@ -117,6 +133,17 @@ object Generate {
         content.toString
     }
 
+    /**
+      * Displays the list of all Watched stocks. Four versions of these files are generated, each sorted by:
+      * name, reverse name, last entry date, reverse last entry date.
+      *
+      * @param stocks all Stocks that have active Watches; sorted in displayable order
+      * @param stockQuotes current prices for the above stocks
+      * @param allFile the file that lists all the stocks
+      * @param otherTicker the buy/sell file that is sorted differently by ticker
+      * @param otherDate the buy/sell file that is sorted differently by date
+      * @return the complete html file as a String
+      */
     private def generateBuySell(stocks: List[Stock], stockQuotes: Map[Ticker, Currency], allFile: String, otherTicker: String, otherDate: String): String = {
         val bd = "10px solid black"
         val content = {
@@ -171,6 +198,24 @@ object Generate {
         content.toString
     }
 
+    /**
+      * Wipe the ~/.stockquotes/www/ dir and regenerate it with files.
+      *
+      * www/
+      *   index.html : redirect to buysell-ticker.html
+      *   buysell-ticker.html
+      *   buysell-ticker-reverse.html
+      *   buysell-date.html
+      *   buysell-date-reverse.html
+      *   all-ticker.html
+      *   all-ticker-reverse.html
+      *   all-date.html
+      *   all-date-reverse.html
+      *   log/
+      *     <ticker1>.txt.html
+      *     <ticker2>.txt.html
+      *     ...
+      */
     def refreshWwwDir(): Unit = {
         val config = Config.load()
         val stocks = Stock.load(config)
