@@ -48,7 +48,7 @@ object Date {
   private val month2number: Map[String, Int] =
     number2month.keys.flatMap{ (number: Int) => {
       val fullMonth = number2month(number).toLowerCase()
-      val abbreviation: String = fullMonth.take(3)
+      val abbreviation = fullMonth.take(3)
       List(fullMonth -> number, abbreviation -> number)
     }}.toMap
 
@@ -70,15 +70,18 @@ object Date {
   )
 
   // each month index has the sum of all previous months
-  // E.g.: (1) -> 0, (2) -> 31, (3) -> (31+28), ...
+  // E.g.: (1) -> 0, (2) -> 31, (3) -> (31+28), (4) -> (31+28+31) ...
   // this is only needed by decimalYear
-  // note: scan() produces a 365 element at index 14 that we don't need so we drop it
+  // note: scan() produces a value 365 element at index 14 that we don't need so we drop it
   private val cumulativeDaysPerMonth: Vector[Int] = daysPerMonth.scan(0){ _ + _ }.dropRight(1)
 
   def apply(year: Int, month: Int, day: Int): Option[Date] =
     if (year<1900 || year>3000) None
     else if (month<1 || month>12) None
-    else if (day<1 || day>daysPerMonth(month)) None
+    else if (day<1 || day>daysPerMonth(month)) {
+      if (month==2 && day==29) Some(new Date(year,month,day))
+      else None
+    }
     else Some(new Date(year,month,day))
 
   def earliest(year: Int): Option[Date] = Date(year,  1,  1)
