@@ -4,6 +4,9 @@ import scala.annotation.tailrec
 
 /**
   * A simple fraction class that can be used for accurate stock splits.
+  * 
+  * All operations on fraction results in a fully reduced fraction.
+  * E.g. Fraction(4,2) results in Fraction(2,1)
   */
 final case class Fraction private(numerator: Int, denominator: Int) extends Ordered[Fraction] {
 
@@ -25,8 +28,6 @@ final case class Fraction private(numerator: Int, denominator: Int) extends Orde
     /**
       * Reduces the current fraction to it's smallest possible numerators and denominators and makes sure the sign is only in the numerator.
       * Mutable actions within this class will always call this method ensuring that we have the smallest possible values.
-      *
-      * @return
       */
     private def normalize: Fraction = {
         // only the numerator is signed, denominator is never negative
@@ -45,7 +46,7 @@ final case class Fraction private(numerator: Int, denominator: Int) extends Orde
         numerator*that.denominator + that.numerator*denominator,
         denominator*that.denominator)
 
-    def unary_- = Fraction(-numerator,denominator)
+    def unary_- = Fraction(-numerator, denominator)
 
     def -(that: Fraction): Fraction = this + -that
 
@@ -65,7 +66,7 @@ final case class Fraction private(numerator: Int, denominator: Int) extends Orde
 
 object Fraction {
 
-    val one  = Fraction(1,1)
+    val one = Fraction(1,1)
 
     def apply(numerator: Int, denominator: Int): Fraction =
         // we could return an Option but this should be a rare case so there's no need to make the caller constantly unpack these
@@ -81,7 +82,7 @@ object Fraction {
      * @param b another integer
      * @return the largest integer that divides into both a and b
      */
-    private[stocknotes] def gcd(a: Int, b: Int): Int = gcdIterative(a.abs,b.abs)
+    private[stocknotes] def gcd(a: Int, b: Int): Int = gcdRecursive(a.abs,b.abs)
 
     /**
       * @param a must be positive
