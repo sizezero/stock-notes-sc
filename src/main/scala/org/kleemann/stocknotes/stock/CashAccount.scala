@@ -18,34 +18,25 @@ object CashAccount {
 
     /**
       * Loads all cash accounts from standard cash directory
+      * Errors in parsing will result in a call to sys.exit(1)
       *
       * @param config the global configuration
       * @return
       */
     def load(config: Config): List[CashAccount] =
       os.list(config.cashDir).flatMap { f =>
-        if (f.ext == "txt") {
+        if (f.ext != "txt") Nil
+        else {
           val accountName = f.baseName
-          List(load(accountName, f))
-        } else Nil
-      }.toList
-
-    /**
-      * Loads the specified cash account. Errors in loading will call sys.exit(1)
-      *
-      * @param dir
-      * @return
-      */
-    private def load(accountName: String, cashFile: os.Path): CashAccount = {
-      val e = load(accountName, cashFile.toString, os.read.lines.stream(cashFile))
-      e match {
-        case Right(ca) => ca
-        case Left(error) => {
-          println(error)
-          sys.exit(1)
+          load(accountName, f.toString(), os.read.lines.stream(f)) match {
+            case Right(ca) => List(ca)
+            case Left(error) => {
+              println(error)
+              sys.exit(1)
+            }
+          }
         }
-      }
-    }
+      }.toList
 
     private val balancePattern = """^BALANCE:\s*\$([\d,]+)\.(\d{2})$""".r
 

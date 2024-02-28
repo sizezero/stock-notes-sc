@@ -43,34 +43,24 @@ object Stock {
 
     /**
       * Loads all stock files from the standard log directory.
+      * Errors in parsing will result in a call to sys.exit(1)
       *
       * @param config the standard config file
       * @return
       */
     def load(config: Config): List[Stock] = 
         os.list(config.logDir).flatMap{ f =>
-                if (f.ext == "txt") List(load(f))
-                else                Nil
-        }.toList
-
-    /**
-      * Loads the specified stock file. Errors in parsing will result in a sys.exit(1)
-      *
-      * @param f
-      * @return
-      */
-    def load(f: os.Path): Stock = {
-        // TODO: maybe the ticker/file conversion should be moved to the inner load()
-        val ticker = Ticker(f.baseName)
-        val e = load(ticker, f.toString, os.read.lines.stream(f))
-        e match {
-            case Right(stock) => stock
-            case Left(error) => {
-                println(error)
-                sys.exit(1)
+            if (f.ext != "txt") Nil
+            else {
+                load(Ticker(f.baseName), f.toString, os.read.lines.stream(f)) match {
+                    case Right(stock) => List(stock)
+                    case Left(error) => {
+                        println(error)
+                        sys.exit(1)
+                    }
+                }
             }
-        }
-    }
+        }.toList
 
     private val namePattern = "^NAME:(.*)$".r
     private val cidPattern = "^CID:(.*)$".r
