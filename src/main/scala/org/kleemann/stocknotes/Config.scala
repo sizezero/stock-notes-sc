@@ -6,9 +6,9 @@ import upickle.default.*
 
 /** An object that encapsulates the user configuration for this program.
   *
-  * Note: os.Path objects cannot be serialized/deserialized with upickle so we we String instead
+  * Note: os.Path objects cannot be serialized/deserialized with upickle so we use String instead
   * 
-  * @param shared The path of checked out stock-notes-data project in the users home dir
+  * @param sharedDir The path of checked out stock-notes-data project in the users home dir
   * @param projectDir The path of the checked out stock-notes-sc project (this project) in the user's home dir
   * @param finnhubAccessKey The key to access the finnhub.io site.
   */
