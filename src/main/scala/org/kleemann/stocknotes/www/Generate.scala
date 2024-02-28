@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.command.www
+package org.kleemann.stocknotes.www
 
 import org.kleemann.stocknotes.{Config, Currency, Date, Fraction, Quote, Ticker}
 import org.kleemann.stocknotes.stock.{Shares, Stock}

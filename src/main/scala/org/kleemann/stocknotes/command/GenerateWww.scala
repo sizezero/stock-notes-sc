@@ -8,7 +8,7 @@ object GenerateWww extends Command {
 
     override def command(args: IndexedSeq[String]): Option[String] =
         if (args.length==0) {
-            www.Generate.refreshWwwDir()
+            org.kleemann.stocknotes.www.Generate.refreshWwwDir()
             None
         }
         else help
