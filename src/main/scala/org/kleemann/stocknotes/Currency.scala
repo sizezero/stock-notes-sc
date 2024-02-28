@@ -30,7 +30,7 @@ final case class Currency private(milliPennies: Long) extends Ordered[Currency] 
     def -(that: Currency): Currency = Currency(milliPennies - that.milliPennies)
 
     /**
-      * Displays strings with periods, columns, a dollar sign, and parens for negative values
+      * Displays strings with periods, commas, a dollar sign, and parens for negative values
       * 0 => $0.00
       * 1_234_56 => $1,234.57
       * -99_99 => ($99.99)
@@ -76,10 +76,8 @@ final case class Currency private(milliPennies: Long) extends Ordered[Currency] 
       */
     def priceMultipleAdjust(from: Fraction, to: Fraction): Currency =
       if (from == to) this
-      else {
-        val m = to / from
-        Currency.fromDouble(this.toDouble / m.toDouble)
-      }
+      else
+        Currency.fromDouble(this.toDouble / (to / from).toDouble)
 
     /**
       * Gets rid of any sub pennie values.

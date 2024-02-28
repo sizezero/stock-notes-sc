@@ -28,12 +28,8 @@ final case class Config (sharedDir: String, projectDir: String, finnhubAccessKey
   /**
     * This is the quotes file that the scala system reads from and writes to.
     *
-    * On reading, if it doesn't exist, then the two legacy files are read and the newest dated quotes are kept.
-    *
     * Even though this doesn't depend on variable data and could exist in the Config object,
     * we place it here to insure that the parent directories have been created.
-    *
-    * @return
     */
   def quotesFile: os.Path = Config.configDir/"quotes.csv"
 
