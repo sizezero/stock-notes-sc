@@ -3,12 +3,9 @@ package org.kleemann.stocknotes
 import scala.collection.mutable
 
 /**
-  * Represets a quote downloaded from some authoritative source on the internet.
-  *
-  * @param price The price of the stock around the time it was downloaded
+  * Provides a map of Tickers to stock quotes in Currency.
+  * Internet quotes are downloaded explicitly and cached to a CSV file in our config dir.
   */
-final case class Quote(price: Currency)
-
 object Quote {
 
     /**
@@ -37,9 +34,6 @@ object Quote {
         os.write.over(config.quotesFile, content)
     }
 
-    def load(config: Config): Map[Ticker, Quote] =
-        load(config.quotesFile)
-
     /**
       * Reads the quote file. Blows out with an IOException if there is any problem.
       *
@@ -48,7 +42,8 @@ object Quote {
       * @param f
       * @return
       */
-    private def load(f: os.Path): Map[Ticker, Quote] = load(os.read.lines.stream(f))
+    def load(config: Config): Map[Ticker, Currency] =
+        load(os.read.lines.stream(config.quotesFile))
 
     /** A functional, testable version of the load command.
       * 
@@ -57,7 +52,7 @@ object Quote {
       * @param g
       * @return
       */
-    private[stocknotes] def load(g: os.Generator[String]): Map[Ticker, Quote] =
+    private[stocknotes] def load(g: os.Generator[String]): Map[Ticker, Currency] =
         g.flatMap{ parseCsvLine(_) }.toSeq.toMap
 
     private val datePattern = """^(\d{2})/(\d{2})/(\d{4})$""".r
@@ -71,14 +66,14 @@ object Quote {
       * @param line
       * @return
       */
-    private[stocknotes] def parseCsvLine(line: String): Option[(Ticker, Quote)] = {
+    private[stocknotes] def parseCsvLine(line: String): Option[(Ticker, Currency)] = {
         val a = line.split(",", 3)
         if (a.length != 3) None
         else {
             val ticker = Ticker(a(0))
             Currency.parse(a(1)) match {
                 case None => None // price string can't be parsed
-                case Some(price) => Some((ticker, Quote(price)))
+                case Some(price) => Some((ticker, price))
             }
         }
     }

@@ -8,11 +8,11 @@ class TestQuote extends munit.FunSuite {
             "ABB,0,",
             "AMD,146.56,",
             "APEMY,31.41,"))
-        val m: Map[Ticker, Quote] = Map(
-            Ticker("AAPL")  -> Quote(Currency(185, 92)),
-            Ticker("ABB")   -> Quote(Currency.zero),
-            Ticker("AMD")   -> Quote(Currency(146, 56)),
-            Ticker("APEMY") -> Quote(Currency(31, 41)))
+        val m: Map[Ticker, Currency] = Map(
+            Ticker("AAPL")  -> Currency(185, 92),
+            Ticker("ABB")   -> Currency.zero,
+            Ticker("AMD")   -> Currency(146, 56),
+            Ticker("APEMY") -> Currency(31, 41))
         assertEquals(Quote.load(g), m)
     }
 

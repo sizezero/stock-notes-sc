@@ -21,7 +21,7 @@ object Current extends Command {
   private def current(oticker: Option[Ticker]): Unit = {
     val config = Config.load()
     val stocks: List[Stock] = Stock.load(config)
-    val quotes: Map[Ticker, Quote] = Quote.load(config)
+    val quotes: Map[Ticker, Currency] = Quote.load(config)
     val cash: List[CashAccount] = CashAccount.load(config)
 
     oticker match {

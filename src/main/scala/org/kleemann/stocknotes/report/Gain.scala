@@ -74,7 +74,7 @@ object Gain {
     * @param today used for testing
     * @return a list of Company objects which, with its contained MatchedSells and MatchedBuys
     */
-  def createCurrent(onlyShow: Option[Ticker], stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Quote], commission: Currency, today: Date): List[StockReport] = {
+  def createCurrent(onlyShow: Option[Ticker], stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Currency], commission: Currency, today: Date): List[StockReport] = {
 
     // if tickers is empty then replace it with the tickers of all companies
     val stocks2: List[Stock] = onlyShow match {
@@ -85,7 +85,7 @@ object Gain {
     val srs: List[StockReport] = stocks2.flatMap{ stock => {
       val price =
         if (quotes contains stock.ticker)
-          quotes.get(stock.ticker).get.price
+          quotes.get(stock.ticker).get
         else
           Currency.zero
       parseCompanyCurrentValue(stock, price, commission, today)

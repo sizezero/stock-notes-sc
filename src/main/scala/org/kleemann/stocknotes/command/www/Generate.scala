@@ -117,7 +117,7 @@ object Generate {
         content.toString
     }
 
-    private def generateBuySell(stocks: List[Stock], stockQuotes: Map[Ticker, Quote], allFile: String, otherTicker: String, otherDate: String): String = {
+    private def generateBuySell(stocks: List[Stock], stockQuotes: Map[Ticker, Currency], allFile: String, otherTicker: String, otherDate: String): String = {
         val bd = "10px solid black"
         val content = {
             import scalatags.Text.all._
@@ -154,7 +154,7 @@ object Generate {
                         for (
                             s <- stocks;
                             // no way to put vals after this so put it here even though it's not a generator
-                            price = stockQuotes.get(s.ticker).get.price
+                            price = stockQuotes.get(s.ticker).get
                         ) yield tr(
                             td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.name)), "\n",
                             td(price.toString), "\n",
