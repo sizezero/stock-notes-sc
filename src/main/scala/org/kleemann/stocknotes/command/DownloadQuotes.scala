@@ -33,7 +33,7 @@ object DownloadQuotes extends Command {
 
     // we use the crusty Java 8 httpGet because we want this program to run
     // on dreamhost which only supports Java 8
-    Quote.save(tickers, config, downloadSingleQuote(config.finnhubAccessKey, httpGetViaJava8))
+    Quote.save(tickers, config, downloadSingleQuoteFromFinnhub(config.finnhubAccessKey, httpGetViaJava8))
 
     println("Download Complete")
   }
@@ -175,7 +175,7 @@ public static String executePost(String targetURL, String urlParameters) {
     * @param ticker The ticker/stock we wish to get a quote of.
     * @return The stock price on success or an error message on failure.
     */
-  private def downloadSingleQuote
+  private def downloadSingleQuoteFromFinnhub
     (
       finnhubAccessKey: String, 
       httpGet: (String, Map[String, String]) => Option[String]
