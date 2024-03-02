@@ -48,8 +48,19 @@ object Stock {
       * @param config the standard config file
       * @return
       */
-    def load(config: Config): List[Stock] = 
-        os.list(config.logDir).flatMap{ f =>
+    def load(config: Config): List[Stock] = load(config.logDir)
+
+    /**
+      * Loads all stock files from the dead log directory.
+      * Errors in parsing will result in a call to sys.exit(1)
+      *
+      * @param config the standard config file
+      * @return
+      */
+    def loadDead(config: Config): List[Stock] = load(config.deadDir)
+
+    private def load(dir: os.Path): List[Stock] = 
+        os.list(dir).flatMap{ f =>
             if (f.ext != "txt") Nil
             else {
                 load(Ticker(f.baseName), f.toString, os.read.lines.stream(f)) match {

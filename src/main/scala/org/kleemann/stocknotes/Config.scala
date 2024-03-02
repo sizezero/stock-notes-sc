@@ -21,6 +21,13 @@ final case class Config (sharedDir: String, projectDir: String, finnhubAccessKey
   def logDir: os.Path = os.home/ sharedDir /"log"
 
   /**
+    * The directory that contains the edited stock notes of dead companies.
+    * This is kept for historical reasons but is not used in reports, watches,
+    * ticker downloads, etc.
+    */
+  def deadDir: os.Path = os.home/ sharedDir /"dead"
+
+  /**
     * The directory where cash accounts are stored.
     */
   def cashDir: os.Path = os.home/ sharedDir /"cash"

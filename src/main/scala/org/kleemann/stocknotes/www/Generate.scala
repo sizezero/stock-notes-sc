@@ -101,7 +101,7 @@ object Generate {
       * @param otherDate a link to the opposite entry date sorting
       * @return the complete html file as a String
       */
-    private def generateAll(stocks: List[Stock], buySellFile: String, otherTicker: String, otherDate: String): String = {
+    private def generateAll(stocks: List[Stock], allFile: String, buySellFile: String, deadFile: String, otherTicker: String, otherDate: String, refDir: String): String = {
         val content = {
             import scalatags.Text.all._
             import scalatags.Text.TypedTag
@@ -112,9 +112,10 @@ object Generate {
                 body (
                     table (
                         tr(
-                            td(border := "20px solid black")(h1( "All")),
-                            td(h1(a(href := buySellFile)("Watch")))
-
+                            //td(border := "20px solid black")(h1( "All")),
+                            td(h1(a(href := allFile)("All"))),
+                            td(h1(a(href := buySellFile)("Watch"))),
+                            td(h1(a(href := deadFile)("Dead")))
                         ),
                         tr(
                             td(h3(a(href := otherTicker)("Ticker"))), "\n",
@@ -124,7 +125,7 @@ object Generate {
                             s <- stocks
                         ) yield tr(
                             td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.name)), "\n",
-                            td(a(href := f"log/${s.ticker.name.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
+                            td(a(href := f"${refDir}/${s.ticker.name.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
                         ), "\n"
                     )
                 )
@@ -144,7 +145,7 @@ object Generate {
       * @param otherDate the buy/sell file that is sorted differently by date
       * @return the complete html file as a String
       */
-    private def generateBuySell(stocks: List[Stock], stockQuotes: Map[Ticker, Currency], allFile: String, otherTicker: String, otherDate: String): String = {
+    private def generateBuySell(stocks: List[Stock], stockQuotes: Map[Ticker, Currency], allFile: String, deadFile:String, otherTicker: String, otherDate: String): String = {
         val bd = "10px solid black"
         val content = {
             import scalatags.Text.all._
@@ -169,8 +170,8 @@ object Generate {
                     table (
                         tr(
                             td(colspan := "3")(h1(a(href := allFile)("All"))),
-                            td(""),
-                            td(colspan := "3")(h1("Watch"))
+                            td(colspan := "3")(h1("Watch")),
+                            td(colspan := "3")(h1(a(href := deadFile)("Dead")))
                         ),
                         tr(
                             td(border := bd)(h3(a(href := otherTicker)("Ticker"))), "\n",
@@ -219,6 +220,7 @@ object Generate {
     def refreshWwwDir(): Unit = {
         val config = Config.load()
         val stocks = Stock.load(config)
+        val dead = Stock.loadDead(config)
         val quotes = Quote.load(config)
 
         // clean files out of www
@@ -235,51 +237,81 @@ object Generate {
             os.write(outFile, stockToHtml(s))
         }
 
+        // generate all dead files
+        val deadDstDir = config.wwwDir/"dead"
+        os.makeDir(deadDstDir)
+        dead.foreach{ s =>
+            val outFile = deadDstDir / (s.ticker.name.toLowerCase() + ".txt.html")
+            os.write(outFile, stockToHtml(s))
+        }
+
         // name the files for brevity
-        val bt  = "buysell-ticker.html"
-        val btr = "buysell-ticker-reverse.html"
-        val bd  = "buysell-date.html"
-        val bdr = "buysell-date-reverse.html"
         val at  = "all-ticker.html"
         val atr = "all-ticker-reverse.html"
         val ad  = "all-date.html"
         val adr = "all-date-reverse.html"
+        val dt  = "dead-ticker.html"
+        val dtr = "dead-ticker-reverse.html"
+        val dd  = "dead-date.html"
+        val ddr = "dead-date-reverse.html"
+        val bt  = "buysell-ticker.html"
+        val btr = "buysell-ticker-reverse.html"
+        val bd  = "buysell-date.html"
+        val bdr = "buysell-date-reverse.html"
 
         // generate files with all tickers
         os.write(config.wwwDir/ at,
             generateAll(
                 stocks.sortWith{ _.ticker.name < _.ticker.name },
-                bt, atr, ad))
+                "", bt, dt, atr, ad, "log"))
         os.write(config.wwwDir/atr,
             generateAll(
                 stocks.sortWith{ _.ticker.name >= _.ticker.name },
-                bt, at, ad))
+                "", bt, dt, at, ad, "log"))
         os.write(config.wwwDir/ ad,
             generateAll(
                 stocks.sortWith{ _.latestDate < _.latestDate },
-                bt, at, adr))
+                "", bt, dt, at, adr, "log"))
         os.write(config.wwwDir/ adr,
             generateAll(
                 stocks.sortWith{ _.latestDate >= _.latestDate },
-                bt, at, ad))
+                "", bt, dt, at, ad, "log"))
+
+        // generate files with dead tickers
+        os.write(config.wwwDir/ dt,
+            generateAll(
+                dead.sortWith{ _.ticker.name < _.ticker.name },
+                at, bt, "", dtr, dd, "dead"))
+        os.write(config.wwwDir/dtr,
+            generateAll(
+                dead.sortWith{ _.ticker.name >= _.ticker.name },
+                at, bt, "", dt, dd, "dead"))
+        os.write(config.wwwDir/ dd,
+            generateAll(
+                dead.sortWith{ _.latestDate < _.latestDate },
+                at, bt, "", dt, ddr, "dead"))
+        os.write(config.wwwDir/ ddr,
+            generateAll(
+                dead.sortWith{ _.latestDate >= _.latestDate },
+                at, bt, "", dt, dd, "dead"))
 
         // generate files with just buysell tickers
         val watched = stocks.filter{ s => s.buyWatch!=BuyWatch.none || s.sellWatch!=SellWatch.none }
         os.write(config.wwwDir/ bt,
             generateBuySell(
                 watched.sortWith{ _.ticker.name < _.ticker.name }, quotes,
-                at, btr, bd))
+                at, dt, btr, bd))
         os.write(config.wwwDir/btr,
             generateBuySell(
                 watched.sortWith{ _.ticker.name >= _.ticker.name }, quotes,
-                at, bt, bd))
+                at, dt, bt, bd))
         os.write(config.wwwDir/ bd,
             generateBuySell(
                 watched.sortWith{ _.latestDate < _.latestDate }, quotes,
-                at, bt, bdr))
+                at, dt, bt, bdr))
         os.write(config.wwwDir/ bdr,
             generateBuySell(
                 watched.sortWith{ _.latestDate >= _.latestDate }, quotes,
-                at, bt, bd))
+                at, dt, bt, bd))
     }
 }

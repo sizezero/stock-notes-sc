@@ -232,3 +232,8 @@
       - ~~I also don't think there is a case for different commissions~~
     - ~~stock-notes historical <year1>[:<year2>]~~
   - ~~refactor create() to createCurrent() createHitorical() with correct params~~
+- ~~add Dead stocks~~
+  - ~~allow stock to load dead~~
+  - ~~www generation~~
+    - ~~dead log files~~
+    - ~~four new dead "all" listing pages~~
