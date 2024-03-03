@@ -39,7 +39,8 @@ object Entry {
     val sb = mutable.StringBuilder()
     // Traverse each element of the content.
     // Accumulate the reverse result
-    val contentReversed = content.foldLeft(List[String | Trade | Watch]()){ case (result, element) => element match {
+    val empty = List[String | Trade | Watch]()
+    val contentReversed = content.foldLeft(empty){ case (result, element) => element match {
       case s: String => {
         sb.append(s)
         result
