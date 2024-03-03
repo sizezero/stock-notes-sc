@@ -261,7 +261,7 @@ object Stock {
             }
             case sell: Sell => {
                 val newShares = shares.sub(sell.shares, multiple)
-                this.copy(content = sell :: content, trades = sell  :: trades, shares = newShares)
+                this.copy(content = sell :: content, trades = sell :: trades, shares = newShares)
             }
             case split: Split => {
                 val newMult = multiple * split.multiple
@@ -304,7 +304,7 @@ object Stock {
 
     def loadFunctional(ticker: Ticker, filename: String, g: os.Generator[String]): Either[String, Stock] = {
         
-        def mkError(lineNo: Int, s: String): Either[String, Stock] = Left(s"$filename($lineNo): $s")
+        def mkError(lineNo: Int, msg: String): Either[String, Stock] = Left(s"$filename($lineNo): $msg")
 
         @tailrec
         def processLine(in: Seq[String], prevLineNo: Int, sb: StockBuilder): Either[String, Stock] = {
