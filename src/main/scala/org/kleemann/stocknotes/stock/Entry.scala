@@ -38,8 +38,8 @@ object Entry {
     // The external, mutable StringBuilder is not functional but it is contained to this small block of code.
     val sb = mutable.StringBuilder()
     // Traverse each element of the content.
-    // Accumulate the reverse result string
-    val contentReversed = content.foldLeft(List[String | Trade | Watch]()){ case (result, trade) => trade match {
+    // Accumulate the reverse result
+    val contentReversed = content.foldLeft(List[String | Trade | Watch]()){ case (result, element) => element match {
       case s: String => {
         sb.append(s)
         result
@@ -53,7 +53,7 @@ object Entry {
         }
       }
     }}
-    if (sb.isEmpty) contentReversed                   .reverse
-    else            (sb.toString() :: contentReversed).reverse
+    if (sb.isEmpty) contentReversed                 .reverse
+    else            (sb.result() :: contentReversed).reverse
   }
 }
