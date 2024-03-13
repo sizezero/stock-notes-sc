@@ -30,38 +30,38 @@ object Generate {
                 if (oc.isDefined) oc.get.toString else "none"
 
             def dispTrade(t: Trade): TypedTag[String] = t match {
-                case buy: Buy => div(
+                case Buy(_, shares, price, commission) => div(
                     span(color := "LightGreen")("BUY"), " ",
-                    dispShares(buy.shares), "@", buy.price.toString, " ",
+                    dispShares(shares), "@", price.toString, " ",
                     "commission", " ",
-                    buy.commission.toString,
+                    commission.toString,
                     "\n"
                 )
-                case sell: Sell => div(
+                case Sell(_, shares, price, commission) => div(
                     span(color := "IndianRed")("SELL"), " ",
-                    dispShares(sell.shares), "@", sell.price.toString, " ",
+                    dispShares(shares), "@", price.toString, " ",
                     "commission", " ",
-                    sell.commission.toString,
+                    commission.toString,
                     "\n"
                 )
-                case split: Split => div(
+                case Split(_, multiple) => div(
                     span(color := "LightSkyBlue")("SPLIT"), " ",
-                    dispMult(split.multiple)
+                    dispMult(multiple)
                 )
             }
 
             def dispWatch(w: Watch): TypedTag[String] = w match {
-                case buy: BuyWatch => div(
+                case BuyWatch(low, high, multiple) => div(
                     span(color := "LightGreen")("BUY WATCH"), " ",
-                    dispOptionCurrency(buy.low), " ",
-                    dispOptionCurrency(buy.high), " ",
-                    dispMult(buy.multiple)
+                    dispOptionCurrency(low), " ",
+                    dispOptionCurrency(high), " ",
+                    dispMult(multiple)
                 )
-                case sell: SellWatch => div(
+                case SellWatch(low, high, multiple) => div(
                     span(color := "IndianRed")("SELL WATCH"), " ",
-                    dispOptionCurrency(sell.low), " ",
-                    dispOptionCurrency(sell.high), " ",
-                    dispMult(sell.multiple)
+                    dispOptionCurrency(low), " ",
+                    dispOptionCurrency(high), " ",
+                    dispMult(multiple)
                 )
             }
 

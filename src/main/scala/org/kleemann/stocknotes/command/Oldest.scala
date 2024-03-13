@@ -73,7 +73,7 @@ object Oldest extends Command {
         display(parseArgs)
         None
       }
-      case Left(error)      => Option(error)
+      case Left(error) => Option(error)
     }
   }
 }

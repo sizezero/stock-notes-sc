@@ -16,7 +16,7 @@ object Calc {
     private[calc] def inputToAttributes(it: Iterator[String]): Either[List[String], Attributes] = {
 
         Attributes.parse(it) match {
-            case Left(errors) => Left(errors)
+            case left @ Left(_) => left
             case Right(att) => {
                 // one value in each set has to be unspecified
                 // TODO: this is not a foolproof check since it doesn't check transitive stuff

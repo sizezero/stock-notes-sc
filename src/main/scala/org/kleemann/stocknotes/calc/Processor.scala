@@ -53,9 +53,9 @@ private[calc] object Processor {
         if (s.length() == 0) (s, defaultMult)
         else
             s.last match {
-                case 'k' | 'K' => (s.dropRight(1),     1_000)
-                case 'm' | 'M' => (s.dropRight(1), 1_000_000)
-                case _         => (s,            defaultMult)
+                case 'k' | 'K' => (s.dropRight(1),       1_000)
+                case 'm' | 'M' => (s.dropRight(1),   1_000_000)
+                case _         => (s,              defaultMult)
            }
 
     private def parseDollar(s: String, defaultMult: Int): Option[Currency] = {
@@ -184,9 +184,9 @@ private[calc] object Processor {
 
 
         override def display(att: Attributes): String = att.shares match {
-            case Some(i) => if (i < 0) "WTF? negative shares\n"
-                            else f"Shares $i\n"
-            case None => ""
+            case Some(i) if (i<0) => "WTF? negative shares\n"
+            case Some(i)          => f"Shares $i\n"
+            case None             => ""
         }
     }
 
@@ -206,9 +206,9 @@ private[calc] object Processor {
             } else att
 
         override def display(att: Attributes): String = att.pe match {
-            case Some(d) => if (d < 0) "N/A\n"
-                            else f"PE $d%.1f\n"
-            case None => ""
+            case Some(d) if (d<0) => "N/A\n"
+            case Some(d)          => f"PE $d%.1f\n"
+            case None             => ""
         }
     }
 

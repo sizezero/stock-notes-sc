@@ -29,7 +29,7 @@ object Trade {
         def parseCurrency(input: String, name: String): Either[String, Currency] =
             Currency.parse(input) match {
                 case Some(c) => Right(c)
-                case None => Left(s"$name must be decimal floating point: $input")
+                case None    => Left(s"$name must be decimal floating point: $input")
             }
         line match {
             case tradeBuySellPattern("buy", s, p, b, c) =>

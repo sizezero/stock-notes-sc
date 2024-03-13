@@ -49,7 +49,7 @@ object Watch {
                 yield (BuyWatch(Some(c), None, multiple))
             case buySellWatch3Pattern("BUY", low, high) =>
                 for (
-                    lowCurrency <- parse(low);
+                    lowCurrency  <- parse(low);
                     highCurrency <- parse(high))
                 yield (BuyWatch(Some(lowCurrency), Some(highCurrency), multiple))
             case buySellWatch1Pattern("SELL", "None" | "none") => Right(SellWatch(None, None, multiple))
@@ -58,7 +58,7 @@ object Watch {
                 yield (SellWatch(None, Some(c), multiple))
             case buySellWatch3Pattern("SELL", low, high) =>
                 for (
-                    lowCurrency <- parse(low);
+                    lowCurrency  <- parse(low);
                     highCurrency <- parse(high))
                 yield (SellWatch(Some(lowCurrency), Some(highCurrency), multiple))
             case _ => Left("""buy/sell lines must be one of the following:

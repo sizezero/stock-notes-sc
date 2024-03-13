@@ -13,15 +13,15 @@ class TestQuote extends munit.FunSuite {
             Ticker("ABB")   -> Currency.zero,
             Ticker("AMD")   -> Currency(146, 56),
             Ticker("APEMY") -> Currency(31, 41))
-        assertEquals(Quote.load(g), m)
+        assertEquals(Quote.load(g, "filename"), Right(m))
     }
 
     test("csv line has too few args") {
-        assertEquals(Quote.parseCsvLine("AAPL,185.92"), None)
+        assertEquals(Quote.parseCsvLine("AAPL,185.92"), Left("line does not have three elements: AAPL,185.92"))
     }
 
     test("csv line has bad price") {
-        assertEquals(Quote.parseCsvLine("AAPL,expensive,"), None)
+        assertEquals(Quote.parseCsvLine("AAPL,expensive,"), Left("can't parse currency: expensive"))
     }
 
 }

@@ -1,6 +1,7 @@
 package org.kleemann.stocknotes
 
 import scala.collection.mutable
+import scala.annotation.tailrec
 
 /**
   * Provides a map of Tickers to stock quotes in Currency.
@@ -35,7 +36,7 @@ object Quote {
     }
 
     /**
-      * Reads the quote file. Blows out with an IOException if there is any problem.
+      * Reads the quote file. Blows out with an IOException or sys.exit if there is any problem.
       *
       * This is the dirty, side effect version of the function.
       * 
@@ -43,17 +44,35 @@ object Quote {
       * @return
       */
     def load(config: Config): Map[Ticker, Currency] =
-        load(os.read.lines.stream(config.quotesFile))
+        load(os.read.lines.stream(config.quotesFile), config.quotesFile.toString) match {
+          case Left(error) => {
+            println(error)
+            sys.exit(1)
+          }
+          case Right(quotes) => quotes
+        }
 
     /** A functional, testable version of the load command.
       * 
       * If the entry fails to parse for any reason, it is silently omitted from the returned list.
       * 
-      * @param g
-      * @return
+      * @param g the input source to parse
+      * @param filename the name of the source file for error reporting
+      * @return a map of quotes on success, an error string (with no trailing newline) on error
       */
-    private[stocknotes] def load(g: os.Generator[String]): Map[Ticker, Currency] =
-        g.flatMap{ parseCsvLine(_) }.toSeq.toMap
+    private[stocknotes] def load(g: os.Generator[String], filename: String): Either[String, Map[Ticker, Currency]] = {
+      @tailrec
+      def loop(in: Seq[String], errors: String, quotes: List[(Ticker, Currency)]): Either[String, Map[Ticker, Currency]] =
+        if (in.isEmpty) {
+          if (errors.isEmpty) Right(quotes.toMap)
+          else                Left(errors)
+        } else
+          parseCsvLine(in.head) match {
+            case Left(error) => loop(in.tail, s"${errors}\n${error}", quotes)
+            case Right(tup)  => loop(in.tail, errors, tup :: quotes)
+          }
+      loop(g.toSeq, "", Nil)
+    }
 
     private val datePattern = """^(\d{2})/(\d{2})/(\d{4})$""".r
 
@@ -66,14 +85,14 @@ object Quote {
       * @param line
       * @return
       */
-    private[stocknotes] def parseCsvLine(line: String): Option[(Ticker, Currency)] = {
+    private[stocknotes] def parseCsvLine(line: String): Either[String, (Ticker, Currency)] = {
         val a = line.split(",", 3)
-        if (a.length != 3) None
+        if (a.length != 3) Left(s"line does not have three elements: ${line}")
         else {
             val ticker = Ticker(a(0))
             Currency.parse(a(1)) match {
-                case None => None // price string can't be parsed
-                case Some(price) => Some((ticker, price))
+                case None => Left(s"can't parse currency: ${a(1)}") // price string can't be parsed
+                case Some(price) => Right((ticker, price))
             }
         }
     }
