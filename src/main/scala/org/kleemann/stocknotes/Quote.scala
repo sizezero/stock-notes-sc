@@ -54,7 +54,7 @@ object Quote {
 
     /** A functional, testable version of the load command.
       * 
-      * If the entry fails to parse for any reason, it is silently omitted from the returned list.
+      * Loads the quotes file and either returns a string of all errors or the quotes map.
       * 
       * @param g the input source to parse
       * @param filename the name of the source file for error reporting
