@@ -16,6 +16,18 @@ class TestQuote extends munit.FunSuite {
         assertEquals(Quote.load(g, "filename"), Right(m))
     }
 
+    test("read a file with errors") {
+        val g: os.Generator[String] = os.Generator.from(Seq(
+            "AAPL,185.92,",
+            "ABB,expensive,",
+            "AMD,146.56,third arg only",
+            "one element"))
+        val expected = 
+        """filename(2): can't parse currency: expensive
+          |filename(4): line does not have three elements: one element""".stripMargin
+        assertEquals(Quote.load(g, "filename"), Left(expected))
+    }
+
     test("csv line has too few args") {
         assertEquals(Quote.parseCsvLine("AAPL,185.92"), Left("line does not have three elements: AAPL,185.92"))
     }
