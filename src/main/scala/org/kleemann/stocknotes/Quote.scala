@@ -24,14 +24,14 @@ object Quote {
     */
   def save(tickers: List[Ticker], config: Config, downloadSingleQuote: Ticker => Either[String, Currency]): Unit = {
 
-    val content: String = tickers.map{ t =>
+    val content: String = tickers.foldLeft(mutable.StringBuilder()){ case (sb, t) =>
       // call the webservice to get a single quote
       downloadSingleQuote(t) match {
         // format the result to a CSV line
-        case Left(error)  => f"${t.name},0.0,${error}\n"
-        case Right(price) => f"${t.name},${price.toStringBare},\n" 
+        case Left(error)  => sb ++= f"${t.name},0.0,${error}\n"
+        case Right(price) => sb ++= f"${t.name},${price.toStringBare},\n" 
       }
-    }.foldLeft(mutable.StringBuilder()){ _ ++= _ }.toString
+    }.toString
 
     // TODO: I can't find good docs on os-lib so I'm just going to collect the quotes in memory and write the file all at once.
     os.write.over(config.quotesFile, content)
