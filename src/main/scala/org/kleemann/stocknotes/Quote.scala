@@ -62,19 +62,20 @@ object Quote {
     * 
     * @param g the input source to parse
     * @param filename the name of the source file for error reporting
-    * @return a map of quotes on success, an error string (with no trailing newline) on error
+    * @return a map of quotes on success, a multiline error string (with no trailing newline) on error
     */
   private[stocknotes] def load(g: os.Generator[String], filename: String): Either[String, Map[Ticker, Currency]] = {
     @tailrec
     def loop(in: Seq[String], prevLineNo: Int, errors: List[String], quotes: List[(Ticker, Currency)]): Either[String, Map[Ticker, Currency]] = {
+      // iterate through the input; accumulate errors and quotes
       if (in.isEmpty) {
         if (errors.isEmpty) Right(quotes.toMap)
         else                Left(errors.reverse.mkString("\n"))
       } else {
         val lineNo = prevLineNo + 1
         parseCsvLine(in.head) match {
-          case Left(error) => loop(in.tail, lineNo, s"${filename}(${lineNo}): ${error}" :: errors, quotes)
-          case Right(tup)  => loop(in.tail, lineNo, errors,                                        tup :: quotes)
+          case Left(error) => loop(in.tail, lineNo, s"${filename}(${lineNo}): ${error}" :: errors,        quotes)
+          case Right(tup)  => loop(in.tail, lineNo,                                        errors, tup :: quotes)
         }
       }
     }
@@ -98,7 +99,7 @@ object Quote {
     else {
       val ticker = Ticker(a(0))
       Currency.parse(a(1)) match {
-        case None => Left(s"can't parse currency: ${a(1)}") // price string can't be parsed
+        case None        => Left(s"can't parse currency: ${a(1)}")
         case Some(price) => Right((ticker, price))
       }
     }
