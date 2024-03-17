@@ -112,10 +112,10 @@ object Gain {
   def createHistorical(start: Date, end: Date, stocks: List[Stock]): List[StockReport] =
     // ignore stocks that don't have at least one sell in the date range
     stocks.filter{ stock =>
-      stock.trades.exists{ t => t match {
+      stock.trades.exists{
         case Sell(date, _, _, _) => start <= date && end >= date
         case _ => false
-      }}
+      }
     }.flatMap{ parseCompanyDateRange(_, start, end) }
 
   /**
