@@ -22,6 +22,7 @@ object Command {
     "browse-ticker"   -> BrowseTicker,
     "download-quotes" -> DownloadQuotes,
     "calc"            -> Calc,
+    "calc-template"   -> CalcTemplate,
     "generate-www"    -> GenerateWww,
     "oldest"          -> Oldest
   )

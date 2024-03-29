@@ -42,7 +42,7 @@ object Date {
 
   /** 
    * Full lowercase month and lower case three letter abbreviation of month to one based number of month.
-   * E.g.: (("january" -> 1, "jan"->1, "february"->2, ... )
+   * E.g.: (("january" -> 1, "jan"->1, "february"->2, "feb"->2, ... )
    * 
    */
   private val month2number: Map[String, Int] =
