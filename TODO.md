@@ -237,3 +237,9 @@
   - ~~www generation~~
     - ~~dead log files~~
     - ~~four new dead "all" listing pages~~
+- break up Gain report code
+  - package name report -> current
+  - break out into separate class
+    - StockReport: createHistorical, createCurrent, render, parseCompanyCurrentValue, parseCompanyDateRange
+    - MatchedSell: BuyReadyToSell, parseMatchedSell, 
+    - MatchedBuy: completeMatchedBuy, annualYield
