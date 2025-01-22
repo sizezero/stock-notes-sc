@@ -1,9 +1,8 @@
 package org.kleemann.stocknotes.command
 
-import org.kleemann.stocknotes.current.{Gain => ReportGain}
 import org.kleemann.stocknotes.{Config, Currency, Date, Quote, Ticker}
 import org.kleemann.stocknotes.stock.{CashAccount, Stock}
-import org.kleemann.stocknotes.current.Gain.StockReport
+import org.kleemann.stocknotes.current.StockReport
 
 object Current extends Command {
 
@@ -35,8 +34,8 @@ object Current extends Command {
     }
 
     val commission = Currency(30,0)
-    val srs: List[ReportGain.StockReport] = ReportGain.createCurrent(oticker, stocks, cash, quotes, commission, Date.today)
-    print(ReportGain.render(srs))
+    val srs: List[StockReport] = StockReport.createCurrent(oticker, stocks, cash, quotes, commission, Date.today)
+    print(StockReport.render(srs))
   }
 
   override def command(args: IndexedSeq[String]): Option[String] = {

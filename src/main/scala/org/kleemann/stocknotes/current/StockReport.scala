@@ -1,15 +1,11 @@
 package org.kleemann.stocknotes.current
 
-import org.kleemann.stocknotes.{Currency, Date, Fraction, Quote, Ticker}
+import org.kleemann.stocknotes.{Currency, Date, Fraction, Ticker}
 import org.kleemann.stocknotes.stock.{CashAccount, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
-import scala.annotation.tailrec
+
 
 /**
-  * This is where all the calculations are performed for the Gain report. All this code is pure functional.
-  */
-object Gain {
-   /**
     * The top level report for the Gain Report is a list of StockReport objects.
     *
     * @param stock The underlying stock data from the log directory.
@@ -18,50 +14,14 @@ object Gain {
     * @param capGains The capital gains of this sale (gross-cost). This includes buy and sell commissions.
     * @param ltcgPercentage This is the percentage of shares sold that are ltcg.
     */
-  case class StockReport(
-    stock: Stock,
-    mss: List[MatchedSell],
-    net: Currency,
-    capGains: Currency,
-    ltcgPercentage: Double)
+final case class StockReport(
+  stock: Stock,
+  mss: List[MatchedSell],
+  net: Currency,
+  capGains: Currency,
+  ltcgPercentage: Double)
 
-  /**
-    * This represents a sale of a block of stock.
-    * It is matched up with perhaps multiple buy blocks of stock.
-    * 
-    * @param sell The Trade Sell that is associated with this sale. All the shares of this Sell trade are sold thus they are all matched with buys.
-    * @param net gross - sell commission, the cash you get when you sell
-    * @param capitalGain net - sell commissions - buy commissions proportional to the shares sold from the buy batch
-    * @param mbs A list of Matched buys that add up to this sale from oldest to newest.
-    */
-  case class MatchedSell(
-    sell: Sell,
-    net: Currency,
-    capitalGain: Currency,
-    mbs: List[MatchedBuy])
-
-  /**
-    * This represents a block of bought shares that are now the result of a possibly larger sale.
-    * Note: not all of the shares of the buy block may have been sold.
-    *
-    * @param buy the Buy Trade
-    * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares. This is in the Sell multiple.
-    * @param price this is the price of the shares in the Sell multiple. This may have sub-penny precision.
-    * @param proportionalCost the cost proportional to the sold shares. This may have sub-penny precision.
-    * @param proportionalBuyCommission the buy commission proportional to the sold shares. This may have sub-penny precision.
-    * @param proportionalSellCommission the sell commision proportional to the sold shares. This may have sub-penny precision.
-    * @param ltcg true if the shares were purchased at least a year before the sale.
-    * @param annualYield The annual yield from cost+proportionalBuyCommission to the gross-proportionalSellCommission
-    */
-  case class MatchedBuy(
-    buy: Buy,
-    sold: Shares,
-    price: Currency,
-    proportionalCost: Currency,
-    proportionalBuyCommission: Currency,
-    proportionalSellCommission: Currency,
-    ltcg: Boolean,
-    annualYield: Double)
+object StockReport {
 
   /**
     * Creates a report by selling all currently owned stocks.
@@ -230,19 +190,6 @@ object Gain {
     }
   }
 
-  /**
-    * This is a buy that is ready to be matched with sells to take some of the shares.
-    *
-    * @param buy The buy associated with these shares to sell.
-    * @param unsold unsold shares at the multiple Fraction.one
-    */
-  private[stocknotes] case class BuyReadyToSell(buy: Buy, unsold: Double)
-
-  private[stocknotes] object BuyReadyToSell {
-    // default has all shares unsold
-    def apply(buy: Buy) = new BuyReadyToSell(buy, buy.shares.atMult(Fraction.one))
-  }
-
   private[stocknotes] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
 
     // When a buy is encountered we add it to brss which is our accumulating list of BuyReadyToSells.
@@ -255,7 +202,7 @@ object Gain {
           case buy: Buy  => (brss :+ BuyReadyToSell(buy), mss)
           case sell: Sell => {
             // even if we the sell isn't in our date range, we have to process it so it will consume earlier buys
-            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = parseMatchedSell(sell, brss)
+            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = MatchedSell.parseMatchedSell(sell, brss)
             if (sell.date>=start && sell.date<=end) (unconsumed, ms :: mss)
             else                                    (unconsumed,       mss)
           }
@@ -293,105 +240,5 @@ object Gain {
     }
   }
 
-  /**
-    * Associates all the shares of the given sell with some of the given buys.
-    * We consume from the head of the buys since those are the oldest.
-    * 
-    * @param buys
-    * @return The MatchedSell and BuyReadyToSells that have yet to be matched with sells.
-    */
-  private[stocknotes] def parseMatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
 
-    // Unfortunately it's not possible to do this calculation with integer share values plus multiples.
-    // We need to use lossy Doubles. This is highlighted in the test case "parseCompanyDateRange fractional matching"
-    // which caused the old code to blow up.
-
-    // this is some tiny share value at multiple one that we are comfortable that share counts will never get below
-    // we use this to see if share counts are equal or at zero since we can't use equality on a Double
-    val quantum: Double = 0.0001
-
-    // all double calculations and all conversion to Shares are done with the sell multiple
-    val m = sell.shares.multiple
-
-    // a tempory structure to build our eventual matched buys
-    case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
-
-    // Recursively walk through the BuyReadyToSell list consuming buys, and accumulate our incomplete matched buy list
-    // until we have satisfied all shares in the sell.
-    // Note: both buy and sell shares are converted to Double at multiple Fraction.one.
-    @tailrec
-    def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
-      if (toSell <= quantum) (toBuys, imbs) // shares to sell are zero, we are done
-      else {
-        val b: BuyReadyToSell = toBuys.head
-        if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
-          // the current buy perfectly completes the sell
-          val s = Shares((toSell * m.toDouble).round.toInt, m)
-          (toBuys.tail, IncompleteMatchedBuy(b.buy, s) :: imbs)
-        } else if (b.unsold < toSell) {
-          // we have used up the current buy, but the sell is not done
-          val s = Shares((b.unsold * m.toDouble).round.toInt, m)
-          assignBuys(toBuys.tail, toSell-b.unsold, IncompleteMatchedBuy(b.buy, s) :: imbs)
-        } else { // b.unsold > toSell
-          // only some of the buy shares are needed to satisfy the sell
-          val s = Shares((toSell * m.toDouble).round.toInt, m)
-          val reducedShares: Double = b.unsold - toSell
-          // sell is completed and the next buy is only partially completed
-          (toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares)), IncompleteMatchedBuy(b.buy, s) :: imbs)
-        }
-      }
-    }
-    val (toBuys: Vector[BuyReadyToSell], imbsReversed: List[IncompleteMatchedBuy]) =
-      assignBuys(buys, sell.shares.atMult(Fraction.one), Nil)
-
-    val mbs = imbsReversed.map{ imb => completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
-    val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
-    val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalBuyCommission }
-    (MatchedSell(sell, net.truncate, capitalGain.truncate, mbs), toBuys)
-  }
-
-  /**
-    * Now that buys are matched with sells, calculate some values needed by the report.
-    *
-    * @param sell the Sell Trade
-    * @param buy one of the (possibly many) Buy Trades matched with the sell
-    * @param sold the number shares from the buy used to satisfy the sell. A single buy may be satisfied with multiple sells.
-    * @return
-    */
-  private[stocknotes] def completeMatchedBuy(sell: Sell, buy: Buy, sold: Shares): MatchedBuy = {
-
-    // we need to convert the buy price to the sell multiple
-    val price = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
-
-    // the proportion of sold shares in this buy batch vs total shares in this buy batch
-    // If all shares in this batch are sold then this is 1.0
-    val proportionBuy: Double = sold.atMult(sell.shares.multiple) / buy.shares.atMult(sell.shares.multiple)
-
-    // the proportion of sold shares in this buy batch vs the total shares in the sell batch
-    val proportionSell: Double = sold.atMult(sell.shares.multiple) / sell.shares.atMult(sell.shares.multiple)
-
-    val proportionalSellCommission: Currency = Currency.fromDouble(sell.commission.toDouble * proportionSell)
-    val proportionalBuyCommission:  Currency = Currency.fromDouble(buy .commission.toDouble * proportionBuy)
-
-    // we can use non-multiple share count since this is the shares at the time of the buy
-    val totalBuyCost = buy.shares.shares * buy.price.toDouble
-    val proportionalBuyCost: Currency = Currency.fromDouble(totalBuyCost * proportionBuy)
-
-    val diff: Double = sell.date.decimalYear - buy.date.decimalYear
-    val ltcg: Boolean = diff >= 1.0
-
-    // include commissions in annual yield calc
-    val proportionalSellGross: Currency = Currency.fromDouble(sell.gross.toDouble * proportionSell)
-    val ay: Double = annualYield(
-        proportionalBuyCost   + proportionalBuyCommission, 
-        proportionalSellGross - proportionalSellCommission, 
-        diff)
-
-    MatchedBuy(buy, sold, price, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
-  }
-
-  private[stocknotes] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =
-    // don't explode if a purchase was made today
-    if (end==start || decimalYearsDifference<0.001 || start==Currency.zero) return 0.0
-    else Math.pow(end.toDouble / start.toDouble, 1.0 / decimalYearsDifference) - 1.0
 }
