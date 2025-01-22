@@ -14,7 +14,7 @@ import scala.annotation.tailrec
  * @param capitalGain net - sell commissions - buy commissions proportional to the shares sold from the buy batch
  * @param mbs A list of Matched buys that add up to this sale from oldest to newest.
  */
-case class MatchedSell(
+final case class MatchedSell(
   sell: Sell,
   net: Currency,
   capitalGain: Currency,
@@ -28,7 +28,7 @@ object MatchedSell {
     * @param buys
     * @return The MatchedSell and BuyReadyToSells that have yet to be matched with sells.
     */
-  private[stocknotes] def parseMatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
+  private[stocknotes] def sell2MatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
 
     // Unfortunately it's not possible to do this calculation with integer share values plus multiples.
     // We need to use lossy Doubles. This is highlighted in the test case "parseCompanyDateRange fractional matching"
@@ -72,7 +72,7 @@ object MatchedSell {
     val (toBuys: Vector[BuyReadyToSell], imbsReversed: List[IncompleteMatchedBuy]) =
       assignBuys(buys, sell.shares.atMult(Fraction.one), Nil)
 
-    val mbs = imbsReversed.map{ imb => MatchedBuy.completeMatchedBuy(sell, imb.buy, imb.sold) }.reverse
+    val mbs = imbsReversed.map{ imb => MatchedBuy(sell, imb.buy, imb.sold) }.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
     val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalBuyCommission }
     (MatchedSell(sell, net.truncate, capitalGain.truncate, mbs), toBuys)

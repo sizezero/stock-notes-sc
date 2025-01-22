@@ -294,7 +294,7 @@ class TestGain extends munit.FunSuite {
       case _ => Nil
     }}.toVector
 
-    val (ms, brss2) = MatchedSell.parseMatchedSell(s1, brss)
+    val (ms, brss2) = MatchedSell.sell2MatchedSell(s1, brss)
 
     // I didn't test the annual yield, just copied it from the output
     val ms2 = List[MatchedBuy](

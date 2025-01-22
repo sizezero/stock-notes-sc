@@ -202,7 +202,7 @@ object StockReport {
           case buy: Buy  => (brss :+ BuyReadyToSell(buy), mss)
           case sell: Sell => {
             // even if we the sell isn't in our date range, we have to process it so it will consume earlier buys
-            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = MatchedSell.parseMatchedSell(sell, brss)
+            val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = MatchedSell.sell2MatchedSell(sell, brss)
             if (sell.date>=start && sell.date<=end) (unconsumed, ms :: mss)
             else                                    (unconsumed,       mss)
           }
@@ -239,6 +239,5 @@ object StockReport {
       Some(StockReport(stock, mss, net.truncate, capGains.truncate, ltcgPercentage))
     }
   }
-
 
 }

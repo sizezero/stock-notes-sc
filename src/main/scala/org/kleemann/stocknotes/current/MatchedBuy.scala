@@ -30,14 +30,14 @@ final case class MatchedBuy(
 
 object MatchedBuy {
   /**
-    * Now that buys are matched with sells, calculate some values needed by the report.
+    * Calculate some values needed by MatchedBuy
     *
     * @param sell the Sell Trade
     * @param buy one of the (possibly many) Buy Trades matched with the sell
     * @param sold the number shares from the buy used to satisfy the sell. A single buy may be satisfied with multiple sells.
     * @return
     */
-  private[stocknotes] def completeMatchedBuy(sell: Sell, buy: Buy, sold: Shares): MatchedBuy = {
+  def apply(sell: Sell, buy: Buy, sold: Shares) = {
 
     // we need to convert the buy price to the sell multiple
     val price = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
@@ -66,7 +66,7 @@ object MatchedBuy {
         proportionalSellGross - proportionalSellCommission, 
         diff)
 
-    MatchedBuy(buy, sold, price, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
+    new MatchedBuy(buy, sold, price, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
   }
 
   private[stocknotes] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =
