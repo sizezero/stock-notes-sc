@@ -1,9 +1,9 @@
 package org.kleemann.stocknotes.command
 
-import org.kleemann.stocknotes.report.{Gain => ReportGain}
+import org.kleemann.stocknotes.current.{Gain => ReportGain}
 import org.kleemann.stocknotes.{Config, Currency, Date, Quote, Ticker}
 import org.kleemann.stocknotes.stock.{CashAccount, Stock}
-import org.kleemann.stocknotes.report.Gain.StockReport
+import org.kleemann.stocknotes.current.Gain.StockReport
 
 object Current extends Command {
 

@@ -1,4 +1,4 @@
-package org.kleemann.stocknotes.report
+package org.kleemann.stocknotes.current
 
 import org.kleemann.stocknotes.{Currency, Date, Fraction, Quote, Ticker}
 import org.kleemann.stocknotes.stock.{CashAccount, Shares, Stock}
