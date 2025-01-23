@@ -23,7 +23,7 @@ final case class Currency private(milliPennies: Long) extends Ordered[Currency] 
     /**
       * @return the amount in dollars
       */
-    def toDouble: Double = milliPennies.toDouble / 100000.0
+    def toDouble: Double = milliPennies.toDouble / 100_000.0
 
     def +(that: Currency): Currency = Currency(milliPennies + that.milliPennies)
 
@@ -41,7 +41,7 @@ final case class Currency private(milliPennies: Long) extends Ordered[Currency] 
       */
     override def toString: String = {
         var out = List[Char]()
-        val pennies: Long = milliPennies / 1000
+        val pennies: Long = milliPennies / 1_000
         if (pennies < 0) out = ')' :: out
         val pUnpadded = pennies.abs.toString
         // prefix with zeros if less than length 3
@@ -84,7 +84,7 @@ final case class Currency private(milliPennies: Long) extends Ordered[Currency] 
       *
       * @return millipennies that are a multiple of a thousand. E.g.: whole pennies.
       */
-    def truncate: Currency = new Currency(milliPennies - (milliPennies % 1000))
+    def truncate: Currency = new Currency(milliPennies - (milliPennies % 1_000))
 }
 
 object Currency {
