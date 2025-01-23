@@ -28,7 +28,7 @@ object MatchedSell {
     * @param buys
     * @return The MatchedSell and BuyReadyToSells that have yet to be matched with sells.
     */
-  private[stocknotes] def sell2MatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
+  def sell2MatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {
 
     // Unfortunately it's not possible to do this calculation with integer share values plus multiples.
     // We need to use lossy Doubles. This is highlighted in the test case "parseCompanyDateRange fractional matching"

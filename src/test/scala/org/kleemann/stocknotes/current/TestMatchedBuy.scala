@@ -1,9 +1,6 @@
 package org.kleemann.stocknotes.current
 
-import _root_.org.kleemann.stocknotes.{Currency, Date, Fraction, Quote, Ticker}
-import _root_.org.kleemann.stocknotes.stock.{Shares, Stock}
-import _root_.org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
-import _root_.org.kleemann.stocknotes.current.{StockReport, MatchedSell, MatchedBuy, BuyReadyToSell}
+import _root_.org.kleemann.stocknotes.{Currency}
 
 class TestMatchedBuy extends munit.FunSuite {
 

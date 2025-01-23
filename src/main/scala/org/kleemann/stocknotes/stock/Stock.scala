@@ -244,7 +244,7 @@ object Stock {
         entries: List[Entry] = Nil, // reverse order
         trades: List[Trade] = Nil,  // reverse order
         buyWatch: BuyWatch = BuyWatch.none, 
-        sellWatch: SellWatch= SellWatch.none,
+        sellWatch: SellWatch = SellWatch.none,
 
         // attributes needed while iterating
         date: Date = Date.earliest,

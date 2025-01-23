@@ -161,7 +161,7 @@ object StockReport {
     }
   }
 
-  private[stocknotes] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
+  private[current] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
     // we only want trades that are less than today; this is really just a problem for testing
     var trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
@@ -190,7 +190,7 @@ object StockReport {
     }
   }
 
-  private[stocknotes] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
+  private[current] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
 
     // When a buy is encountered we add it to brss which is our accumulating list of BuyReadyToSells.
     // When a sell is encountered, the accumulated buy list is passed to the sell parser which may consume some of the buys

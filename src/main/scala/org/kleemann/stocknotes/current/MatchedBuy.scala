@@ -42,11 +42,11 @@ object MatchedBuy {
     // we need to convert the buy price to the sell multiple
     val price = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
 
-    // the proportion of sold shares in this buy batch vs total shares in this buy batch
-    // If all shares in this batch are sold then this is 1.0
+    // the proportion of sold shares in this sell batch vs total shares in this sell batch
+    // If all shares in the buy equals all the sold shares then this is 1.0
     val proportionBuy: Double = sold.atMult(sell.shares.multiple) / buy.shares.atMult(sell.shares.multiple)
 
-    // the proportion of sold shares in this buy batch vs the total shares in the sell batch
+    // the proportion of sold shares in this sell batch vs the total shares in the sell
     val proportionSell: Double = sold.atMult(sell.shares.multiple) / sell.shares.atMult(sell.shares.multiple)
 
     val proportionalSellCommission: Currency = Currency.fromDouble(sell.commission.toDouble * proportionSell)
@@ -69,8 +69,8 @@ object MatchedBuy {
     new MatchedBuy(buy, sold, price, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
   }
 
-  private[stocknotes] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =
-    // don't explode if a purchase was made today
+  private[current] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =
+    // there are several undefined cases where we just return zero
     if (end==start || decimalYearsDifference<0.001 || start==Currency.zero) return 0.0
     else Math.pow(end.toDouble / start.toDouble, 1.0 / decimalYearsDifference) - 1.0
 
