@@ -158,11 +158,10 @@ object Currency {
     def parse(s: String): Option[Currency] = {
       // scala RE matching doesn like optional matches so we check the sign outside the RE
       val (trimmed, sign) =
-        if (s.length>0) {
-          if      (s(0)=='+') (s.tail,  1)
-          else if (s(0)=='-') (s.tail, -1)
-          else                (s,       1)
-        } else                (s,       1)
+        if      (s.length==0) (s,       1)
+        else if (s(0)=='+')   (s.tail,  1)
+        else if (s(0)=='-')   (s.tail, -1)
+        else                  (s,       1)
 
       trimmed match {
         case numberPattern(n) => Some(new Currency(sign * n.toLong * 100_000L))
