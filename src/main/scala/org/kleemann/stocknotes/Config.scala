@@ -1,7 +1,5 @@
 package org.kleemann.stocknotes
 
-import sttp.client4.quick.*
-import sttp.model.Uri
 import upickle.default.*
 
 /** An object that encapsulates the user configuration for this program.
