@@ -82,8 +82,6 @@ object Quote {
     loop(g.toSeq, 0, Nil, Nil)
   }
 
-  private val datePattern = """^(\d{2})/(\d{2})/(\d{4})$""".r
-
   /**
     * Parses a line of our dowloaded quote CSV file.
     * 
