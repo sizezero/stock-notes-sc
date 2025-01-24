@@ -164,11 +164,10 @@ public static String executePost(String targetURL, String urlParameters) {
   }
 
   /**
-    * We either return an error or a decimal stock price.
+    * The purpose of this function is use the remote service finnhub to lookup the price of a ticker symbol.
     * 
-    * Currying is used so that we can pass this function to Query.save() not pollute the 
-    * signature with the access key and httpGet implementation which is not 
-    * in Query's domain.
+    * The function requires both finnhub authentication as well as an httpGet implementation so currying is used
+    * to provide this functionality and create a simpler function that just needs a Ticker argument.
     *
     * @param finnhubAccessKey The access key that allows us to auth agains finnhub web services.
     * @param httpGet An implementation that lets us connect to a webservice. Takes a base url and query paramaters and returns the body on success.
