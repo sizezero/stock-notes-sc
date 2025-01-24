@@ -28,7 +28,7 @@ private[calc] sealed trait Processor(re: Regex) {
          * If the attribute wasn't specified on input, then we attempt to generate it.
          * We will likely use the other values in the passed Attribute to generate this value.
          * If the value cannot be generated, then the original Attributes is returned.
-         * The method will only overrite the attribute if it is not already defined.
+         * The method will only generate the attribute if it is not already defined.
          */
     def generate(att: Attributes): Attributes
 
