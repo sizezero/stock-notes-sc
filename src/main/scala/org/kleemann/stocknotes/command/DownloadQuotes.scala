@@ -31,7 +31,11 @@ object DownloadQuotes extends Command {
     val delay: Double = (delayInSeconds/60.0) * tickers.length
     println(f"The download is estimated to take ${delay}%2.2f minutes.")
 
-    // we use the crusty Java 8 httpGet because we want this program to run
+    // Use Quote.save to write out the peristent file of stock prices.
+    // We are passing the curried function downloadSingleQuoteFromFinhub configured
+    // so that it now only requires a Ticker argument.
+    // Quote.save() does not need to care about auth or httpGet implementation.
+    // We use the crusty Java 8 httpGet because we want this program to run
     // on dreamhost which only supports Java 8
     Quote.save(tickers, config, downloadSingleQuoteFromFinnhub(config.finnhubAccessKey, httpGetViaJava8))
 
