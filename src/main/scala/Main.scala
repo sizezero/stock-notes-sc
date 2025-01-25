@@ -30,7 +30,7 @@ def funcMain(args: Seq[String]): Option[String] = {
 @main def main(args: String*): Unit = {
   
   // make sure the config file exists and load it
-  val config = Config.load()
+  Config.load()
 
   funcMain(args) match {
     case Some(out) => {
