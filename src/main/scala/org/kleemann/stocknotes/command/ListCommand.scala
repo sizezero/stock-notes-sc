@@ -3,9 +3,12 @@ package org.kleemann.stocknotes.command
 import org.kleemann.stocknotes.{Config, Date}
 import org.kleemann.stocknotes.stock.{Stock}
 
-object Oldest extends Command {
+/**
+  * Named ListCommand instead of List to avoid conflicts with the standard library data structure.
+  */
+object ListCommand extends Command {
 
-  val help = s"""oldest [-r] [-t] [-k <keyword>]
+  val help = s"""list [-r] [-t] [-k <keyword>]
   |  -r reverse the order
   |  -t display ticker only
   |  -k restrict the list to the specified keyword""".stripMargin

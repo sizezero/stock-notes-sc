@@ -24,7 +24,7 @@ object Command {
     "calc"            -> Calc,
     "calc-template"   -> CalcTemplate,
     "generate-www"    -> GenerateWww,
-    "oldest"          -> Oldest
+    "list"            -> ListCommand
   )
 
 }
