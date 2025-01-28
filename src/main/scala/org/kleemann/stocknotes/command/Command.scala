@@ -24,6 +24,7 @@ object Command {
     "calc"            -> Calc,
     "calc-template"   -> CalcTemplate,
     "generate-www"    -> GenerateWww,
+    "keywords"        -> Keywords,
     "list"            -> ListCommand
   )
 
