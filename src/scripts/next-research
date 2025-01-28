@@ -8,7 +8,7 @@ function list-companies-by-keyword {
     echo "*** $1 ***"
     echo
 
-    $D/src/scripts/stock-notes oldest $2 | ( head -5 ; ( dd of=/dev/null &> /dev/null ) )
+    $D/src/scripts/stock-notes list $2 | ( head -5 ; ( dd of=/dev/null &> /dev/null ) )
 }
 
 list-companies-by-keyword New "-k new"
