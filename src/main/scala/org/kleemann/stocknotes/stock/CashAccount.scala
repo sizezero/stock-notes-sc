@@ -24,19 +24,21 @@ object CashAccount {
       * @return
       */
     def load(config: Config): List[CashAccount] =
-      os.list(config.cashDir).flatMap { f =>
-        if (f.ext != "txt") Nil
-        else {
-          val accountName = f.baseName
-          load(accountName, f.toString(), os.read.lines.stream(f)) match {
-            case Right(ca) => List(ca)
-            case Left(error) => {
-              println(error)
-              sys.exit(1)
+      if (os.isDir(config.cashDir)) {
+        os.list(config.cashDir).flatMap { f =>
+          if (f.ext != "txt") Nil
+          else {
+            val accountName = f.baseName
+            load(accountName, f.toString(), os.read.lines.stream(f)) match {
+              case Right(ca) => List(ca)
+              case Left(error) => {
+                println(error)
+                sys.exit(1)
+              }
             }
           }
-        }
-      }.toList
+        }.toList
+      } else Nil
 
     private val balancePattern = """^BALANCE:\s*\$([\d,]+)\.(\d{2})$""".r
 
