@@ -24,7 +24,8 @@ object CashAccount {
       * @return
       */
     def load(config: Config): List[CashAccount] =
-      if (os.isDir(config.cashDir)) {
+      if (!os.isDir(config.cashDir)) Nil
+      else {
         os.list(config.cashDir).flatMap { f =>
           if (f.ext != "txt") Nil
           else {
@@ -38,7 +39,7 @@ object CashAccount {
             }
           }
         }.toList
-      } else Nil
+      }
 
     private val balancePattern = """^BALANCE:\s*\$([\d,]+)\.(\d{2})$""".r
 
