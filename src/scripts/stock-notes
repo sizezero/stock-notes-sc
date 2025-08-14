@@ -3,4 +3,4 @@
 SD=$(dirname "$(readlink -f "$0")")
 D="$SD/../.."
 
-java -jar "$D/target/scala-3.3.1/stock-notes-sc-assembly-0.1.0-SNAPSHOT.jar" "$@"
+java -jar "$D/target/scala-3.3.6/stock-notes-sc-assembly-0.1.0-SNAPSHOT.jar" "$@"
