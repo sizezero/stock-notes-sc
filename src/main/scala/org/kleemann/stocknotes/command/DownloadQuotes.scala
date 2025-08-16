@@ -18,30 +18,6 @@ object DownloadQuotes extends Command {
 
   private val delayInSeconds = 2
 
-  private def downloadQuotes(): Unit = {
-
-    val config = Config.load()
-
-    // we need quotes for stocks we either own or that have active watches
-    val tickers: List[Ticker] =
-      for (stock <- Stock.load(config)
-        if (stock.keywords contains "owned") || (stock.keywords contains "watching"))
-      yield stock.ticker
-
-    val delay: Double = (delayInSeconds/60.0) * tickers.length
-    println(f"The download is estimated to take ${delay}%2.2f minutes.")
-
-    // Use Quote.save to write out the peristent file of stock prices.
-    // We are passing the curried function downloadSingleQuoteFromFinhub configured
-    // so that it now only requires a Ticker argument.
-    // Quote.save() does not need to care about auth or httpGet implementation.
-    // We use the crusty Java 8 httpGet because we want this program to run
-    // on dreamhost which only supports Java 8
-    Quote.save(tickers, config, downloadSingleQuoteFromFinnhub(config.finnhubAccessKey, httpGetViaJava8))
-
-    println("Download Complete")
-  }
-
   /**
     * GET the given url and return the body.
     * 
@@ -125,7 +101,7 @@ public static String executePost(String targetURL, String urlParameters) {
     * @return The response body if status code was 200 or None if there was an error.
     */
   private def httpGetViaJava8(baseUrl: String, queryParams: Map[String, String]): Option[String] = {
-    var connection: java.net.HttpURLConnection  = null
+    var connection: java.net.HttpURLConnection = null
     //Create connection
     try {
       val urlString = baseUrl + "?" + queryParams.map{ (key, value) => f"$key=$value" }.mkString("&")
@@ -133,10 +109,8 @@ public static String executePost(String targetURL, String urlParameters) {
       connection = url.openConnection().asInstanceOf[java.net.HttpURLConnection]; // cast to (HttpURLConnection)
       connection.setRequestProperty("Content-Type", 
         "application/x-www-form-urlencoded");
-      connection.setRequestProperty("Content-Type",
-                                       "application/json")
-      connection.setRequestProperty("Accept",
-                                       "application/json")
+      connection.setRequestProperty("Content-Type", "application/json")
+      connection.setRequestProperty("Accept", "application/json")
       connection.setUseCaches(false)
       connection.setDoOutput(true)
 
@@ -210,6 +184,32 @@ public static String executePost(String targetURL, String urlParameters) {
         }
       }
     }
+  }
+
+  private def downloadQuotes(): Unit = {
+
+    val config = Config.load()
+
+    // we need quotes for stocks we either own or that have active watches
+    val tickers: List[Ticker] =
+      for (stock <- Stock.load(config)
+        if (stock.keywords contains "owned") || (stock.keywords contains "watching"))
+      yield stock.ticker
+
+    val delay: Double = (delayInSeconds/60.0) * tickers.length
+    println(f"The download is estimated to take ${delay}%2.2f minutes.")
+
+    // Use Quote.save to write out the peristent file of stock prices.
+    // We are passing the curried function downloadSingleQuoteFromFinhub configured
+    // so that it now only requires a Ticker argument.
+    // Quote.save() does not need to care about auth or httpGet implementation.
+    // We use the crusty Java 8 httpGet because we want this program to run
+    // on dreamhost which only supports Java 8
+    val downloadSingleQuote = downloadSingleQuoteFromFinnhub(config.finnhubAccessKey, httpGetViaJava8)
+
+    Quote.save(tickers, config, downloadSingleQuote)
+
+    println("Download Complete")
   }
 
   val help = Some(s"""
