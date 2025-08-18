@@ -17,7 +17,7 @@ object Historical extends Command {
     if (args.length != 1) Left(help)
     else {
       val arg: String = args(0)
-      if (args(0)==":") Right((Date.earliest, Date.latest))
+      if (arg==":") Right((Date.earliest, Date.latest))
       else arg.match {
         case yearPattern(y)        => Right((Date.earliest( y.toInt).get, Date.latest( y.toInt).get))
         case twoYearPattern(y1,y2) => Right((Date.earliest(y1.toInt).get, Date.latest(y2.toInt).get))
