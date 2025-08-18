@@ -6,7 +6,7 @@ import org.kleemann.stocknotes.current.StockReport
 
 object Historical extends Command {
 
-  val help = s"""historical <year>[:<year>]
+  val help = s"""historical ( : | <year> | <year1>:<year2> )
   |""".stripMargin
 
   private[command] def parse(args: IndexedSeq[String]): Either[String, (Date, Date)] = {
