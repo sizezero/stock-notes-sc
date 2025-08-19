@@ -8,7 +8,7 @@ object Historical extends Command {
 
   val help = s"""historical ( all | <year> | <year1>:<year2> )
                 |    ${Date.earliest.year} <= <year> <= ${Date.latest.year}
-  |""".stripMargin
+                |""".stripMargin
 
   private[command] def parse(args: IndexedSeq[String]): Either[String, (Date, Date)] = {
     // TODO: figure out why these can't be dropped in place
