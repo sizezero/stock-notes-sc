@@ -24,7 +24,7 @@ object Historical extends Command {
       val arg: String = args(0)
       if (arg=="all") Right((Date.earliest, Date.latest))
       else arg.match {
-        case yearPattern(y)        => unwrapDates(Date.earliest(y.toInt), Date.latest( y.toInt))
+        case yearPattern(y)        => unwrapDates(Date.earliest( y.toInt), Date.latest( y.toInt))
         case twoYearPattern(y1,y2) => unwrapDates(Date.earliest(y1.toInt), Date.latest(y2.toInt))
         case _                     => Left(help)
       }
