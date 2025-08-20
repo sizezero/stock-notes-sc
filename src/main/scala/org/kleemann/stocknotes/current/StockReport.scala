@@ -31,7 +31,7 @@ object StockReport {
     * @param cash the loaded cash accounts
     * @param quotes the loaded quotes
     * @param commission the additional cost for each sell block
-    * @param today used for testing
+    * @param today normally set to Date.today, other values are for testing
     * @return a list of Company objects which, with its contained MatchedSells and MatchedBuys
     */
   def createCurrent(onlyShow: Option[Ticker], stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Currency], commission: Currency, today: Date): List[StockReport] = {
@@ -44,10 +44,8 @@ object StockReport {
 
     val srs: List[StockReport] = stocks2.flatMap{ stock => {
       val price =
-        if (quotes contains stock.ticker)
-          quotes.get(stock.ticker).get
-        else
-          Currency.zero
+        if (quotes contains stock.ticker) quotes.get(stock.ticker).get
+        else                              Currency.zero
       parseCompanyCurrentValue(stock, price, commission, today)
     }}.sortBy{ _.net }
 
@@ -163,7 +161,7 @@ object StockReport {
 
   private[current] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
     // we only want trades that are less than today; this is really just a problem for testing
-    var trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
+    val trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
 
     // We need to find all currently owned shares of the company.
     // Walk through each trade, accumulating the share count and multiple.
@@ -190,6 +188,15 @@ object StockReport {
     }
   }
 
+  /**
+    * This is the beginning of the common code of both the current report and the historical report.
+    * Iterate through sells and match them with buys.
+    *
+    * @param stock the stock to analyze
+    * @param start the earliest sell
+    * @param end the latest sell
+    * @return
+    */
   private[current] def parseCompanyDateRange(stock: Stock, start: Date, end: Date): Option[StockReport] = {
 
     // When a buy is encountered we add it to brss which is our accumulating list of BuyReadyToSells.
@@ -201,7 +208,7 @@ object StockReport {
         trade match {
           case buy: Buy  => (brss :+ BuyReadyToSell(buy), mss)
           case sell: Sell => {
-            // even if we the sell isn't in our date range, we have to process it so it will consume earlier buys
+            // even if the sell isn't in our date range, we have to process it so it will consume earlier buys
             val (ms: MatchedSell, unconsumed: Vector[BuyReadyToSell]) = MatchedSell.sell2MatchedSell(sell, brss)
             if (sell.date>=start && sell.date<=end) (unconsumed, ms :: mss)
             else                                    (unconsumed,       mss)
@@ -215,10 +222,11 @@ object StockReport {
     if (mss.isEmpty) None
     else {
 
-      // the sum of each Matched sell, only count sell commission, not buy commission or buys cost
+      // for net sum, only count sell commission, not buy commission or buys cost
       // this is the cash you get when you sell
       val net: Currency = mss.foldLeft(Currency.zero){ (acc, ms) => acc + ms.sell.gross - ms.sell.commission }
 
+      // capital gains is what you actually earned
       // gross of each sell - sell commission - cost - buy commisions proportional to sold shares
       val capGains: Currency = mss.foldLeft(Currency.zero){ (acc: Currency, ms: MatchedSell) =>
         acc + ms.sell.gross - ms.sell.commission - ms.mbs.foldLeft(Currency.zero) { (acc2, mb) =>
