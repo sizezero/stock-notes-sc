@@ -2,7 +2,7 @@ package org.kleemann.stocknotes.command
 
 import org.kleemann.stocknotes.{Config, Date, Ticker}
 import org.kleemann.stocknotes.stock.{Stock}
-import org.kleemann.stocknotes.current.StockReport
+import org.kleemann.stocknotes.current.{StockReport, createHistorical, render }
 
 object Historical extends Command {
 
@@ -38,8 +38,8 @@ object Historical extends Command {
     val config = Config.load()
     val ss: List[Stock] = Stock.load(config)
 
-    val srs: List[StockReport] = StockReport.createHistorical(start, end, ss)
-    print(StockReport.render(srs))
+    val srs: List[StockReport] = createHistorical(start, end, ss)
+    print(render(srs))
   }
 
   override def command(args: IndexedSeq[String]): Option[String] = {
