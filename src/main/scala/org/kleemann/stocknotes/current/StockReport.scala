@@ -8,6 +8,30 @@ import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 /**
     * The top level report for the Gain Report is a list of StockReport objects.
     *
+    * The data model has StockReport wrapping a stock object and adding more calculated attributes.
+    * Similarly MatchedSell wraps Sell and MatchedBuy Wraps Buy.
+    * A StockReport can have one or more MatchedSells.
+    * A MatchedSell can have one more more MatchedBuys.
+    *
+    * ┌───────────────┐
+    * │               │  ┌────────┐
+    * │  StockReport  ┼──► Stock  │
+    * │               │1 └────────┘
+    * └───────┬───────┘
+    *         │ many
+    * ┌───────▼───────┐
+    * │               │  ┌──────┐
+    * │  MatchedSell  ┼──► Sell │
+    * │               │1 └──────┘
+    * └───────┬───────┘
+    *         │ many
+    *         │
+    * ┌───────▼─────┐
+    * │             │   ┌─────┐
+    * │  MatchedBuy ┼───► Buy │
+    * │             │ 1 └─────┘
+    * └─────────────┘
+    *
     * @param stock The underlying stock data from the log directory.
     * @param mss The set of matched sells that have occurred. For current data, there is only one matched sell.
     * @param net The total value of all sales minus the sell commission
