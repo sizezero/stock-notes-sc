@@ -16,16 +16,16 @@ import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
   * A MatchedSell can have one more more MatchedBuys.
   *
   * ┌───────────────┐
-  * │  StockReport  │  ┌────────┐
-  * │  * $net       ┼──► Stock  │
-  * │  * $cap gains │1 └────────┘
+  * │  StockReport  │   ┌────────┐
+  * │  * $net       ┼───► Stock  │
+  * │  * $cap gains │ 1 └────────┘
   * │  * %LTCG      │
   * └───────┬───────┘
   *         │ many
   * ┌───────▼───────┐
-  * │  MatchedSell  │  ┌──────┐
-  * │  * $net       ┼──► Sell │
-  * │  * $cap gains │1 └──────┘
+  * │  MatchedSell  │   ┌──────┐
+  * │  * $net       ┼───► Sell │
+  * │  * $cap gains │ 1 └──────┘
   * └───────┬───────┘
   *         │ many
   * ┌───────▼─────────────┐
