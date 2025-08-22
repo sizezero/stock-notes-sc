@@ -3,7 +3,7 @@ package org.kleemann.stocknotes.current
 import _root_.org.kleemann.stocknotes.{Currency, Date, Fraction, Quote, Ticker}
 import _root_.org.kleemann.stocknotes.stock.{Shares, Stock}
 import _root_.org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
-import _root_.org.kleemann.stocknotes.current.{StockReport, MatchedSell, MatchedBuy, BuyReadyToSell}
+import _root_.org.kleemann.stocknotes.current.{StockReport, MatchedSell, MatchedBuy, BuyReadyToSell, createCurrent}
 
 class TestStockReport extends munit.FunSuite {
 
@@ -61,7 +61,7 @@ class TestStockReport extends munit.FunSuite {
     val stocks = List(stock1, stock2)
     val quotes = Map( t1 -> Currency(8,0), t2 -> Currency(9,0))
 
-    val srs = StockReport.createCurrent(None, stocks, List(), quotes, commission, today)
+    val srs = createCurrent(None, stocks, List(), quotes, commission, today)
 
     assertEquals(srs.length, 2)
   }

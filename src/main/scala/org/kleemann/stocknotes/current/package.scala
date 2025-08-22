@@ -28,7 +28,6 @@ import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
   * │  * $cap gains │1 └──────┘
   * └───────┬───────┘
   *         │ many
-  *         │
   * ┌───────▼─────────────┐
   * │  MatchedBuy         │   ┌─────┐
   * │  * shares sold      ┼───► Buy │
@@ -43,15 +42,15 @@ import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 package object current {
 
   /**
-    * Creates a report by selling all currently owned stocks.
+    * Creates a report by pretending to sell all currently owned stocks and reporting the cash value.
     *
-    * @param onlyShow if defined then only show this one ticker, if specified, ticker must appear in stocks
+    * @param onlyShow if defined then only show this one ticker, otherwise show all stocks that have unsold shares
     * @param stocks the loaded stock logs
     * @param cash the loaded cash accounts
     * @param quotes the loaded quotes
     * @param commission the additional cost for each sell block
     * @param today normally set to Date.today, other values are for testing
-    * @return a list of Company objects which, with its contained MatchedSells and MatchedBuys
+    * @return a list of StockReport objects that can be used for reporting
     */
   def createCurrent(onlyShow: Option[Ticker], stocks: List[Stock], cash: List[CashAccount], quotes: Map[Ticker, Currency], commission: Currency, today: Date): List[StockReport] = {
 
@@ -81,17 +80,17 @@ package object current {
   /**
     * Show the sold stocks in the year range with gains and losses.
     *
-    * @param start the first year inclusive
-    * @param end the last year inclusive
+    * @param start the first date of possible sales inclusive
+    * @param end the last date of possible sales inclusive
     * @param stocks the loaded stock logs
-    * @return a list of Company objects which, with its contained MatchedSells and MatchedBuys
+    * @return a list of StockReport objects that can be used for reporting
     */
   def createHistorical(start: Date, end: Date, stocks: List[Stock]): List[StockReport] =
     // ignore stocks that don't have at least one sell in the date range
     stocks.filter{ stock =>
       stock.trades.exists{
         case Sell(date, _, _, _) => start <= date && end >= date
-        case _ => false
+        case _                   => false
       }
     }.flatMap{ StockReport.parseCompanyDateRange(_, start, end) }
 

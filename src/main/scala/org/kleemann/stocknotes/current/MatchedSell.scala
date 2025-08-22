@@ -25,7 +25,8 @@ object MatchedSell {
     * Associates all the shares of the given sell with some of the given buys.
     * We consume from the head of the buys since those are the oldest.
     * 
-    * @param buys
+    * @param sell the shares to sell
+    * @param buys the list of buys from which we can consume
     * @return The MatchedSell and BuyReadyToSells that have yet to be matched with sells.
     */
   def sell2MatchedSell(sell: Sell, buys: Vector[BuyReadyToSell]): (MatchedSell, Vector[BuyReadyToSell]) = {

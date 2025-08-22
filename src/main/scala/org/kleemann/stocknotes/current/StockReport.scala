@@ -50,7 +50,7 @@ object StockReport {
           val sharesAtNewMultiple = accShares.add(Shares.zero, newMultiple)
           (newMultiple, sharesAtNewMultiple)
         }
-    }}
+      }}
 
     if (currentOwnedShares == Shares.zero) None // nothing to sell so no report
     else {
