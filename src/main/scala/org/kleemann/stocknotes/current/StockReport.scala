@@ -35,7 +35,7 @@ object StockReport {
     */
   private[current] def parseCompanyCurrentValue(stock: Stock, price: Currency, commission: Currency, today: Date): Option[StockReport] = {
     // we only want trades that are less than today; this is really just a problem for testing
-    val trades = stock.trades.filter{ (t: Trade) => t.getDate() <= today }
+    val trades = stock.trades.filter{ _.getDate() <= today }
 
     // We need to find all currently owned shares of the company.
     // Walk through each trade, accumulating the share count and multiple.
