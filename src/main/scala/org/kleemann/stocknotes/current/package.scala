@@ -136,8 +136,7 @@ package object current {
               percentString(mb.annualYield))
             sb ++= "\n"
           }
-          // TODO: move this into matched buy so we can test it
-          val totalCost: Double = ms.mbs.foldLeft(0.0){ (c, mb) => c + mb.proportionalCost.toDouble }
+          val totalCost: Double = ms.mbs.foldLeft(0.0){ _ + _.proportionalCost.toDouble }
           val weightedPrice = Currency.fromDouble(totalCost / s.shares.atMult(m))
           sb ++= String.format(itemFmt, 
             "", 

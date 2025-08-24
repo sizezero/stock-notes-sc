@@ -74,8 +74,8 @@ object MatchedSell {
       assignBuys(buys, sell.shares.atMult(Fraction.one), Nil)
 
     val mbs = imbsReversed.map{ imb => MatchedBuy(sell, imb.buy, imb.sold) }.reverse
-    val net = sell.gross - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalCost }
-    val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ (acc, mb) => acc + mb.proportionalBuyCommission }
+    val net = sell.gross - mbs.foldLeft(Currency.zero){ _ + _.proportionalCost }
+    val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ _ + _.proportionalBuyCommission }
     (MatchedSell(sell, net.truncate, capitalGain.truncate, mbs), toBuys)
   }
 

@@ -110,12 +110,12 @@ object StockReport {
 
       // percentage of shares that are ltcg vs short
       val m = Fraction.one // all calculations need to be at the same multiple but it doesn't matter which one
-      val ltcgShares: Double = mss.foldLeft(0.0){ (acc, ms) =>
-        acc + ms.mbs.foldLeft(0.0){ (acc, mb) => 
+      val ltcgShares: Double = mss.foldLeft(0.0){
+        _ + _.mbs.foldLeft(0.0){ (acc, mb) =>
           acc + (if (mb.ltcg) mb.sold.atMult(m) else 0.0)
         } 
       }
-      val totalShares: Double = mss.foldLeft(0.0){ (acc, ms) => acc + ms.sell.shares.atMult(m) }
+      val totalShares: Double = mss.foldLeft(0.0){ _ + _.sell.shares.atMult(m) }
       val ltcgPercentage = ltcgShares / totalShares
 
       Some(StockReport(stock, mss, net.truncate, capGains.truncate, ltcgPercentage))
