@@ -11,7 +11,7 @@ object Keywords extends Command {
    """.stripMargin)
 
   private def allKeywords(stocks: List[Stock]): String = {
-    val allKeywords: Set[String] = stocks.foldLeft(Set[String]()){ (acc, stock) => { acc ++ stock.keywords }}
+    val allKeywords: Set[String] = stocks.foldLeft(Set[String]()){ _ ++ _.keywords }
     allKeywords.toList.sorted.mkString("\n")
   }
 

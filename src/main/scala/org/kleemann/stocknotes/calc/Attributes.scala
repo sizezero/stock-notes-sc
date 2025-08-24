@@ -61,7 +61,7 @@ private final case class Attributes(
      * @return A multi-line String.
      */
     override def toString(): String =
-        Processor.all.foldLeft(mutable.StringBuilder()){ (sb, proc) => sb ++= proc.display(this) }.result
+        Processor.all.foldLeft(mutable.StringBuilder()){ _ ++= _.display(this) }.result
 
 }
 

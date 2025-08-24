@@ -40,17 +40,17 @@ object Entry {
     // Traverse each element of the content.
     // Accumulate the reverse result
     val empty = List[String | Trade | Watch]()
-    val contentReversed = content.foldLeft(empty){ case (result, element) => element match {
+    val contentReversed = content.foldLeft(empty){ case (acc, element) => element match {
       case s: String => {
         sb.append(s)
-        result
+        acc
       }
       case other: (Trade | Watch) => {
-        if (sb.isEmpty) other :: result
+        if (sb.isEmpty) other :: acc
         else {
           val combinedString = sb.result()
           sb.clear()
-          other :: combinedString :: result
+          other :: combinedString :: acc
         }
       }
     }}

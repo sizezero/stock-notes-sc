@@ -159,8 +159,8 @@ package object current {
       val itemFmt2 = "%10s%18s%7s%15s%15s"
       sb ++= String.format(itemFmt2, "ticker", "value", "%", "cap gains", "ltcg")
       sb ++= "\n"
-      val totalNet = srs.foldLeft(Currency.zero){ (acc, sr) => acc + sr.net }
-      val totalCapGains = srs.foldLeft(Currency.zero){ (acc, sr) => acc + sr.capGains }
+      val totalNet = srs.foldLeft(Currency.zero){ _ + _.net }
+      val totalCapGains = srs.foldLeft(Currency.zero){ _ + _.capGains }
       srs.foreach{ sr =>
         val percentageValue = sr.net.toDouble / totalNet.toDouble
         sb ++= String.format(itemFmt2, sr.stock.ticker, sr.net, percentString(percentageValue), sr.capGains, percentString(sr.ltcgPercentage))
