@@ -64,6 +64,37 @@ class TestStockReport extends munit.FunSuite {
     val srs = createCurrent(None, stocks, List(), quotes, commission, today)
 
     assertEquals(srs.length, 2)
+
+  }
+
+  test("split msft") {
+
+    val g1: os.Generator[String] = os.Generator.from(
+        """
+        |Jan 1, 1990
+        |TRADE buy 10@$5.00 balance 10 commission 9.99
+        |Jan 1, 1991
+        |TRADE buy 5@$6.00 balance 15 commission 9.99
+        |Jan 1, 1992
+        |TRADE split 2:1 balance 30
+        |Jan 1, 1993
+        |TRADE buy 10@$4.00 balance 40 commission 9.99
+        |""".stripMargin.split("\n")
+    )
+    val t1 = Ticker("MSFT")
+    val e1 = Stock.load(t1, "filename", g1)
+    assert(e1.isRight)
+    val stock1: Stock = e1.right.get
+
+    val today = Date(1997, 1, 1).get
+    val commission = Currency(30, 0)
+    val stocks = List(stock1)
+    val quotes = Map( t1 -> Currency(8,0) )
+
+    val srs = createCurrent(None, stocks, List(), quotes, commission, today)
+    // verify that the sharecount of the pretend sale of MSFT includes splits
+    val sr = srs.head
+    assertEquals(sr.mss.head.sell.shares, Shares(40,Fraction(2,1)))
   }
 
   test("gain aapl") {
