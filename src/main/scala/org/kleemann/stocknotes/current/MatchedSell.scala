@@ -43,37 +43,37 @@ object MatchedSell {
     val m = sell.shares.multiple
 
     // a tempory structure to build our eventual matched buys
-    case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
+    //case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
 
     // Recursively walk through the BuyReadyToSell list consuming buys, and accumulate our incomplete matched buy list
     // until we have satisfied all shares in the sell.
     // Note: both buy and sell shares are converted to Double at multiple Fraction.one.
     @tailrec
-    def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, imbs: List[IncompleteMatchedBuy]): (Vector[BuyReadyToSell], List[IncompleteMatchedBuy]) = {
-      if (toSell <= quantum) (toBuys, imbs) // shares to sell are zero, we are done
+    def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, mbs: List[MatchedBuy]): (Vector[BuyReadyToSell], List[MatchedBuy]) = {
+      if (toSell <= quantum) (toBuys, mbs) // shares to sell are zero, we are done
       else {
         val b: BuyReadyToSell = toBuys.head
         if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
           // the current buy perfectly completes the sell
           val s = Shares((toSell * m.toDouble).round.toInt, m)
-          (toBuys.tail, IncompleteMatchedBuy(b.buy, s) :: imbs)
+          (toBuys.tail, MatchedBuy(sell, b.buy, s) :: mbs)
         } else if (b.unsold < toSell) {
           // we have used up the current buy, but the sell is not done
           val s = Shares((b.unsold * m.toDouble).round.toInt, m)
-          assignBuys(toBuys.tail, toSell-b.unsold, IncompleteMatchedBuy(b.buy, s) :: imbs)
+          assignBuys(toBuys.tail, toSell-b.unsold, MatchedBuy(sell, b.buy, s) :: mbs)
         } else { // b.unsold > toSell
           // only some of the buy shares are needed to satisfy the sell
           val s = Shares((toSell * m.toDouble).round.toInt, m)
           val reducedShares: Double = b.unsold - toSell
           // sell is completed and the next buy is only partially completed
-          (toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares)), IncompleteMatchedBuy(b.buy, s) :: imbs)
+          (toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares)), MatchedBuy(sell, b.buy, s) :: mbs)
         }
       }
     }
-    val (toBuys: Vector[BuyReadyToSell], imbsReversed: List[IncompleteMatchedBuy]) =
+    val (toBuys: Vector[BuyReadyToSell], mbsReversed: List[MatchedBuy]) =
       assignBuys(buys, sell.shares.atMult(Fraction.one), Nil)
 
-    val mbs = imbsReversed.map{ imb => MatchedBuy(sell, imb.buy, imb.sold) }.reverse
+    val mbs = mbsReversed.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ _ + _.proportionalCost }
     val capitalGain = net - sell.commission - mbs.foldLeft(Currency.zero){ _ + _.proportionalBuyCommission }
     (MatchedSell(sell, net.truncate, capitalGain.truncate, mbs), toBuys)
