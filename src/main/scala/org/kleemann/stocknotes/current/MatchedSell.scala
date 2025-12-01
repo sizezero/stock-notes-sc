@@ -42,10 +42,7 @@ object MatchedSell {
     // all double calculations and all conversion to Shares are done with the sell multiple
     val m = sell.shares.multiple
 
-    // a tempory structure to build our eventual matched buys
-    //case class IncompleteMatchedBuy(buy: Buy, sold: Shares) // sold shares are in the Sell multiple
-
-    // Recursively walk through the BuyReadyToSell list consuming buys, and accumulate our incomplete matched buy list
+    // Recursively walk through the BuyReadyToSell list consuming buys, and accumulate our matched buy list
     // until we have satisfied all shares in the sell.
     // Note: both buy and sell shares are converted to Double at multiple Fraction.one.
     @tailrec
