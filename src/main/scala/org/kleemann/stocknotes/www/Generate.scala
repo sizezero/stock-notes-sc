@@ -193,14 +193,18 @@ object Generate {
                         for (
                             s <- stocks;
                             // no way to put vals after this so put it here even though it's not a generator
-                            price = stockQuotes.get(s.ticker).get
+                            price = stockQuotes.get(s.ticker).get;
+                            currentMultiple = s.trades.foldLeft(Fraction.one) { (accMult, t) => t match {
+                                case Split(_, splitMult) => splitMult * accMult
+                                case _ => accMult
+                            }}
                         ) yield tr(
                             td(a(href := f"http://finance.yahoo.com/q?s=${s.ticker}")(s.ticker.name)), "\n",
                             td(price.toString), "\n",
-                            dispTd(s.buyWatch.low,   price, "DarkGreen", _ < _), "\n",
-                            dispTd(s.buyWatch.high,  price, "DarkGreen", _ < _), "\n",
-                            dispTd(s.sellWatch.low,  price, "DarkRed",   _ > _), "\n",
-                            dispTd(s.sellWatch.high, price, "DarkRed",   _ > _), "\n",
+                            dispTd(s.buyWatch.lowAtMult(currentMultiple),   price, "DarkGreen", _ < _), "\n",
+                            dispTd(s.buyWatch.highAtMult(currentMultiple),  price, "DarkGreen", _ < _), "\n",
+                            dispTd(s.sellWatch.lowAtMult(currentMultiple),  price, "DarkRed",   _ > _), "\n",
+                            dispTd(s.sellWatch.highAtMult(currentMultiple), price, "DarkRed",   _ > _), "\n",
                             td(a(href := f"log/${s.ticker.name.toLowerCase}.txt.html")(s.latestDate.toString())), "\n"
                         ), "\n"
                     )

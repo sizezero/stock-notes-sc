@@ -27,12 +27,12 @@ object DownloadQuotes extends Command {
     * @param options query parameters
     * @return The response body if status code was 200 or None if there was an error.
     */
-  private def httpGetViaSttp(baseUrl: String, options: Map[String, String]): Option[String] = {
+  private def httpGetViaSttp(baseUrl: String, queryParams: Map[String, String]): Option[String] = {
     // uri"http:foo.com/dir?$options" is prettier but the below is required when the root url is in a variable.
     // couldn't get sttp to not encode the baseUrl so using java Uri instead
     val jUri: java.net.URI = java.net.URI(baseUrl + "?")
     val uBase: Uri = Uri(jUri)
-    val u: Uri = uBase.addParams(options)
+    val u: Uri = uBase.addParams(queryParams)
     val request = quickRequest.get(u)
     val response = request.send()
     if (response.code == StatusCode.Ok)
