@@ -78,6 +78,11 @@ private[calc] object Processor {
         s2.replace(",","").toIntOption.map{ _ * mult }
     }
 
+    private def parseLong(s: String, defaultMult: Int): Option[Long] = {
+        val (s2, mult) = parsesMegaKilo(s.trim(), defaultMult)
+        s2.replace(",","").toLongOption.map{ _ * mult }
+    }
+
     private def parseSingleArgumentDoubleValue(attribute: String, args: Vector[String]): Either[String, Double] =
         if (args.length != 1) Left(f"$attribute takes a single argument")
         else
@@ -165,8 +170,8 @@ private[calc] object Processor {
         override def parse(args: Vector[String], att: Attributes): Either[String, Attributes] = {
             if (args.length==1 || (args.length==2 && args(1)=="(diluted)")) {
                 val arg = args(0)
-                parseNumber(arg, 1) match {
-                    case Some(i) => Right(att.copy(shares = Some(i)))
+                parseLong(arg, 1) match {
+                    case Some(sh) => Right(att.copy(shares = Some(sh)))
                     case None    => Left(f"can't parse share argument: $arg")
                 }
             } else Left("incorrect number of share arguments")
@@ -175,10 +180,10 @@ private[calc] object Processor {
         override def generate(att: Attributes): Attributes =
             if (att.shares.isDefined) att
             else if (att.price.isDefined && att.marketCap.isDefined) {
-                val shares: Int = (att.marketCap.get.toDouble / att.price.get.toDouble).toInt
+                val shares: Long = (att.marketCap.get.toDouble / att.price.get.toDouble).toLong
                 att.copy(shares = Some(shares))
             } else if (att.income.isDefined && att.eps.isDefined) {
-                val shares: Int = (att.income.get.toDouble / att.eps.get.toDouble).toInt
+                val shares: Long = (att.income.get.toDouble / att.eps.get.toDouble).toLong
                 att.copy(shares = Some(shares))
             } else att
 

@@ -191,4 +191,26 @@ class TestCalc extends munit.FunSuite {
             case Left(e)    => assert(true)
         }
     }
+
+    test("big share count") {
+        // royal dutch shell had a share count of 1.7B which blew up the int converter
+        val it: Iterator[String] =
+            """
+            |rev 69,691,000 64,093,000 68,153,000 65,406,000
+            |inc 10,366,000 3,159,000 7,734,000 6,013,000
+            |shares 5,689,891,670
+            |price 87.13
+            |div 2.96
+            |""".stripMargin.split("\n").iterator
+        Calc.inputToAttributes(it) match {
+            case Right(att) => {
+                att.shares match {
+                    case Some(sh) => assert(sh == 5_689_891_670L)
+                    case None => assert(false)
+                }
+            }
+            case Left(e)    => assert(false)
+        }
+
+    }
 }

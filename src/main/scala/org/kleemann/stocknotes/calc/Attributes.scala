@@ -25,7 +25,7 @@ import org.kleemann.stocknotes.Currency
 private final case class Attributes(
         income:        Option[Currency] = None,
         revenue:       Option[Currency] = None,
-        shares:        Option[Int]      = None,
+        shares:        Option[Long]      = None,
         eps:           Option[Currency] = None,
         pe:            Option[Double]   = None,
         marketCap:     Option[Currency] = None,
