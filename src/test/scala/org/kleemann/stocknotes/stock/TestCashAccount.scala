@@ -75,4 +75,20 @@ class TestCashAccount extends munit.FunSuite {
     assertEquals(obtained, Left("foo(5): no balance entered"))
   }
 
+  test("two balances") {
+    val accountName = "name"
+    val cashFile = "foo" // this is just for error reporting
+    val in: os.Generator[String] = os.Generator.from(
+        """line one
+        |line two
+        |Apr 24, 1968
+        |BALANCE: $5.00
+        |BALANCE: $6.00
+        |Some more text
+        |last line""".stripMargin.split("\\n").toSeq)
+    val obtained = CashAccount.load(accountName, cashFile, in)
+    //val expected = CashAccount(accountName, Date(1968,4,24).get, Currency(6, 0))
+    assertEquals(obtained, Left("foo(4): balance defined more than once"))
+  }
+
 }

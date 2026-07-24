@@ -51,44 +51,7 @@ object CashAccount {
       * @param cashFile the string representation of the input file used for error reporting
       * @param g the generator that produces all the text lines to parse
       */
-    private[stock] def load(accountName: String, cashFile: String, g: os.Generator[String]): Either[String, CashAccount] = 
-      loadFunctional(accountName, cashFile, g)
-
-    private[stock] def loadImperative(accountName: String, cashFile: String, g: os.Generator[String]): Either[String, CashAccount] = {
-      // oh god, this is some old school iteration
-      var lineNo = 0
-      var curDate: Date = null
-      var curBalance: Currency = null
-      var error: String = null
-      breakable {
-        g.foreach { line =>
-          lineNo = lineNo + 1
-          Date.parse(line) match {
-            case Some(d) => {
-              if (curDate != null) { 
-                error = s"$cashFile($lineNo): date entered a second time"
-                break
-              }
-              else curDate = d
-            }
-            case None => {
-              line match {
-                case balancePattern(dollars, cents) => {
-                  curBalance = Currency(dollars.replace(",","").toLong, cents.toLong)
-                }
-                case _ => 
-              }
-            }
-          }
-        }
-      }
-      if (error != null) Left(error)
-      else if (curDate == null) Left(s"$cashFile: no date entered")
-      else if (curBalance == null) Left(s"$cashFile: no balance entered")
-      else Right(CashAccount(accountName, curDate, curBalance))
-    }
-
-    private[stock] def loadFunctional(accountName: String, cashFile: String, g: os.Generator[String]): Either[String, CashAccount] = {
+    private[stock] def load(accountName: String, cashFile: String, g: os.Generator[String]): Either[String, CashAccount] = {
 
         def mkError(lineNo: Int, s: String): Either[String, CashAccount] = Left(s"$cashFile($lineNo): $s")
 
@@ -115,8 +78,11 @@ object CashAccount {
                         // continue parsing
                         line match {
                             case balancePattern(dollars, cents) => {
-                                val newBalance = Currency(dollars.replace(",","").toLong, cents.toLong)
-                                processLine(in.tail, lineNo, date, Some(newBalance))
+                                if (balance.isDefined) mkError(prevLineNo, "balance defined more than once")
+                                else {
+                                  val newBalance = Currency(dollars.replace(",","").toLong, cents.toLong)
+                                  processLine(in.tail, lineNo, date, Some(newBalance))
+                                }
                             }
                             case _ => processLine(in.tail, lineNo, date, balance)
                         }
