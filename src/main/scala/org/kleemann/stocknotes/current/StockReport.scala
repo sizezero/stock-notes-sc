@@ -24,11 +24,6 @@ final case class StockReport(
 
 object StockReport {
 
-  // this is some tiny share value at multiple one that we are comfortable that share counts will never get below
-  // we use this to see if share counts are equal or at zero since we can't use equality on a Double
-  // TODO: this was copied from MatchedSell. It should probably be moved to a common place
-  private val quantum: Double = 0.0001
-
   /**
     * If we currently own shares in this stock then make a pretend sale and generate the sell objects.
     *
@@ -65,7 +60,7 @@ object StockReport {
         }
       }}
 
-    if (currentOwnedShares < quantum) None // nothing to sell so no report
+    if (Shares.equals(currentOwnedShares, 0.0)) None // nothing to sell so no report
     else {
       // This pretends we sell all of our remaining shares so the report
       // can show us what the current value of the shares are.

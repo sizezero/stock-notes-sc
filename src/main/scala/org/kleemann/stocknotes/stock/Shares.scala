@@ -72,4 +72,11 @@ object Shares {
     // It just converts a decimal to a share count and takes a multiple argument.
 
     val zero = Shares(0, Fraction.one)
-}
+
+    /**
+      * At times the integer share count runs into rounding errors (often cause by reverse splits) 
+      * and so it needs to be converted into a double.
+      * Comparisons of doubles for equality is verboten so use this method instead.
+      */
+    def equals(d1: Double, d2: Double): Boolean = Math.abs(d1-d2) < 0.001
+ }

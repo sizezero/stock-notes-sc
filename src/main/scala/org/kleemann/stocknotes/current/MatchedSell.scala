@@ -35,10 +35,6 @@ object MatchedSell {
     // We need to use lossy Doubles. This is highlighted in the test case "parseCompanyDateRange fractional matching"
     // which caused the old code to blow up.
 
-    // this is some tiny share value at multiple one that we are comfortable that share counts will never get below
-    // we use this to see if share counts are equal or at zero since we can't use equality on a Double
-    val quantum: Double = 0.0001
-
     // all double calculations are done in multiple Fraction.one
     // when we produce final share counts, they are converted to the sell multiple
     def sharesToDouble(s: Shares): Double = s.atMult(Fraction.one)
@@ -49,10 +45,10 @@ object MatchedSell {
     // Note: both buy and sell shares are converted to Double at multiple Fraction.one.
     @tailrec
     def assignBuys(toBuys: Vector[BuyReadyToSell], toSell: Double, mbs: List[MatchedBuy]): (Vector[BuyReadyToSell], List[MatchedBuy]) = {
-      if (toSell <= quantum) (toBuys, mbs) // shares to sell are zero, we are done
+      if (Shares.equals(toSell, 0.0)) (toBuys, mbs) // shares to sell are zero, we are done
       else {
         val b: BuyReadyToSell = toBuys.head
-        if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
+        if (Shares.equals(b.unsold, toSell)) { // b.unsold == toSell
           // the current buy perfectly completes the sell
           val mb = MatchedBuy(sell, b.buy, doubleToShares(toSell))
           (toBuys.tail, mb :: mbs)
