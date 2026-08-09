@@ -75,5 +75,4 @@ class TestShares extends munit.FunSuite {
             Shares(3, Fraction.one).sub(Shares(1, Fraction.one), Fraction.one),
             Shares(2, Fraction.one))
     }
-
 }

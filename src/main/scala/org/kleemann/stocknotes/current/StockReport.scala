@@ -24,6 +24,11 @@ final case class StockReport(
 
 object StockReport {
 
+  // this is some tiny share value at multiple one that we are comfortable that share counts will never get below
+  // we use this to see if share counts are equal or at zero since we can't use equality on a Double
+  // TODO: this was copied from MatchedSell. It should probably be moved to a common place
+  private val quantum: Double = 0.0001
+
   /**
     * If we currently own shares in this stock then make a pretend sale and generate the sell objects.
     *
@@ -39,24 +44,33 @@ object StockReport {
 
     // We need to find all currently owned shares of the company.
     // Walk through each trade, accumulating the share count and multiple.
-    // We only keep the share count.
-    val (_, currentOwnedShares: Shares) =
-      trades.foldLeft( (Fraction.one, Shares.zero) ) { case ((accMultiple, accShares), t) => t match {
-        case Buy(_, shares, _, _)  => (accMultiple, accShares.add(shares, accMultiple))
-        case Sell(_, shares, _, _) => (accMultiple, accShares.sub(shares, accMultiple))
+    // We accumulate the share count as a double in Fraction.one to avoid
+    // rounding errors that can happen with reverse stock splits
+
+    // The Double share count is kept up to date with the current multiple
+    val (finalMultiple, currentOwnedShares: Double) =
+      trades.foldLeft( (Fraction.one, 0.0: Double) ) { case ((accMultiple, accShares), t) => t match {
+        case Buy(_, shares, _, _)  => {
+          assert(shares.multiple == accMultiple)
+          (accMultiple, accShares + shares.atMult(accMultiple))
+        }
+        case Sell(_, shares, _, _) => {
+          assert(shares.multiple == accMultiple)
+          (accMultiple, accShares - shares.atMult(accMultiple))
+        }
         case Split(_, multiple)    => {
           val newMultiple = accMultiple * multiple
-          // shares need to be adjusted since the final, pretend sell has a price at the new multiple
-          val sharesAtNewMultiple = accShares.add(Shares.zero, newMultiple)
+          val sharesAtNewMultiple = (newMultiple/accMultiple).toDouble * accShares
           (newMultiple, sharesAtNewMultiple)
         }
       }}
 
-    if (currentOwnedShares == Shares.zero) None // nothing to sell so no report
+    if (currentOwnedShares < quantum) None // nothing to sell so no report
     else {
       // This pretends we sell all of our remaining shares so the report
       // can show us what the current value of the shares are.
-      val pretendSell = Sell(today, currentOwnedShares, price, commission)
+      // splits can cause problems so we truncate the double instead of rounding it so we don't end up with one extra share
+      val pretendSell = Sell(today, Shares(currentOwnedShares.toInt, finalMultiple), price, commission)
       val pretendStock = stock.copy(trades = trades :+ pretendSell)
       parseCompanyDateRange(pretendStock, today, today)
     }

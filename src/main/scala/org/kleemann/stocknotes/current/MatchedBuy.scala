@@ -10,8 +10,8 @@ import org.kleemann.stocknotes.stock.{Buy, Sell}
  * Note: not all of the shares of the buy block may have been sold.
  *
  * @param buy the Buy Trade
- * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares. This is in the Sell multiple.
- * @param price this is the price of the shares in the Sell multiple. This may have sub-penny precision.
+ * @param sold the number of shares sold from this Buy Trade: sold <= buy.shares. May be any multiple. This could be rounded due to splits.
+ * @param buyPricePerShare this is the purchase price of the sold shares in the Sell multiple. (get's smaller with splits) This may have sub-penny precision but still could be rounded due to splits.
  * @param proportionalCost the cost proportional to the sold shares. This may have sub-penny precision.
  * @param proportionalBuyCommission the buy commission proportional to the sold shares. This may have sub-penny precision.
  * @param proportionalSellCommission the sell commision proportional to the sold shares. This may have sub-penny precision.
@@ -21,7 +21,7 @@ import org.kleemann.stocknotes.stock.{Buy, Sell}
 final case class MatchedBuy(
   buy: Buy,
   sold: Shares,
-  price: Currency,
+  buyPricePerShare: Currency,
   proportionalCost: Currency,
   proportionalBuyCommission: Currency,
   proportionalSellCommission: Currency,
@@ -34,13 +34,13 @@ object MatchedBuy {
     *
     * @param sell the Sell Trade
     * @param buy one of the (possibly many) Buy Trades matched with the sell
-    * @param sold the number shares from the buy used to satisfy the sell. A single buy may be satisfied with multiple sells.
+    * @param sold the number shares from the buy used to satisfy the sell. A single buy may be satisfied with multiple sells. Can be in any split multiple.
     * @return
     */
   def apply(sell: Sell, buy: Buy, sold: Shares) = {
 
     // we need to convert the buy price to the sell multiple
-    val price = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
+    val buyPricePerShare = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
 
     // the proportion of sold shares in this sell batch vs total shares in this sell batch
     // If all shares in the buy equals all the sold shares then this is 1.0
@@ -66,7 +66,7 @@ object MatchedBuy {
         proportionalSellGross - proportionalSellCommission, 
         diff)
 
-    new MatchedBuy(buy, sold, price, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
+    new MatchedBuy(buy, sold, buyPricePerShare, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
   }
 
   private[current] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =

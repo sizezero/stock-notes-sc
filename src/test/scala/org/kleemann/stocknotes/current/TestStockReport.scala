@@ -248,13 +248,61 @@ class TestStockReport extends munit.FunSuite {
     assert(e.isRight)
     val stock: Stock = e.right.get
 
+    // since we are doing a current value report on that long list up there
+    // most entries will get filtered out and we should be left with the first three buys,
+    // the following split, and a phantom sell on the end
     val today = Date(1993, 12, 31).get
-    val o1 = StockReport.parseCompanyCurrentValue(stock, Currency(8,0), Currency.zero, today)
+
+    val sellPrice = Currency(8,0)
+    val o1 = StockReport.parseCompanyCurrentValue(stock, sellPrice, Currency.zero, today)
     o1 match {
       case Some(c: StockReport) => {
         assertEquals(c.mss.length, 1) // one sell
+        val ms = c.mss.head
+        assertEquals(ms.sell.date, today)
+        assertEquals(ms.sell.shares, Shares(40, Fraction(2,1))) // sell happens post split
+        assertEquals(ms.sell.price, sellPrice)
+        assertEquals(ms.sell.commission, Currency.zero)
+        assertEquals(ms.mbs.length, 3)
+
+        val mb1 = ms.mbs.head
+        val buyCommission = Currency(9,99)
+        assertEquals(mb1.buy, Buy(Date(1990,1,1).get, Shares(10,Fraction.one), Currency(5,0), buyCommission))
+        assertEquals(mb1.sold, Shares(10, Fraction.one))
+        assertEquals(mb1.buyPricePerShare, Currency(2,50)) // post split we bought the shares at a cheaper price
+        assertEquals(mb1.proportionalCost, Currency(5 * 10, 0)) // this whole buy lot was sold
+        assertEquals(mb1.proportionalBuyCommission, buyCommission) // since all shares in this lot are sold, the whole commission counts
+        assertEquals(mb1.proportionalSellCommission, Currency.zero) // sell commission is zero so a fraction of zero is zero
+        assertEquals(mb1.ltcg, true)
+        // eye-balling annual yield
+        // Math.pow(net / cost, 1.0 / decimalYearsDifference) - 1.0
+        // cost: (50.0+9.99)
+        // net: (8*20)
+        val ay1 = Math.pow((8*20)/((5*10)+9.99), 1.0/4.0) - 1.0
+        assert(Math.abs(ay1 - mb1.annualYield) < 0.001, s"ay: expected: ${ay1}, obtained:${mb1.annualYield}")
+
+        val mb2 = ms.mbs.tail.head
+        assertEquals(mb2.buy, Buy(Date(1991,1,1).get, Shares(5,Fraction.one), Currency(6,0), buyCommission))
+        assertEquals(mb2.sold, Shares(5, Fraction.one))
+        assertEquals(mb2.buyPricePerShare, Currency(6/2,0)) // post split we bought the shares at a cheaper price
+        assertEquals(mb2.proportionalCost, Currency(6 * 5, 0)) // this whole buy lot was sold
+        assertEquals(mb2.proportionalBuyCommission, buyCommission) // since all shares in this lot are sold, the whole commission counts
+        assertEquals(mb2.proportionalSellCommission, Currency.zero) // sell commission is zero so a fraction of zero is zero
+        assertEquals(mb2.ltcg, true)
+        // TODO: could test annual yield again
+
+        val mb3 = ms.mbs.tail.tail.head
+        assertEquals(mb3.buy, Buy(Date(1993,1,1).get, Shares(10,Fraction(2,1)), Currency(4,0), buyCommission))
+        assertEquals(mb3.sold, Shares(10, Fraction(2,1)))
+        assertEquals(mb3.buyPricePerShare, Currency(4,0)) // no splits after this buy so the price is unchanged
+        assertEquals(mb3.proportionalCost, Currency(4 * 10, 0)) // this whole buy lot was sold
+        assertEquals(mb3.proportionalBuyCommission, buyCommission) // since all shares in this lot are sold, the whole commission counts
+        assertEquals(mb3.proportionalSellCommission, Currency.zero) // sell commission is zero so a fraction of zero is zero
+        assertEquals(mb3.ltcg, false)
+        // TODO: could test annual yield again
+
         val cost = Currency(10*5, 0) + Currency(5*6, 0) + Currency(10*4, 0)
-        val capGains = Currency(40*8, 0) - cost - Currency(29,97)
+        val capGains = Currency(40*8, 0) - cost - (buyCommission+buyCommission+buyCommission)
         assertEquals(c.capGains, capGains)
       }
       case None => assert(false)
@@ -294,6 +342,33 @@ class TestStockReport extends munit.FunSuite {
     assert(stock.trades.length == 6)
 
     val o = StockReport.parseCompanyDateRange(stock, Date.earliest(2014).get, Date.latest(2014).get)
+    assert(o.isDefined)
+    val sr = o.get
+    // we're really testing that the above didn't blow up; not sure what else to look at
+  }
+
+  test("DD reverse split") {
+    // a reverse split in June 2026 for DD caused an exception
+    // this is the test case
+
+    val ticker = Ticker("DD")
+    val g: os.Generator[String] = os.Generator.from(
+      """
+      |Aug 31, 2016
+      |TRADE buy 125@32.5529 balance 125 commission 9.99
+      |May 19, 2021
+      |TRADE buy 360@34.3205 balance 485 commission 0.0
+      |Jun 24, 2026
+      |TRADE split 1:3 balance 162
+      |""".stripMargin.split("\n")
+    )
+
+    val e = Stock.load(ticker, "filename", g)
+    assert(e.isRight)
+    val stock = e.right.get
+
+    val o = StockReport.parseCompanyCurrentValue(stock, Currency(142,47), Currency.zero, Date(2026,8,8).get)
+    //val o = StockReport.parseCompanyDateRange(stock, d, d)
     assert(o.isDefined)
     val sr = o.get
     // we're really testing that the above didn't blow up; not sure what else to look at

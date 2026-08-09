@@ -13,7 +13,8 @@ final private[current] case class BuyReadyToSell(buy: Buy, unsold: Double)
 
 private[current] object BuyReadyToSell {
   // default has all shares unsold
-  def apply(buy: Buy) = new BuyReadyToSell(buy, buy.shares.atMult(Fraction.one))
+  def apply(buy: Buy) =
+    new BuyReadyToSell(buy, buy.shares.atMult(Fraction.one))
 }
 
 

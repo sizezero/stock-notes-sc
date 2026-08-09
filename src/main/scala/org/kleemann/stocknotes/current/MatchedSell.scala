@@ -39,8 +39,10 @@ object MatchedSell {
     // we use this to see if share counts are equal or at zero since we can't use equality on a Double
     val quantum: Double = 0.0001
 
-    // all double calculations and all conversion to Shares are done with the sell multiple
-    val m = sell.shares.multiple
+    // all double calculations are done in multiple Fraction.one
+    // when we produce final share counts, they are converted to the sell multiple
+    def sharesToDouble(s: Shares): Double = s.atMult(Fraction.one)
+    def doubleToShares(d: Double): Shares = Shares((d * sell.shares.multiple.toDouble).round.toInt, sell.shares.multiple)
 
     // Recursively walk through the BuyReadyToSell list consuming buys, and accumulate our matched buy list
     // until we have satisfied all shares in the sell.
@@ -52,23 +54,24 @@ object MatchedSell {
         val b: BuyReadyToSell = toBuys.head
         if (Math.abs(b.unsold - toSell) < quantum) { // b.unsold == toSell
           // the current buy perfectly completes the sell
-          val s = Shares((toSell * m.toDouble).round.toInt, m)
-          (toBuys.tail, MatchedBuy(sell, b.buy, s) :: mbs)
+          val mb = MatchedBuy(sell, b.buy, doubleToShares(toSell))
+          (toBuys.tail, mb :: mbs)
         } else if (b.unsold < toSell) {
           // we have used up the current buy, but the sell is not done
-          val s = Shares((b.unsold * m.toDouble).round.toInt, m)
-          assignBuys(toBuys.tail, toSell-b.unsold, MatchedBuy(sell, b.buy, s) :: mbs)
+          val mb = MatchedBuy(sell, b.buy, doubleToShares(b.unsold))
+          // our sold shares could be rounded up or down so use this value instead of b.unsold to subtract from toSell
+          assignBuys(toBuys.tail, toSell-b.unsold, mb :: mbs)
         } else { // b.unsold > toSell
           // only some of the buy shares are needed to satisfy the sell
-          val s = Shares((toSell * m.toDouble).round.toInt, m)
+          val mb = MatchedBuy(sell, b.buy, doubleToShares(toSell))
           val reducedShares: Double = b.unsold - toSell
           // sell is completed and the next buy is only partially completed
-          (toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares)), MatchedBuy(sell, b.buy, s) :: mbs)
+          (toBuys.updated(0, BuyReadyToSell(b.buy, reducedShares)), mb :: mbs)
         }
       }
     }
     val (toBuys: Vector[BuyReadyToSell], mbsReversed: List[MatchedBuy]) =
-      assignBuys(buys, sell.shares.atMult(Fraction.one), Nil)
+      assignBuys(buys, sharesToDouble(sell.shares), Nil)
 
     val mbs = mbsReversed.reverse
     val net = sell.gross - mbs.foldLeft(Currency.zero){ _ + _.proportionalCost }

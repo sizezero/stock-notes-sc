@@ -129,7 +129,7 @@ package object current {
             sb ++= String.format(itemFmt, 
               mb.buy.date.toStringEnglishFixedWidth(), 
               if (mb.ltcg) "(ltcg)" else "", 
-              s"${mb.sold.toString(m)}@${mb.price}", 
+              s"${mb.sold.toString(m)}@${mb.buyPricePerShare}",
               mb.proportionalCost, 
               mb.proportionalBuyCommission, 
               mb.proportionalSellCommission, 
