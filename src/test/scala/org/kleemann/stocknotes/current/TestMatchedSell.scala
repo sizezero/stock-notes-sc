@@ -44,7 +44,7 @@ class TestMatchedSell extends munit.FunSuite {
     assertEquals(ms, MatchedSell(s1, Currency(16, 0), Currency(16, 0), ms2))
 
     val brss3 = Vector[BuyReadyToSell](
-      BuyReadyToSell(b4, Shares(2,m).atMult(Fraction.one))  // none of the shares were sold from this, still at two
+      BuyReadyToSell(b4, Shares(2,m).toDoubleShares)  // none of the shares were sold from this, still at two
     )
 
     assertEquals(brss2, brss3)

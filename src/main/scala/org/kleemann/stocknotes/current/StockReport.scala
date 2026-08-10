@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.current
 
 import org.kleemann.stocknotes.{Currency, Date, Fraction, Ticker}
-import org.kleemann.stocknotes.stock.{CashAccount, Shares, Stock}
+import org.kleemann.stocknotes.stock.{CashAccount, DoubleShares, Shares, Stock}
 import org.kleemann.stocknotes.stock.{Trade, Buy, Sell, Split}
 
 /**
@@ -42,30 +42,19 @@ object StockReport {
     // We accumulate the share count as a double in Fraction.one to avoid
     // rounding errors that can happen with reverse stock splits
 
-    // The Double share count is kept up to date with the current multiple
-    val (finalMultiple, currentOwnedShares: Double) =
-      trades.foldLeft( (Fraction.one, 0.0: Double) ) { case ((accMultiple, accShares), t) => t match {
-        case Buy(_, shares, _, _)  => {
-          assert(shares.multiple == accMultiple)
-          (accMultiple, accShares + shares.atMult(accMultiple))
-        }
-        case Sell(_, shares, _, _) => {
-          assert(shares.multiple == accMultiple)
-          (accMultiple, accShares - shares.atMult(accMultiple))
-        }
-        case Split(_, multiple)    => {
-          val newMultiple = accMultiple * multiple
-          val sharesAtNewMultiple = (newMultiple/accMultiple).toDouble * accShares
-          (newMultiple, sharesAtNewMultiple)
-        }
+    val (finalMultiple, currentOwnedShares) =
+      trades.foldLeft( (Fraction.one, DoubleShares.zero) ) { case ((accMultiple, accShares), t) => t match {
+        case Buy(_, shares, _, _)  => (accMultiple,            accShares + shares.toDoubleShares)
+        case Sell(_, shares, _, _) => (accMultiple,            accShares - shares.toDoubleShares)
+        case Split(_, multiple)    => (accMultiple * multiple, accShares)
       }}
 
-    if (Shares.equals(currentOwnedShares, 0.0)) None // nothing to sell so no report
+    if (currentOwnedShares.equals(DoubleShares.zero)) None // nothing to sell so no report
     else {
       // This pretends we sell all of our remaining shares so the report
       // can show us what the current value of the shares are.
       // splits can cause problems so we truncate the double instead of rounding it so we don't end up with one extra share
-      val pretendSell = Sell(today, Shares(currentOwnedShares.toInt, finalMultiple), price, commission)
+      val pretendSell = Sell(today, currentOwnedShares.toSharesTruncate(finalMultiple), price, commission)
       val pretendStock = stock.copy(trades = trades :+ pretendSell)
       parseCompanyDateRange(pretendStock, today, today)
     }
@@ -118,14 +107,13 @@ object StockReport {
       }
 
       // percentage of shares that are ltcg vs short
-      val m = Fraction.one // all calculations need to be at the same multiple but it doesn't matter which one
-      val ltcgShares: Double = mss.foldLeft(0.0){
-        _ + _.mbs.foldLeft(0.0){ (acc, mb) =>
-          acc + (if (mb.ltcg) mb.sold.atMult(m) else 0.0)
+      val ltcgShares = mss.foldLeft(DoubleShares.zero){
+        _ + _.mbs.foldLeft(DoubleShares.zero){ (acc, mb) =>
+          acc + (if (mb.ltcg) mb.sold.toDoubleShares else DoubleShares.zero)
         } 
       }
-      val totalShares: Double = mss.foldLeft(0.0){ _ + _.sell.shares.atMult(m) }
-      val ltcgPercentage = ltcgShares / totalShares
+      val totalShares = mss.foldLeft(DoubleShares.zero){ _ + _.sell.shares.toDoubleShares }
+      val ltcgPercentage = ltcgShares.d / totalShares.d
 
       Some(StockReport(stock, mss, net.truncate, capGains.truncate, ltcgPercentage))
     }

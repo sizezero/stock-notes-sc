@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.current
 
 import org.kleemann.stocknotes.{Fraction}
-import org.kleemann.stocknotes.stock.{Buy}
+import org.kleemann.stocknotes.stock.{Buy, DoubleShares}
 
 /**
  * This is a buy that is ready to be matched with sells to take some of the shares.
@@ -9,12 +9,12 @@ import org.kleemann.stocknotes.stock.{Buy}
  * @param buy The buy associated with these shares to sell.
  * @param unsold unsold shares at the multiple Fraction.one
  */
-final private[current] case class BuyReadyToSell(buy: Buy, unsold: Double)
+final private[current] case class BuyReadyToSell(buy: Buy, unsold: DoubleShares)
 
 private[current] object BuyReadyToSell {
   // default has all shares unsold
   def apply(buy: Buy) =
-    new BuyReadyToSell(buy, buy.shares.atMult(Fraction.one))
+    new BuyReadyToSell(buy, buy.shares.toDoubleShares)
 }
 
 

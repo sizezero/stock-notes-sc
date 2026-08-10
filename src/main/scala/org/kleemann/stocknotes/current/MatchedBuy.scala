@@ -1,7 +1,7 @@
 package org.kleemann.stocknotes.current
 
-import org.kleemann.stocknotes.{Currency}
-import org.kleemann.stocknotes.stock.{Shares}
+import org.kleemann.stocknotes.{Currency, Fraction}
+import org.kleemann.stocknotes.stock.{DoubleShares, Shares}
 import org.kleemann.stocknotes.stock.{Buy, Sell}
 
 
@@ -37,17 +37,17 @@ object MatchedBuy {
     * @param sold the number shares from the buy used to satisfy the sell. A single buy may be satisfied with multiple sells. Can be in any split multiple.
     * @return
     */
-  def apply(sell: Sell, buy: Buy, sold: Shares) = {
+  def apply(sell: Sell, buy: Buy, sold: DoubleShares) = {
 
     // we need to convert the buy price to the sell multiple
     val buyPricePerShare = buy.price.priceMultipleAdjust(buy.shares.multiple, sell.shares.multiple)
 
     // the proportion of sold shares in this sell batch vs total shares in this sell batch
     // If all shares in the buy equals all the sold shares then this is 1.0
-    val proportionBuy: Double = sold.atMult(sell.shares.multiple) / buy.shares.atMult(sell.shares.multiple)
+    val proportionBuy: Double = sold.d / buy.shares.toDoubleShares.d
 
     // the proportion of sold shares in this sell batch vs the total shares in the sell
-    val proportionSell: Double = sold.atMult(sell.shares.multiple) / sell.shares.atMult(sell.shares.multiple)
+    val proportionSell: Double = sold.d / sell.shares.toDoubleShares.d
 
     val proportionalSellCommission: Currency = Currency.fromDouble(sell.commission.toDouble * proportionSell)
     val proportionalBuyCommission:  Currency = Currency.fromDouble(buy .commission.toDouble * proportionBuy)
@@ -66,7 +66,7 @@ object MatchedBuy {
         proportionalSellGross - proportionalSellCommission, 
         diff)
 
-    new MatchedBuy(buy, sold, buyPricePerShare, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
+    new MatchedBuy(buy, sold.toShares(Fraction.one), buyPricePerShare, proportionalBuyCost, proportionalBuyCommission, proportionalSellCommission, ltcg, ay)
   }
 
   private[current] def annualYield(start: Currency, end: Currency, decimalYearsDifference: Double): Double =

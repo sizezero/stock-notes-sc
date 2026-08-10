@@ -20,6 +20,8 @@ final case class Shares(shares: Int, multiple: Fraction) {
       */
     def atMult(currentMultiple: Fraction): Double = (shares * (currentMultiple/multiple).toDouble)
 
+    def toDoubleShares: DoubleShares = DoubleShares(atMult(Fraction.one))
+
     def toString(multiple: Fraction): String = atMult(multiple).toInt.toString
 
     /**
@@ -72,11 +74,43 @@ object Shares {
     // It just converts a decimal to a share count and takes a multiple argument.
 
     val zero = Shares(0, Fraction.one)
-
-    /**
-      * At times the integer share count runs into rounding errors (often cause by reverse splits) 
-      * and so it needs to be converted into a double.
-      * Comparisons of doubles for equality is verboten so use this method instead.
-      */
-    def equals(d1: Double, d2: Double): Boolean = Math.abs(d1-d2) < 0.001
  }
+
+/**
+  * Reverse splits can cause old share counts to be fractional so, during report calculations it's
+  * handy to have a data object that is non-integer.
+  * This is usually just needed for reporting that can handle tiny rounding issues so the solution is to treat the
+  * shares as a double at multiple Fraction.one.
+  *
+  * Note: we would like this object to be called Double in the Shares object but we don't want to
+  * mask the built-in Double type.
+  */
+case class DoubleShares private[stock] (d: Double) {
+
+  /**
+    * Compares at a small quantum that should be far below any fractional share.
+    */
+  override def equals(other: Any): Boolean = other match
+    case that: DoubleShares => Math.abs(this.d-that.d) < 0.0001
+    case _                  => false
+
+  /**
+    * Converts to a Share object at the given multiple by rounding the contained double.
+    */
+  def toShares(toMultiple: Fraction): Shares = Shares((d * toMultiple.toDouble).round.toInt, toMultiple)
+
+  /**
+    * Converts to a Share object at the given multiple by truncating the contained double.
+    */
+  def toSharesTruncate(toMultiple: Fraction) = Shares((d * toMultiple.toDouble).toInt, toMultiple)
+
+  def +(that: DoubleShares): DoubleShares = DoubleShares(this.d + that.d)
+
+  def -(that: DoubleShares): DoubleShares = DoubleShares(this.d - that.d)
+}
+
+object DoubleShares {
+
+  val zero = Shares.zero.toDoubleShares
+
+}
