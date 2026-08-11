@@ -38,19 +38,21 @@ object StockReport {
     val trades = stock.trades.filter{ _.getDate() <= today }
 
     // We need to find all currently owned shares of the company.
-    // Walk through each trade, accumulating the share count and multiple.
-    // We accumulate the share count as a double in Fraction.one to avoid
-    // rounding errors that can happen with reverse stock splits
-
-    val (finalMultiple, currentOwnedShares) =
-      trades.foldLeft( (Fraction.one, DoubleShares.zero) ) { case ((accMultiple, accShares), t) => t match {
-        case Buy(_, shares, _, _)  => (accMultiple,            accShares + shares.toDoubleShares)
-        case Sell(_, shares, _, _) => (accMultiple,            accShares - shares.toDoubleShares)
-        case Split(_, multiple)    => (accMultiple * multiple, accShares)
+    // Walk through each trade, accumulating the share count
+    val currentOwnedShares =
+      trades.foldLeft(DoubleShares.zero) { case (accShares, t) => t match {
+        case Buy(_, shares, _, _)  => accShares + shares.toDoubleShares
+        case Sell(_, shares, _, _) => accShares - shares.toDoubleShares
+        case _                     => accShares
       }}
 
     if (currentOwnedShares.equals(DoubleShares.zero)) None // nothing to sell so no report
     else {
+      val finalMultiple =
+        trades.foldLeft(Fraction.one) { case (accMultiple, t) => t match {
+          case Split(_, multiple)    => accMultiple * multiple
+          case _                     => accMultiple
+        }}
       // This pretends we sell all of our remaining shares so the report
       // can show us what the current value of the shares are.
       // splits can cause problems so we truncate the double instead of rounding it so we don't end up with one extra share
