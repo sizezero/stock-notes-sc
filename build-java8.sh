@@ -14,4 +14,4 @@ sbt compile
 sbt assembly
 
 echo "consider running:"
-echo "scp target/scala-3.3.6/stock-notes-sc-assembly-0.1.0-SNAPSHOT.jar kleemann@kleemann.org:."
+echo "scp target/scala-3.7.4/stock-notes-sc-assembly-0.1.0-SNAPSHOT.jar kleemann@kleemann.org:."
