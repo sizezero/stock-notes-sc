@@ -1,5 +1,7 @@
 package org.kleemann.stocknotes.command
 
+import scala.util.chaining._
+
 import org.kleemann.stocknotes.{Config, Date}
 import org.kleemann.stocknotes.stock.{Stock}
 
@@ -42,31 +44,27 @@ object ListCommand extends Command {
 
   private def display(pa: ParseArgs): Unit = {
     val config = Config.load()
-    val ss1: List[Stock] = Stock.load(config)
-
-    val ss2: List[Stock] = ss1.sortWith{ (s1,s2) => s1.latestDate < s2.latestDate }
-
-    val ss3: List[Stock] = if (pa.reverse) ss2.reverse else ss2
-
-    val ss4: List[Stock] = pa.keyword match {
-      case Some(keyword) => ss3.filter{ _.keywords contains keyword }
-      case None => ss3
-    }
+    val stocks = Stock.load(config)
+      .sortWith{ (s1,s2) => s1.latestDate < s2.latestDate }
+      .pipe{ stocks => if (pa.reverse) stocks.reverse else stocks }
+      .pipe{ stocks => pa.keyword match {
+          case Some(keyword) => stocks.filter{ _.keywords contains keyword }
+          case None => stocks
+      }}
 
     if (pa.tickerOnly)
-      ss4.foreach{ s =>
+      stocks.foreach{ s =>
         println(s.ticker)
       }
     else {
       // TODO: I'm not sure if it's possible for a Stock to have no entries but doing this anyway
       val noDate = "NODATE".padTo(Date.earliest.toStringEnglishFixedWidth().length() , " ")
-      ss4.foreach{ s => {
+      stocks.foreach{ s => {
         val d = if (s.entries.length > 0) s.entries.last.date.toStringEnglishFixedWidth() else "NODATE"
         val n = s.name.getOrElse("NONAME")
         println(s"$d ${s.ticker} $n")
       }}
     }
-  
     None
   }
 
